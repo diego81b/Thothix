@@ -20,9 +20,9 @@ linters:
   - gocritic
   - revive
   - gocyclo
-  disable: 
-  - goimports  # Disabled to prevent conflicts with manual formatting
-  - gofumpt    # Disabled to prevent constant formatting complaints
+  disable:
+  - goimports # Disabled to prevent conflicts with manual formatting
+  - gofumpt # Disabled to prevent constant formatting complaints
 
 linters-settings:
   gosec:

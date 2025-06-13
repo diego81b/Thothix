@@ -40,67 +40,53 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	roleHandler := handlers.NewRoleHandler(db)
 	// API routes
 	v1 := r.Group("/api/v1")
-	{
-		// Public routes (non protette)
-		auth := v1.Group("/auth")
-		{
-			// Webhook di Clerk (non richiede autenticazione)
-			auth.POST("/webhooks/clerk", authHandler.WebhookHandler)
-		}
+	
+	// Public routes (non protette)
+	auth := v1.Group("/auth")
+	// Webhook di Clerk (non richiede autenticazione)
+	auth.POST("/webhooks/clerk", authHandler.WebhookHandler)
 
-		// Protected routes con Clerk Auth
-		protected := v1.Group("/")
-		protected.Use(middleware.ClerkAuth(cfg.ClerkSecretKey))
-		protected.Use(middleware.SetUserContext()) // Add user context for GORM hooks
-		{
-			// Auth routes (sync with Clerk)
-			authProtected := protected.Group("/auth")
-			{
-				authProtected.POST("/sync", authHandler.SyncUser)
-				authProtected.GET("/me", authHandler.GetCurrentUser)
-			}
+	// Protected routes con Clerk Auth
+	protected := v1.Group("/")
+	protected.Use(middleware.ClerkAuth(cfg.ClerkSecretKey))
+	protected.Use(middleware.SetUserContext()) // Add user context for GORM hooks
+	
+	// Auth routes (sync with Clerk)
+	authProtected := protected.Group("/auth")
+	authProtected.POST("/sync", authHandler.SyncUser)
+	authProtected.GET("/me", authHandler.GetCurrentUser)
 
-			// Users
-			users := protected.Group("/users")
-			{
-				users.GET("", userHandler.GetUsers)
-				users.GET("/:id", userHandler.GetUser)
-				users.PUT("/:id", middleware.RequirePermission(db, models.PermissionUserManage, nil), userHandler.UpdateUser)
-				users.PUT("/me", userHandler.UpdateCurrentUser)
-				users.GET("/:userId/roles", roleHandler.GetUserRoles)
-			}
+	// Users
+	users := protected.Group("/users")
+	users.GET("", userHandler.GetUsers)
+	users.GET("/:id", userHandler.GetUser)
+	users.PUT("/:id", middleware.RequirePermission(db, models.PermissionUserManage, nil), userHandler.UpdateUser)
+	users.PUT("/me", userHandler.UpdateCurrentUser)
+	users.GET("/:userId/roles", roleHandler.GetUserRoles)
 
-			// Roles management (only admins can manage roles)
-			roles := protected.Group("/roles")
-			{
-				roles.POST("", middleware.RequireSystemRole(db, models.RoleAdmin), roleHandler.AssignUserRole)
-				roles.DELETE("/:roleId", middleware.RequireSystemRole(db, models.RoleAdmin), roleHandler.RevokeUserRole)
-			}
+	// Roles management (only admins can manage roles)
+	roles := protected.Group("/roles")
+	roles.POST("", middleware.RequireSystemRole(db, models.RoleAdmin), roleHandler.AssignUserRole)
+	roles.DELETE("/:roleId", middleware.RequireSystemRole(db, models.RoleAdmin), roleHandler.RevokeUserRole)
 
-			// Projects
-			projects := protected.Group("/projects")
-			{
-				projects.GET("", projectHandler.GetProjects)
-				projects.POST("", middleware.RequirePermission(db, models.PermissionProjectCreate, nil), projectHandler.CreateProject)
-				projects.GET("/:id", middleware.RequireProjectAccess(db), projectHandler.GetProject)
-				projects.PUT("/:id", middleware.RequireProjectAccess(db), projectHandler.UpdateProject)
-				projects.DELETE("/:id", middleware.RequirePermission(db, models.PermissionProjectDelete, stringPtr("project")), projectHandler.DeleteProject)
-				projects.POST("/:id/members", middleware.RequirePermission(db, models.PermissionProjectManage, stringPtr("project")), projectHandler.AddMember)
-				projects.DELETE("/:id/members/:userId", middleware.RequirePermission(db, models.PermissionProjectManage, stringPtr("project")), projectHandler.RemoveMember)
-			}
+	// Projects
+	projects := protected.Group("/projects")
+	projects.GET("", projectHandler.GetProjects)
+	projects.POST("", middleware.RequirePermission(db, models.PermissionProjectCreate, nil), projectHandler.CreateProject)
+	projects.GET("/:id", middleware.RequireProjectAccess(db), projectHandler.GetProject)
+	projects.PUT("/:id", middleware.RequireProjectAccess(db), projectHandler.UpdateProject)
+	projects.DELETE("/:id", middleware.RequirePermission(db, models.PermissionProjectDelete, stringPtr("project")), projectHandler.DeleteProject)
+	projects.POST("/:id/members", middleware.RequirePermission(db, models.PermissionProjectManage, stringPtr("project")), projectHandler.AddMember)
+	projects.DELETE("/:id/members/:userId", middleware.RequirePermission(db, models.PermissionProjectManage, stringPtr("project")), projectHandler.RemoveMember)
 
-			// Channels
-			channels := protected.Group("/channels")
-			{
-				channels.GET("", channelHandler.GetChats)
-				channels.POST("", middleware.RequirePermission(db, models.PermissionChannelCreate, nil), channelHandler.CreateChat)
-				channels.GET("/:id", middleware.RequireChannelAccess(db), channelHandler.GetChat)
-				channels.POST("/:id/join", channelHandler.JoinChannel)
-				channels.GET("/:id/messages", middleware.RequireChannelAccess(db), messageHandler.GetMessages)
-				channels.POST("/:id/messages", middleware.RequireChannelAccess(db), messageHandler.SendMessage)
-			}
-		}
-	}
+	// Channels
+	channels := protected.Group("/channels")
+	channels.GET("", channelHandler.GetChats)
+	channels.POST("", middleware.RequirePermission(db, models.PermissionChannelCreate, nil), channelHandler.CreateChat)
+	channels.GET("/:id", middleware.RequireChannelAccess(db), channelHandler.GetChat)
+	channels.POST("/:id/join", channelHandler.JoinChannel)
+	channels.GET("/:id/messages", middleware.RequireChannelAccess(db), messageHandler.GetMessages)
+	channels.POST("/:id/messages", middleware.RequireChannelAccess(db), messageHandler.SendMessage)
 
 	// WebSocket endpoint
 	r.GET("/ws", func(c *gin.Context) {

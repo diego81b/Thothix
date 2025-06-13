@@ -1,0 +1,107 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: thothix_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+        
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: go mod download
+
+    - name: Run tests
+      working-directory: ./backend
+      env:
+        DB_HOST: localhost
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_NAME: thothix_test
+        DB_PORT: 5432
+        CLERK_SECRET_KEY: test_key
+      run: go test -v ./...
+
+    - name: Build
+      working-directory: ./backend
+      run: go build -v ./...
+
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: test-backend
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build backend Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: false
+        tags: thothix-backend:latest
+        
+    - name: Build database Docker image  
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.postgres
+        push: false
+        tags: thothix-postgres:latest
+
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    needs: build-docker
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Create .env file
+      run: |
+        cp backend/.env.example backend/.env
+        echo "CLERK_SECRET_KEY=test_key" >> backend/.env
+        
+    - name: Test with docker-compose
+      run: |
+        docker-compose up -d
+        sleep 30
+        docker-compose ps
+        curl -f http://localhost:30000/health || exit 1
+        docker-compose down

@@ -1,0 +1,37 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Ensure shell scripts always use LF line endings
+*.sh text eol=lf
+
+# Ensure batch scripts always use CRLF line endings  
+*.bat text eol=crlf
+
+# Binary files should be left untouched
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.exe binary
+
+# Docker files should use LF
+Dockerfile* text eol=lf
+docker-compose*.yml text eol=lf
+
+# Go files should use LF
+*.go text eol=lf
+
+# JSON and YAML files
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Markdown files
+*.md text eol=lf
+
+# SQL files
+*.sql text eol=lf

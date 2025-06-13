@@ -1,50 +1,50 @@
-# Sistema RBAC Semplificato - Thothix
+# Simplified RBAC System - Thothix
 
-## Panoramica
+## Overview
 
-Il sistema di gestione ruoli e permessi di Thothix è stato semplificato per includere quattro ruoli principali, ognuno con permessi specifici e limitazioni.
+The Thothix role and permission management system has been simplified to include four main roles, each with specific permissions and limitations.
 
-## Ruoli del Sistema
+## System Roles
 
 ### 1. Admin
 
-- **Permessi**: Può gestire tutto il sistema
-- **Descrizione**: Accesso completo a tutte le funzionalità
-- **Limitazioni**: Nessuna
+- **Permissions**: Can manage the entire system
+- **Description**: Full access to all functionalities
+- **Limitations**: None
 
 ### 2. Manager
 
-- **Permessi**: Può gestire tutto tranne la gestione degli utenti
-- **Descrizione**: Può creare e gestire progetti, canali, messaggi
-- **Limitazioni**: Non può assegnare ruoli o gestire utenti
+- **Permissions**: Can manage everything except user management
+- **Description**: Can create and manage projects, channels, messages
+- **Limitations**: Cannot assign roles or manage users
 
 ### 3. User
 
-- **Permessi**: Può partecipare ai progetti e canali in cui è stato aggiunto
-- **Descrizione**: Può leggere progetti assegnati, partecipare a canali, creare chat 1:1
-- **Limitazioni**: Non può creare progetti, solo partecipare a quelli assegnati
+- **Permissions**: Can participate in projects and channels they've been added to
+- **Description**: Can read assigned projects, participate in channels, create 1:1 chats
+- **Limitations**: Cannot create projects, only participate in assigned ones
 
 ### 4. External
 
-- **Permessi**: Può solo partecipare alle conversazioni pubbliche
-- **Descrizione**: Accesso limitato ai soli canali pubblici
-- **Limitazioni**: Non può accedere a canali privati o progetti
+- **Permissions**: Can only participate in public conversations
+- **Description**: Limited access to public channels only
+- **Limitations**: Cannot access private channels or projects
 
-## Strategia per Canali Pubblici vs Privati
+## Public vs Private Channel Strategy
 
-### Canali Pubblici
+### Public Channels
 
-- **Definizione**: Canali senza membri espliciti nella tabella `channel_members`
-- **Accesso**: Accessibili a tutti gli utenti autenticati (tranne External che hanno limitazioni sui progetti)
+- **Definition**: Channels with no explicit members in the `channel_members` table
+- **Access**: Accessible to all authenticated users (except External who have project limitations)
 
-### Canali Privati
+### Private Channels
 
-- **Definizione**: Canali con almeno una riga nella tabella `channel_members`
-- **Accesso**: Solo ai membri espliciti o agli utenti con ruoli Admin/Manager
+- **Definition**: Channels with at least one row in the `channel_members` table
+- **Access**: Only to explicit members or users with Admin/Manager roles
 
-### Campo Calcolato `IsPrivate`
+### Computed `IsPrivate` Field
 
-Il campo `IsPrivate` viene calcolato dinamicamente:
+The `IsPrivate` field is calculated dynamically:
 
 ```go
 func (c *Channel) LoadIsPrivate(db *gorm.DB) error {
@@ -58,7 +58,7 @@ func (c *Channel) LoadIsPrivate(db *gorm.DB) error {
 }
 ```
 
-## Modelli Dati Aggiornati
+## Updated Data Models
 
 ### Channel
 
@@ -100,69 +100,69 @@ type User struct {
 }
 ```
 
-## Controlli di Accesso
+## Access Controls
 
-### Logica per Canali
+### Channel Logic
 
-1. **External**: Solo canali pubblici
-2. **User**: Canali pubblici + canali privati di cui è membro (se ha accesso al progetto)
-3. **Manager/Admin**: Tutti i canali
+1. **External**: Only public channels
+2. **User**: Public channels + private channels they're a member of (if they have project access)
+3. **Manager/Admin**: All channels
 
-### Logica per Progetti
+### Project Logic
 
-1. **External**: Solo progetti di cui è membro esplicito
-2. **User**: Solo progetti di cui è membro esplicito  
-3. **Manager/Admin**: Tutti i progetti
+1. **External**: Only projects they're explicitly a member of
+2. **User**: Only projects they're explicitly a member of  
+3. **Manager/Admin**: All projects
 
-### Logica per Messaggi
+### Message Logic
 
-1. **Messaggi in Canali**: Devono avere accesso al canale
-2. **Messaggi Diretti**: Tutti possono creare (tranne External)
+1. **Channel Messages**: Must have access to the channel
+2. **Direct Messages**: All can create (except External)
 
-## API Endpoints Principali
+## Main API Endpoints
 
-### Canali
+### Channels
 
-- `GET /api/v1/channels` - Lista canali accessibili
-- `POST /api/v1/channels` - Crea nuovo canale (Manager/Admin)
-- `GET /api/v1/channels/{id}` - Dettagli canale
-- `POST /api/v1/channels/{id}/join` - Unisciti a canale pubblico
+- `GET /api/v1/channels` - List accessible channels
+- `POST /api/v1/channels` - Create new channel (Manager/Admin)
+- `GET /api/v1/channels/{id}` - Channel details
+- `POST /api/v1/channels/{id}/join` - Join public channel
 
-### Messaggi
+### Messages
 
-- `GET /api/v1/channels/{id}/messages` - Messaggi del canale
-- `POST /api/v1/channels/{id}/messages` - Invia messaggio al canale
-- `POST /api/v1/messages/direct` - Invia messaggio diretto
+- `GET /api/v1/channels/{id}/messages` - Channel messages
+- `POST /api/v1/channels/{id}/messages` - Send message to channel
+- `POST /api/v1/messages/direct` - Send direct message
 
-### Ruoli (Solo Admin)
+### Roles (Admin Only)
 
-- `POST /api/v1/roles` - Assegna ruolo
-- `DELETE /api/v1/roles/{roleId}` - Revoca ruolo
-- `GET /api/v1/users/{userId}/roles` - Lista ruoli utente
+- `POST /api/v1/roles` - Assign role
+- `DELETE /api/v1/roles/{roleId}` - Revoke role
+- `GET /api/v1/users/{userId}/roles` - List user roles
 
-## Middleware di Sicurezza
+## Security Middleware
 
-Il sistema utilizza middleware per controllare:
+The system uses middleware to control:
 
-1. **RequirePermission**: Verifica permessi specifici
-2. **RequireSystemRole**: Verifica ruolo minimo richiesto  
-3. **RequireProjectAccess**: Verifica accesso al progetto
-4. **RequireChannelAccess**: Verifica accesso al canale
+1. **RequirePermission**: Verifies specific permissions
+2. **RequireSystemRole**: Verifies minimum required role  
+3. **RequireProjectAccess**: Verifies project access
+4. **RequireChannelAccess**: Verifies channel access
 
 ## Database Schema
 
-Le tabelle principali sono:
+The main tables are:
 
-- `users` - con campo `system_role`
-- `channels` - senza campo `type` (calcolato dinamicamente)
-- `channel_members` - definisce i canali privati
-- `messages` - collegati a canali o utenti per DM
-- `user_roles` - per ruoli futuri più granulari (non utilizzato nel sistema semplificato)
+- `users` - with `system_role` field
+- `channels` - without `type` field (calculated dynamically)
+- `channel_members` - defines private channels
+- `messages` - linked to channels or users for DMs
+- `user_roles` - for future more granular roles (not used in simplified system)
 
-## Migrazione
+## Migration
 
-Per applicare i cambiamenti al database:
+To apply changes to the database:
 
-1. Rimuovere il campo `type` dalla tabella `channels`
-2. Assicurarsi che tutti gli utenti abbiano un `system_role` valido
-3. Le relazioni esistenti in `channel_members` definiranno automaticamente i canali privati
+1. Remove the `type` field from the `channels` table
+2. Ensure all users have a valid `system_role`
+3. Existing relationships in `channel_members` will automatically define private channels

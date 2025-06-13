@@ -1,46 +1,46 @@
-# Thothix - Messaggistica Aziendale
+# Thothix - Enterprise Messaging Platform
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-diego81b%2FThothix-blue?style=flat&logo=github)](https://github.com/diego81b/Thothix)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat&logo=docker)](https://docker.com)
 [![Go](https://img.shields.io/badge/Go-1.23-blue?style=flat&logo=go)](https://golang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=flat&logo=postgresql)](https://postgresql.org)
 
-Thothix è una piattaforma di messaggistica aziendale moderna che permette la gestione di progetti, chat di gruppo e conversazioni private 1:1. Costruita con architettura a microservizi containerizzata.
+Thothix is a modern enterprise messaging platform that enables project management, group chats, and private 1:1 conversations. Built with containerized microservices architecture.
 
-## 🚀 Repository GitHub
+## 🚀 GitHub Repository
 
-Il progetto è disponibile su GitHub: **[https://github.com/diego81b/Thothix](https://github.com/diego81b/Thothix)**
+The project is available on GitHub: **[https://github.com/diego81b/Thothix](https://github.com/diego81b/Thothix)**
 
 ```bash
-# Clona il repository
+# Clone the repository
 git clone https://github.com/diego81b/Thothix.git
 cd Thothix
 ```
 
-## 📋 Indice
+## 📋 Table of Contents
 
-- [Architettura](#architettura)
-- [Prerequisiti](#prerequisiti)
-- [Avvio Rapido con Docker](#avvio-rapido-con-docker)
-- [Configurazione Docker](#configurazione-docker)
-- [Deployment Kubernetes](#deployment-kubernetes)
-- [Comandi Docker Utili](#comandi-docker-utili)
-- [Sviluppo](#sviluppo)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Quick Start with Docker](#quick-start-with-docker)
+- [Docker Configuration](#docker-configuration)
+- [Kubernetes Deployment](#kubernetes-deployment)
+- [Useful Docker Commands](#useful-docker-commands)
+- [Development](#development)
 - [API Reference](#api-reference)
 - [Troubleshooting](#troubleshooting)
 
-## 🏗️ Architettura
+## 🏗️ Architecture
 
-### Stack Tecnologico
+### Technology Stack
 
 - **Frontend**: Vue.js 3 + Nuxt.js + Nuxt UI
 - **Backend**: Go + Gin Framework + GORM
 - **Database**: PostgreSQL 15
 - **File Storage**: MinIO (S3-compatible)
-- **Orchestrazione**: Kubernetes
-- **Containerizzazione**: Docker
+- **Orchestration**: Kubernetes
+- **Containerization**: Docker
 
-### Struttura dei Servizi
+### Service Structure
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -58,24 +58,24 @@ cd Thothix
                        └─────────────────┘
 ```
 
-### Funzionalità Principali
+### Main Features
 
-- 💼 **Gestione Progetti**: Creazione e amministrazione progetti aziendali
-- 👥 **Chat di Gruppo**: Canali pubblici e privati per progetti
-- 💬 **Messaggi 1:1**: Conversazioni private tra utenti
-- 📁 **Condivisione File**: Upload e condivisione documenti tramite MinIO
-- 🔐 **Gestione Utenti**: Sistema di autenticazione e autorizzazione
-- 📱 **Responsive**: Interfaccia ottimizzata per desktop e mobile
+- 💼 **Project Management**: Creation and administration of enterprise projects
+- 👥 **Group Chats**: Public and private channels for projects
+- 💬 **1:1 Messages**: Private conversations between users
+- 📁 **File Sharing**: Document upload and sharing via MinIO
+- 🔐 **User Management**: Authentication and authorization system
+- 📱 **Responsive**: Interface optimized for desktop and mobile
 
-## 🚀 Prerequisiti
+## 🚀 Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) (versione 20.10+)
-- [Docker Compose](https://docs.docker.com/compose/install/) (versione 2.0+)
-- [Kubernetes](https://kubernetes.io/docs/setup/) (per deployment)
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) (per gestione K8s)
+- [Docker](https://docs.docker.com/get-docker/) (version 20.10+)
+- [Docker Compose](https://docs.docker.com/compose/install/) (version 2.0+)
+- [Kubernetes](https://kubernetes.io/docs/setup/) (for deployment)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) (for K8s management)
 - Git
 
-### Verifica installazione
+### Installation Verification
 
 ```bash
 docker --version
@@ -83,53 +83,53 @@ docker-compose --version
 kubectl version --client
 ```
 
-## 🐳 Avvio Rapido con Docker
+## 🐳 Quick Start with Docker
 
-### 1. Clone del repository
+### 1. Repository Clone
 
 ```bash
 git clone <repository-url>
 cd Thothix
 ```
 
-### 2. Configurazione ambiente
+### 2. Environment Configuration
 
 ```bash
-# Copia e configura le variabili d'ambiente
+# Copy and configure environment variables
 cp .env.example .env
 notepad .env
 ```
 
-### 3. Avvio completo dell'stack
+### 3. Start the complete stack
 
 ```bash
-# Avvia tutti i servizi
+# Start all services
 docker-compose up -d --build
 
-# Verifica che tutti i container siano attivi
+# Verify all containers are running
 docker-compose ps
 ```
 
-### 4. Inizializzazione database
+### 4. Database initialization
 
 ```bash
-# Esegui le migrazioni del database
+# Run database migrations
 docker-compose exec thothix-api go run cmd/migrate/main.go
 
-# Carica dati di esempio (opzionale)
+# Load sample data (optional)
 docker-compose exec thothix-api go run cmd/seed/main.go
 ```
 
-### 5. Accesso ai servizi
+### 5. Access services
 
-| Servizio | URL | Credenziali |
+| Service | URL | Credentials |
 |----------|-----|-------------|
 | **API Swagger** | <http://localhost:30000/swagger/index.html> | - |
 | **Thothix Web** | <http://localhost:30001> | - |
 | **MinIO Console** | <http://localhost:30002> | admin/password123 |
 | **pgAdmin** | <http://localhost:5432> | postgres/@Admin123 |
 
-## ⚙️ Configurazione Docker
+## ⚙️ Docker Configuration
 
 ### docker-compose.yml
 
@@ -388,62 +388,62 @@ docker-compose up -d thothix-postgres
 
 ### Utility Scripts
 
-Il progetto include script per verificare facilmente l'allineamento del database con i modelli Go:
+The project includes scripts to easily verify database alignment with Go models:
 
 #### Windows (cmd/PowerShell)
 
 ```cmd
-# Verifica allineamento BaseModel (tutte le tabelle dovrebbero avere 5 colonne)
+# Verify BaseModel alignment (all tables should have 5 columns)
 scripts\db-verify.bat check-basemodel
 
-# Lista tutte le tabelle
+# List all tables
 scripts\db-verify.bat list-tables
 
-# Controlla struttura di una tabella specifica
+# Check structure of a specific table
 scripts\db-verify.bat check-table users
 
-# Trova tabelle che mancano di un campo specifico
+# Find tables missing a specific field
 scripts\db-verify.bat missing-field updated_by
 
-# Trova tabelle che hanno un campo specifico
+# Find tables that have a specific field
 scripts\db-verify.bat has-field system_role
 
-# Connetti al database interattivamente
+# Connect to database interactively
 scripts\db-verify.bat connect
 
-# Stato del database
+# Database status
 scripts\db-verify.bat status
 ```
 
 #### Linux/MacOS (bash)
 
 ```bash
-# Stesso utilizzo ma con estensione .sh
+# Same usage but with .sh extension
 chmod +x scripts/db-verify.sh
 ./scripts/db-verify.sh check-basemodel
 ```
 
-### Comandi SQL Manuali
+### Manual SQL Commands
 
-Per eseguire comandi SQL direttamente:
+To execute SQL commands directly:
 
 ```bash
-# Connessione diretta al database
+# Direct database connection
 docker-compose exec postgres psql -U postgres -d thothix-db
 
-# Esecuzione comando singolo
+# Execute single command
 docker-compose exec postgres psql -U postgres -d thothix-db -c "SELECT version();"
 ```
 
-Per più dettagli sui comandi di verifica, consulta `DB_MIGRATION.md`.
+For more details on verification commands, see `DB_MIGRATION.md`.
 
-## 💻 Sviluppo
+## 💻 Development
 
-### Struttura del progetto
+### Project Structure
 
 ```
 thothix/
-├── backend/                 # API Go + Gin
+├── backend/                 # Go API + Gin
 │   ├── cmd/                # Entry points
 │   ├── internal/           # Business logic
 │   ├── pkg/               # Shared packages
@@ -459,102 +459,102 @@ thothix/
 └── README.md
 ```
 
-### Hot reload
+### Hot Reload
 
-- **Frontend**: Nuxt con hot reload automatico
-- **Backend**: Air per auto-restart del server Go
-- **Database**: Persiste attraverso volumi Docker
+- **Frontend**: Nuxt with automatic hot reload
+- **Backend**: Air for Go server auto-restart
+- **Database**: Persists through Docker volumes
 
 ### Testing
 
 ```bash
-# Test Go backend
+# Go backend tests
 docker-compose exec thothix-api go test ./...
 
-# Test frontend
+# Frontend tests
 docker-compose exec thothix-web npm run test
 
-# Test di integrazione
+# Integration tests
 docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 ```
 
 ## 📡 API Reference
 
-L'API REST è documentata con Swagger UI e disponibile all'indirizzo: `http://localhost:30000/swagger/index.html`
+The REST API is documented with Swagger UI and available at: `http://localhost:30000/swagger/index.html`
 
-### Sistema di Ruoli e Permessi (RBAC)
+### Role-Based Access Control (RBAC) System
 
-Thothix implementa un sistema di controllo accessi basato su ruoli (RBAC) semplificato:
+Thothix implements a simplified role-based access control (RBAC) system:
 
-#### Ruoli Disponibili:
-- **Admin**: Può gestire tutto il sistema
-- **Manager**: Può gestire tutto tranne la gestione degli utenti  
-- **User**: Può partecipare ai progetti e canali assegnati, creare chat 1:1
-- **External**: Può solo partecipare ai canali pubblici
+#### Available Roles:
+- **Admin**: Can manage the entire system
+- **Manager**: Can manage everything except user management  
+- **User**: Can participate in assigned projects and channels, create 1:1 chats
+- **External**: Can only participate in public channels
 
-#### Strategia Canali Pubblici/Privati:
-- **Canali Pubblici**: Nessun membro esplicito nella tabella `channel_members`
-- **Canali Privati**: Almeno un membro nella tabella `channel_members`
+#### Public/Private Channel Strategy:
+- **Public Channels**: No explicit members in the `channel_members` table
+- **Private Channels**: At least one member in the `channel_members` table
 
-Per maggiori dettagli consultare: [`backend/RBAC_SIMPLIFIED.md`](backend/RBAC_SIMPLIFIED.md)
+For more details see: [`backend/RBAC_SIMPLIFIED.md`](backend/RBAC_SIMPLIFIED.md)
 
-### Endpoint Principali:
+### Main Endpoints:
 
-#### Autenticazione
-- `POST /api/v1/auth/sync` - Sincronizza utente con Clerk
-- `GET /api/v1/auth/me` - Informazioni utente corrente
+#### Authentication
+- `POST /api/v1/auth/sync` - Sync user with Clerk
+- `GET /api/v1/auth/me` - Current user information
 
-#### Progetti
-- `GET /api/v1/projects` - Lista progetti
-- `POST /api/v1/projects` - Crea progetto (Manager/Admin)
-- `GET /api/v1/projects/{id}` - Dettagli progetto
+#### Projects
+- `GET /api/v1/projects` - List projects
+- `POST /api/v1/projects` - Create project (Manager/Admin)
+- `GET /api/v1/projects/{id}` - Project details
 
-#### Canali
-- `GET /api/v1/channels` - Lista canali accessibili
-- `POST /api/v1/channels` - Crea canale (Manager/Admin)
-- `POST /api/v1/channels/{id}/join` - Unisciti a canale pubblico
+#### Channels
+- `GET /api/v1/channels` - List accessible channels
+- `POST /api/v1/channels` - Create channel (Manager/Admin)
+- `POST /api/v1/channels/{id}/join` - Join public channel
 
-#### Messaggi
-- `GET /api/v1/channels/{id}/messages` - Messaggi del canale
-- `POST /api/v1/channels/{id}/messages` - Invia messaggio
-- `POST /api/v1/messages/direct` - Messaggio diretto 1:1
+#### Messages
+- `GET /api/v1/channels/{id}/messages` - Channel messages
+- `POST /api/v1/channels/{id}/messages` - Send message
+- `POST /api/v1/messages/direct` - Direct message 1:1
 
-#### Gestione Ruoli (Solo Admin)
-- `POST /api/v1/roles` - Assegna ruolo
-- `DELETE /api/v1/roles/{roleId}` - Revoca ruolo
-
----
-
-## 🤝 Contribuire
-
-1. Fai fork del repository
-2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
-3. Committa le modifiche (`git commit -m 'Add some AmazingFeature'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Apri una Pull Request
+#### Role Management (Admin Only)
+- `POST /api/v1/roles` - Assign role
+- `DELETE /api/v1/roles/{roleId}` - Revoke role
 
 ---
 
-## 📄 Licenza
+## 🤝 Contributing
 
-Questo progetto è distribuito sotto licenza MIT. Vedi `LICENSE` per maggiori informazioni.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
 ## 👥 Team
 
-- **Diego** - [@diego81b](https://github.com/diego81b) - Sviluppo iniziale e architettura
+- **Diego** - [@diego81b](https://github.com/diego81b) - Initial development and architecture
 
 ## 📚 Roadmap
 
-- [x] Setup base architettura
-- [ ] Autenticazione JWT
-- [ ] Chat 1:1
-- [ ] Chat di gruppo
-- [ ] Gestione progetti
-- [ ] Upload file
-- [ ] Notifiche real-time
+- [x] Base architecture setup
+- [ ] JWT Authentication
+- [ ] 1:1 Chat
+- [ ] Group chat
+- [ ] Project management
+- [ ] File upload
+- [ ] Real-time notifications
 - [ ] Mobile app
 - [ ] CI/CD pipeline
 
-Per contribuire al progetto, consulta la [guida per sviluppatori](./docs/CONTRIBUTING.md).
+To contribute to the project, see the [developer guide](./docs/CONTRIBUTING.md).

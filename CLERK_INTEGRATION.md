@@ -2,9 +2,9 @@
 
 ## Overview
 
-Thothix integra con Clerk per gestire l'autenticazione utenti in modo sicuro e scalabile. Questa guida spiega come configurare e utilizzare l'integrazione.
+Thothix integrates with Clerk to manage user authentication securely and scalably. This guide explains how to configure and use the integration.
 
-## Architettura di Autenticazione
+## Authentication Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -29,54 +29,54 @@ Thothix integra con Clerk per gestire l'autenticazione utenti in modo sicuro e s
         │◀───────────────────────│                        │
 ```
 
-## Configurazione Clerk
+## Clerk Configuration
 
-### 1. Setup Account Clerk
+### 1. Clerk Account Setup
 
-1. Crea un account su [clerk.com](https://clerk.com)
-2. Crea una nuova applicazione
-3. Configura i provider di autenticazione (Email, Google, etc.)
+1. Create an account at [clerk.com](https://clerk.com)
+2. Create a new application
+3. Configure authentication providers (Email, Google, etc.)
 
-### 2. Ottieni le Chiavi API
+### 2. Get API Keys
 
 ```bash
-# Da Clerk Dashboard → API Keys
+# From Clerk Dashboard → API Keys
 CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 ```
 
-### 3. Configurazione Environment Variables
+### 3. Environment Variables Configuration
 
 ```bash
 # .env file
 CLERK_SECRET_KEY=sk_test_your_secret_key_here
 ```
 
-## Configurazione Backend
+## Backend Configuration
 
-### 1. Middleware di Autenticazione
+### 1. Authentication Middleware
 
-Il middleware `ClerkAuth` verifica automaticamente i token JWT:
+The `ClerkAuth` middleware automatically verifies JWT tokens:
 
 ```go
-// Configurazione automatica via environment
+// Automatic configuration via environment
 protected.Use(middleware.ClerkAuth(cfg.ClerkSecretKey))
 ```
 
-#### Come Funziona il Middleware
+#### How the Middleware Works
 
-1. **Estrazione Token**: Estrae il JWT dall'header `Authorization: Bearer <token>`
-2. **Verifica con Clerk**: Chiama l'API Clerk `https://api.clerk.com/v1/users/me`
-3. **Validazione**: Verifica che l'utente abbia ID ed email validi
-4. **Context Setup**: Imposta nel context Gin:
-   - `clerk_user_id` - ID utente Clerk
-   - `clerk_email` - Email principale  
-   - `clerk_first_name` - Nome
-   - `clerk_last_name` - Cognome
+1. **Token Extraction**: Extracts JWT from `Authorization: Bearer <token>` header
+2. **Clerk Verification**: Calls Clerk API `https://api.clerk.com/v1/users/me`
+3. **Validation**: Verifies user has valid ID and email
+4. **Context Setup**: Sets in Gin context:
+   - `clerk_user_id` - Clerk user ID
+   - `clerk_email` - Primary email  
+   - `clerk_first_name` - First name
+   - `clerk_last_name` - Last name
    - `clerk_image_url` - Avatar URL
-   - `user_id` - Per i hook BaseModel
+   - `user_id` - For BaseModel hooks
 
-#### Struttura Dati Clerk
+#### Clerk Data Structure
 
 ```go
 type ClerkUser struct {
@@ -86,32 +86,34 @@ type ClerkUser struct {
     LastName             *string                `json:"last_name"`
     ImageURL             string                 `json:"image_url"`
     PrimaryEmailAddress  *ClerkEmailAddress     `json:"primary_email_address"`
-    // Altri campi...
+    // Other fields...
 }
 ```
 
-### 2. Endpoint Disponibili
+### 2. Available Endpoints
 
-#### Autenticazione
-- `POST /api/v1/auth/sync` - Sincronizza utente da Clerk al DB locale
-- `GET /api/v1/auth/me` - Ottieni utente corrente
-- `POST /api/v1/auth/webhooks/clerk` - Webhook per sincronizzazione automatica
+#### Authentication
 
-#### Flusso di Autenticazione
-1. **Frontend**: Autentica con Clerk e ottiene JWT
-2. **Frontend**: Invia richiesta con header `Authorization: Bearer <jwt>`
-3. **Backend**: Middleware verifica JWT con Clerk
-4. **Backend**: Estrae info utente e le mette nel context
-5. **Backend**: Esegue business logic con utente autenticato
+- `POST /api/v1/auth/sync` - Sync user from Clerk to local DB
+- `GET /api/v1/auth/me` - Get current user
+- `POST /api/v1/auth/webhooks/clerk` - Webhook for automatic sync
 
-## Sincronizzazione Utenti
+#### Authentication Flow
 
-### Sincronizzazione Manuale
+1. **Frontend**: Authenticates with Clerk and obtains JWT
+2. **Frontend**: Sends request with `Authorization: Bearer <jwt>` header
+3. **Backend**: Middleware verifies JWT with Clerk
+4. **Backend**: Extracts user info and puts it in context
+5. **Backend**: Executes business logic with authenticated user
 
-Il frontend deve chiamare `/api/v1/auth/sync` dopo il login:
+## User Synchronization
+
+### Manual Synchronization
+
+The frontend must call `/api/v1/auth/sync` after login:
 
 ```javascript
-// Frontend (dopo login con Clerk)
+// Frontend (after Clerk login)
 const response = await fetch('/api/v1/auth/sync', {
   method: 'POST',
   headers: {
@@ -121,62 +123,63 @@ const response = await fetch('/api/v1/auth/sync', {
 });
 ```
 
-### Sincronizzazione Automatica (Webhook)
+### Automatic Synchronization (Webhook)
 
-Configura webhook in Clerk Dashboard:
+Configure webhook in Clerk Dashboard:
 
 1. **URL**: `https://your-domain.com/api/v1/auth/webhooks/clerk`
-2. **Eventi**: 
+2. **Events**: 
    - `user.created`
    - `user.updated`
    - `user.deleted`
 
-Il sistema sincronizzerà automaticamente:
-- ✅ Creazione nuovi utenti
-- ✅ Aggiornamento dati esistenti (email, nome, avatar)
-- ✅ Cancellazione utenti
+The system will automatically sync:
 
-## Mapping Dati Utente
+- ✅ New user creation
+- ✅ Existing user data updates (email, name, avatar)
+- ✅ User deletion
 
-### Da Clerk a Thothix
+## User Data Mapping
 
-| Campo Clerk | Campo Thothix | Note |
-|-------------|---------------|------|
-| `id` | `id` | Chiave primaria |
-| `primary_email_address.email_address` | `email` | Email principale |
-| `first_name + last_name` | `name` | Nome completo |
-| `image_url` | `avatar_url` | Avatar utente |
-| `username` | `name` | Fallback se nome mancante |
-| (default) | `system_role` | Sempre `user` per nuovi utenti |
+### From Clerk to Thothix
 
-### Gestione Ruoli
+| Clerk Field | Thothix Field | Notes |
+|-------------|---------------|-------|
+| `id` | `id` | Primary key |
+| `primary_email_address.email_address` | `email` | Primary email |
+| `first_name + last_name` | `name` | Full name |
+| `image_url` | `avatar_url` | User avatar |
+| `username` | `name` | Fallback if name missing |
+| (default) | `system_role` | Always `user` for new users |
 
-- **Nuovi utenti**: Ruolo `user` di default
-- **Admin**: Deve essere assegnato manualmente via API
-- **Ruoli progetto**: Gestiti separatamente in `project_members`
+### Role Management
 
-## Testing dell'Integrazione
+- **New users**: Default `user` role
+- **Admin**: Must be assigned manually via API
+- **Project roles**: Managed separately in `project_members`
 
-### 1. Test Manuale
+## Integration Testing
+
+### 1. Manual Testing
 
 ```bash
-# 1. Ottieni token da Clerk (frontend)
+# 1. Get token from Clerk (frontend)
 TOKEN="your_clerk_jwt_token"
 
-# 2. Test sincronizzazione
+# 2. Test synchronization
 curl -X POST "http://localhost:30000/api/v1/auth/sync" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json"
 
-# 3. Test ottenimento utente corrente
+# 3. Test get current user
 curl -X GET "http://localhost:30000/api/v1/auth/me" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-### 2. Test Webhook
+### 2. Webhook Testing
 
 ```bash
-# Simula webhook di creazione utente
+# Simulate user creation webhook
 curl -X POST "http://localhost:30000/api/v1/auth/webhooks/clerk" \
   -H "Content-Type: application/json" \
   -d '{
@@ -193,104 +196,108 @@ curl -X POST "http://localhost:30000/api/v1/auth/webhooks/clerk" \
   }'
 ```
 
-## Debug e Troubleshooting
+## Debug and Troubleshooting
 
-### Log di Debug
+### Debug Logs
 
-Per abilitare i log di debug dell'autenticazione:
+To enable authentication debug logs:
 
 ```bash
-# Nel docker-compose.yml o variabili ambiente
+# In docker-compose.yml or environment variables
 DEBUG=true
 LOG_LEVEL=debug
 GIN_MODE=debug
 ```
 
-### Problemi Comuni
+### Common Issues
 
-#### 1. Token JWT Invalido
+#### 1. Invalid JWT Token
 
-**Errore**: `Invalid token: clerk verification failed with status: 401`
+**Error**: `Invalid token: clerk verification failed with status: 401`
 
-**Soluzioni**:
-- Verifica che `CLERK_SECRET_KEY` sia configurata correttamente
-- Controlla che il token non sia scaduto (il frontend deve fare refresh)
-- Assicurati di usare il token corretto per l'environment (development/production)
+**Solutions**:
 
-#### 2. User ID Non Trovato
+- Verify that `CLERK_SECRET_KEY` is configured correctly
+- Check that the token hasn't expired (frontend must refresh)
+- Make sure you're using the correct token for the environment (development/production)
 
-**Errore**: `Clerk user ID not found`
+#### 2. User ID Not Found
 
-**Soluzioni**:
-- Verifica che il middleware `ClerkAuth` sia configurato correttamente
-- Controlla che l'endpoint sia protetto dal middleware
-- Assicurati che il token sia valido
+**Error**: `Clerk user ID not found`
 
-#### 3. Problemi di Sincronizzazione
+**Solutions**:
 
-**Errore**: Utente non creato nel database locale
+- Verify that the `ClerkAuth` middleware is configured correctly
+- Check that the endpoint is protected by the middleware
+- Make sure the token is valid
 
-**Soluzioni**:
-- Chiama `/api/v1/auth/sync` dopo ogni login
-- Verifica la connessione al database
-- Controlla i log per errori di database
+#### 3. Synchronization Issues
 
-#### 4. Webhook Non Funziona
+**Error**: User not created in local database
 
-**Problemi**: Sincronizzazione automatica non avviene
+**Solutions**:
 
-**Soluzioni**:
-- Verifica URL webhook in Clerk Dashboard
-- Controlla che l'endpoint sia pubblico (non protetto da auth)
-- Verifica eventi configurati: `user.created`, `user.updated`, `user.deleted`
+- Call `/api/v1/auth/sync` after each login
+- Verify database connection
+- Check logs for database errors
 
-### Testare l'Integrazione
+#### 4. Webhook Not Working
+
+**Issues**: Automatic synchronization doesn't happen
+
+**Solutions**:
+
+- Verify webhook URL in Clerk Dashboard
+- Check that the endpoint is public (not protected by auth)
+- Verify configured events: `user.created`, `user.updated`, `user.deleted`
+
+### Testing the Integration
 
 ```bash
-# 1. Test del middleware di autenticazione
+# 1. Test authentication middleware
 curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
      http://localhost:30000/api/v1/auth/me
 
-# 2. Test sincronizzazione manuale
+# 2. Test manual synchronization
 curl -X POST \
      -H "Authorization: Bearer YOUR_JWT_TOKEN" \
      -H "Content-Type: application/json" \
      http://localhost:30000/api/v1/auth/sync
 
-# 3. Test webhook (simulazione)
+# 3. Test webhook (simulation)
 curl -X POST \
      -H "Content-Type: application/json" \
      -d '{"type":"user.created","data":{"id":"user_123","email_addresses":[{"email_address":"test@example.com"}]}}' \
      http://localhost:30000/api/v1/auth/webhooks/clerk
 ```
 
-### Monitoraggio
+### Monitoring
 
-Per monitorare l'integrazione in produzione:
+To monitor the integration in production:
 
 ```bash
-# Verifica utenti sincronizzati
+# Verify synchronized users
 docker-compose exec postgres psql -U postgres -d thothix-db \
   -c "SELECT id, email, name, created_at FROM users ORDER BY created_at DESC LIMIT 10;"
 
-# Verifica log dell'applicazione
+# Verify application logs
 docker-compose logs thothix-api --tail=50 --follow
 ```
 
-## Sicurezza
+## Security
 
 ### Best Practices
 
-- ✅ Mai esporre `CLERK_SECRET_KEY` nel frontend
-- ✅ Usa HTTPS in produzione
-- ✅ Valida sempre i token dal backend
-- ✅ Implementa rate limiting
-- ✅ Monitora webhook per attacchi
+- ✅ Never expose `CLERK_SECRET_KEY` in frontend
+- ✅ Use HTTPS in production
+- ✅ Always validate tokens from backend
+- ✅ Implement rate limiting
+- ✅ Monitor webhooks for attacks
 
-### Configurazione Produzione
+### Production Configuration
 
 ```bash
-# Variabili di produzione
+# Production variables
 CLERK_SECRET_KEY=sk_live_your_live_secret_key
 ENVIRONMENT=production
 GIN_MODE=release
@@ -361,13 +368,13 @@ export const useAuth = () => {
 }
 ```
 
-## Conclusione
+## Conclusion
 
-L'integrazione con Clerk fornisce:
-- ✅ Autenticazione sicura e scalabile
-- ✅ Sincronizzazione automatica utenti
-- ✅ Gestione sessioni robusta
-- ✅ Support multi-provider (Google, GitHub, etc.)
-- ✅ UI components pre-built per il frontend
+The Clerk integration provides:
+- ✅ Secure and scalable authentication
+- ✅ Automatic user synchronization
+- ✅ Robust session management
+- ✅ Multi-provider support (Google, GitHub, etc.)
+- ✅ Pre-built UI components for frontend
 
-Per assistenza tecnica, consulta la [documentazione Clerk](https://clerk.com/docs) o il team di sviluppo.
+For technical support, see the [Clerk documentation](https://clerk.com/docs) or contact the development team.

@@ -1,51 +1,51 @@
-# Backend di Thothix - Messaggistica Aziendale
+# Thothix Backend - Enterprise Messaging Platform
 
-Questo è il backend della piattaforma di messaggistica aziendale Thothix, sviluppato in Go con il framework Gin e integrazione con Clerk per l'autenticazione.
+This is the backend for the Thothix enterprise messaging platform, developed in Go with the Gin framework and Clerk integration for authentication.
 
-## Modelli di Dati
+## Data Models
 
-Il backend utilizza i seguenti modelli principali:
+The backend uses the following main models:
 
-- **User**: Utenti della piattaforma (sincronizzati con Clerk)
-- **Project**: Progetti aziendali 
-- **ProjectMember**: Membri assegnati ai progetti con ruoli
-- **Channel**: Canali di comunicazione all'interno dei progetti
-- **ChannelMember**: Membri dei canali
-- **Message**: Messaggi (in canali o diretti tra utenti)
-- **File**: File condivisi nei progetti
+- **User**: Platform users (synchronized with Clerk)
+- **Project**: Enterprise projects 
+- **ProjectMember**: Members assigned to projects with roles
+- **Channel**: Communication channels within projects
+- **ChannelMember**: Channel members
+- **Message**: Messages (in channels or direct between users)
+- **File**: Shared files in projects
 
-## Struttura del progetto
+## Project Structure
 
 ```
 backend/
 ├── internal/
-│   ├── config/         # Configurazione applicazione
-│   ├── database/       # Setup e migrazioni database
-│   ├── handlers/       # Handler HTTP per le API
-│   ├── middleware/     # Middleware personalizzati
-│   ├── models/         # Modelli di dati
-│   └── router/         # Setup delle rotte
-├── main.go            # Entry point dell'applicazione
-├── go.mod            # Dipendenze Go
-├── Dockerfile        # Configurazione Docker
-└── .env.example      # Template variabili d'ambiente
+│   ├── config/         # Application configuration
+│   ├── database/       # Database setup and migrations
+│   ├── handlers/       # HTTP handlers for APIs
+│   ├── middleware/     # Custom middleware
+│   ├── models/         # Data models
+│   └── router/         # Route setup
+├── main.go            # Application entry point
+├── go.mod            # Go dependencies
+├── Dockerfile        # Docker configuration
+└── .env.example      # Environment variables template
 ```
 
-## Avvio veloce
+## Quick Start
 
-1. **Configura le variabili d'ambiente**:
+1. **Configure environment variables**:
    ```bash
    cp .env.example .env
-   # Modifica .env con le tue chiavi Clerk
+   # Edit .env with your Clerk keys
    ```
 
-2. **Avvia con Docker**:
+2. **Start with Docker**:
    ```bash
    cd ..
    docker-compose up -d
    ```
 
-3. **Verifica che funzioni**:
+3. **Verify it's working**:
    ```bash
    curl http://localhost:30000/health
    ```
@@ -60,38 +60,38 @@ backend/
 - **Channels**: `GET /api/v1/channels` (TODO)
 - **Messages**: `GET /api/v1/channels/{id}/messages` (TODO)
 
-## Sviluppo
+## Development
 
-Per sviluppare in locale:
+For local development:
 
 ```bash
-# Installa le dipendenze
+# Install dependencies
 go mod tidy
 
-# Genera documentazione Swagger
+# Generate Swagger documentation
 go install github.com/swaggo/swag/cmd/swag@latest
 swag init
 
-# Avvia il server
+# Start the server
 go run main.go
 ```
 
-## Autenticazione con Clerk
+## Clerk Authentication
 
-Il backend utilizza Clerk per l'autenticazione. Gli utenti vengono sincronizzati automaticamente nel database locale al primo accesso.
+The backend uses Clerk for authentication. Users are automatically synchronized to the local database on first access.
 
-Flow di autenticazione:
-1. L'utente si autentica tramite Clerk nel frontend
-2. Il frontend invia il token Clerk nelle richieste API
-3. Il middleware `ClerkAuth` verifica il token con Clerk
-4. L'endpoint `/auth/sync` crea/aggiorna l'utente nel database locale
+Authentication flow:
+1. User authenticates via Clerk in the frontend
+2. Frontend sends Clerk token in API requests
+3. `ClerkAuth` middleware verifies token with Clerk
+4. `/auth/sync` endpoint creates/updates user in local database
 
 ## TODO
 
-- [ ] Implementare handlers per progetti
-- [ ] Implementare handlers per canali  
-- [ ] Implementare handlers per messaggi
-- [ ] Aggiungere WebSocket per real-time
-- [ ] Aggiungere supporto per file upload (MinIO)
-- [ ] Aggiungere test unitari
-- [ ] Migliorare documentazione API
+- [ ] Implement project handlers
+- [ ] Implement channel handlers  
+- [ ] Implement message handlers
+- [ ] Add WebSocket for real-time
+- [ ] Add file upload support (MinIO)
+- [ ] Add unit tests
+- [ ] Improve API documentation

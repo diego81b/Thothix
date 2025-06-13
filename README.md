@@ -1,4 +1,4 @@
-# Thothix - Enterprise Messaging Platform
+# Thothix Messaging Platform
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-diego81b%2FThothix-blue?style=flat&logo=github)](https://github.com/diego81b/Thothix)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat&logo=docker)](https://docker.com)

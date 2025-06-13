@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"thothix-backend/internal/models"
 
@@ -172,11 +173,23 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 
 	switch eventType {
 	case "user.created":
-		h.handleUserCreated(data)
+		if err := h.handleUserCreated(data); err != nil {
+			log.Printf("Error handling user.created webhook: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+			return
+		}
 	case "user.updated":
-		h.handleUserUpdated(data)
+		if err := h.handleUserUpdated(data); err != nil {
+			log.Printf("Error handling user.updated webhook: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+			return
+		}
 	case "user.deleted":
-		h.handleUserDeleted(data)
+		if err := h.handleUserDeleted(data); err != nil {
+			log.Printf("Error handling user.deleted webhook: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+			return
+		}
 	default:
 		// Ignora eventi non gestiti
 	}

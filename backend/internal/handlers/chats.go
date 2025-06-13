@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"thothix-backend/internal/models"
 
@@ -76,7 +77,9 @@ func (h *ChannelHandler) GetChats(c *gin.Context) {
 
 	// Load IsPrivate field for each channel
 	for i := range channels {
-		channels[i].LoadIsPrivate(h.db)
+		if err := channels[i].LoadIsPrivate(h.db); err != nil {
+			log.Printf("Error loading IsPrivate for channel %s: %v", channels[i].ID, err)
+		}
 	}
 
 	c.JSON(http.StatusOK, channels)
@@ -147,7 +150,9 @@ func (h *ChannelHandler) CreateChat(c *gin.Context) {
 
 	// Load project relation and IsPrivate field for response
 	h.db.Preload("Project").First(&channel, channel.ID)
-	channel.LoadIsPrivate(h.db)
+	if err := channel.LoadIsPrivate(h.db); err != nil {
+		log.Printf("Error loading IsPrivate for channel %s: %v", channel.ID, err)
+	}
 
 	c.JSON(http.StatusCreated, channel)
 }

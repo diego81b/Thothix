@@ -93,21 +93,21 @@ jobs:
         cache-to: type=gha,mode=max
   lint-and-security:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.23'
-        
+
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3
       with:
         version: latest
         working-directory: ./backend
-        
+
     - name: Run gosec security scanner
       uses: securecodewarrior/github-action-gosec@master
       with:
@@ -116,7 +116,7 @@ jobs:
 
   docker-compose-test:
     runs-on: ubuntu-latest
-    needs: [build-docker, lint-and-security]
+    needs: [ build-docker, lint-and-security ]
 
     steps:
     - uses: actions/checkout@v4
@@ -140,19 +140,19 @@ jobs:
         docker-compose up -d --build
         echo "Waiting for services to be ready..."
         sleep 45
-        
+
         echo "Checking service status:"
         docker-compose ps
-        
+
         echo "Checking API logs:"
         docker-compose logs thothix-api
-        
+
         echo "Testing health endpoint:"
         curl -f http://localhost:30000/health || {
           echo "Health check failed, showing logs:"
           docker-compose logs
           exit 1
         }
-        
+
         echo "All tests passed!"
         docker-compose down

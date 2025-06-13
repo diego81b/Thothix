@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/golangci-lint.json
 # golangci-lint configuration for Thothix backend
 # See https://golangci-lint.run/usage/configuration/
 
@@ -48,6 +49,18 @@ linters-settings:
       - name: exported
         disabled: false
 
+  gofmt:
+    simplify: true
+
+  errcheck:
+    exclude-functions:
+      - fmt.Fprintf
+
+  staticcheck:
+    checks: ["all"]
+  govet:
+    enable-all: true
+
 issues:
   exclude-rules:
     # Exclude some linters from running on test files
@@ -56,6 +69,7 @@ issues:
         - gosec
         - gocritic
         - gocyclo
+        - errcheck
     # Exclude specific issues in generated files
     - path: docs/
       linters:

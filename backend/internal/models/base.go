@@ -12,6 +12,7 @@ type BaseModel struct {
 	ID        string    `gorm:"primaryKey" json:"id"`
 	CreatedBy string    `json:"created_by"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedBy string    `json:"updated_by"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
@@ -35,9 +36,18 @@ func (b *BaseModel) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// BeforeUpdate hook to update timestamps
+// BeforeUpdate hook to update timestamps and updater
 func (b *BaseModel) BeforeUpdate(tx *gorm.DB) error {
 	b.UpdatedAt = time.Now()
+	
+	// Set UpdatedBy from context if not already set
+	if b.UpdatedBy == "" {
+		if userID := tx.Statement.Context.Value("user_id"); userID != nil {
+			if uid, ok := userID.(string); ok {
+				b.UpdatedBy = uid
+			}
+		}
+	}
 	return nil
 }
 

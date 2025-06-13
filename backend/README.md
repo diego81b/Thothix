@@ -1,18 +1,24 @@
-# Thothix Backend - Enterprise Messaging Platform
+# Thothix Backend
 
-This is the backend for the Thothix enterprise messaging platform, developed in Go with the Gin framework and Clerk integration for authentication.
+This directory contains the Go backend for the Thothix enterprise messaging platform.
 
-## Data Models
+> **Main Documentation**: See the [main README](../README.md) for complete setup instructions, Docker usage, and project overview.
 
-The backend uses the following main models:
+## Quick Backend Development
 
-- **User**: Platform users (synchronized with Clerk)
-- **Project**: Enterprise projects 
-- **ProjectMember**: Members assigned to projects with roles
-- **Channel**: Communication channels within projects
-- **ChannelMember**: Channel members
-- **Message**: Messages (in channels or direct between users)
-- **File**: Shared files in projects
+For backend-specific development:
+
+```bash
+# Install dependencies
+go mod tidy
+
+# Generate Swagger documentation
+go install github.com/swaggo/swag/cmd/swag@latest
+swag init
+
+# Start the server (requires database)
+go run main.go
+```
 
 ## Project Structure
 
@@ -25,73 +31,31 @@ backend/
 │   ├── middleware/     # Custom middleware
 │   ├── models/         # Data models
 │   └── router/         # Route setup
+├── docs/              # Generated Swagger documentation
 ├── main.go            # Application entry point
 ├── go.mod            # Go dependencies
-├── Dockerfile        # Docker configuration
-└── .env.example      # Environment variables template
+└── Dockerfile        # Docker configuration
 ```
 
-## Quick Start
+## Data Models
 
-1. **Configure environment variables**:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Clerk keys
-   ```
+- **User**: Platform users (synchronized with Clerk)
+- **Project**: Enterprise projects with members
+- **Channel**: Communication channels (public/private)
+- **Message**: Channel messages and direct messages
+- **File**: Shared files in projects
 
-2. **Start with Docker**:
-   ```bash
-   cd ..
-   docker-compose up -d
-   ```
+## Key Features
 
-3. **Verify it's working**:
-   ```bash
-   curl http://localhost:30000/health
-   ```
+- **Clerk Integration**: JWT authentication with user sync
+- **RBAC System**: Admin, Manager, User, External roles
+- **RESTful API**: Documented with Swagger/OpenAPI
+- **Docker Ready**: Multi-stage build with health checks
 
-## API Endpoints
+## API Documentation
 
-- **Health**: `GET /health`
-- **Swagger**: `GET /swagger/index.html`
-- **API**: `GET /api/v1/auth/sync`, `GET /api/v1/auth/me`
-- **Users**: `GET /api/v1/users`, `PUT /api/v1/users/me`
-- **Projects**: `GET /api/v1/projects` (TODO)
-- **Channels**: `GET /api/v1/channels` (TODO)
-- **Messages**: `GET /api/v1/channels/{id}/messages` (TODO)
+- **Swagger UI**: `http://localhost:30000/swagger/index.html`
+- **Health Check**: `GET /health`
+- **RBAC Details**: See [RBAC_SIMPLIFIED.md](RBAC_SIMPLIFIED.md)
 
-## Development
-
-For local development:
-
-```bash
-# Install dependencies
-go mod tidy
-
-# Generate Swagger documentation
-go install github.com/swaggo/swag/cmd/swag@latest
-swag init
-
-# Start the server
-go run main.go
-```
-
-## Clerk Authentication
-
-The backend uses Clerk for authentication. Users are automatically synchronized to the local database on first access.
-
-Authentication flow:
-1. User authenticates via Clerk in the frontend
-2. Frontend sends Clerk token in API requests
-3. `ClerkAuth` middleware verifies token with Clerk
-4. `/auth/sync` endpoint creates/updates user in local database
-
-## TODO
-
-- [ ] Implement project handlers
-- [ ] Implement channel handlers  
-- [ ] Implement message handlers
-- [ ] Add WebSocket for real-time
-- [ ] Add file upload support (MinIO)
-- [ ] Add unit tests
-- [ ] Improve API documentation
+For complete setup instructions, Docker usage, and deployment, see the [main project README](../README.md).

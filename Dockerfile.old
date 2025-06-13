@@ -1,0 +1,38 @@
+FROM golang:1.24-alpine AS builder
+
+# Installa git per go modules
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+# Copia go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copia il codice sorgente
+COPY . .
+
+# Build dell'applicazione
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+# Stage finale
+FROM alpine:latest
+
+# Installa ca-certificates per HTTPS
+RUN apk --no-cache add ca-certificates tzdata
+
+WORKDIR /app
+
+# Copia il binario dal builder stage
+COPY --from=builder /app/main .
+
+# Crea directory per i logs
+RUN mkdir -p /app/logs
+
+# Espone la porta
+EXPOSE 30000
+
+# Comando di avvio
+CMD ["./main"]

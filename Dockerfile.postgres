@@ -1,0 +1,24 @@
+# Dockerfile per PostgreSQL personalizzato per Thothix
+FROM postgres:17.5-alpine
+
+# Metadata dell'immagine
+LABEL org.opencontainers.image.title="Thothix PostgreSQL Database"
+LABEL org.opencontainers.image.description="Database PostgreSQL personalizzato per la piattaforma Thothix"
+LABEL org.opencontainers.image.version="17.5-thothix1.0"
+LABEL org.opencontainers.image.vendor="Thothix"
+LABEL org.opencontainers.image.authors="Thothix Team"
+LABEL org.opencontainers.image.source="https://github.com/thothix/thothix"
+LABEL org.opencontainers.image.documentation="https://docs.thothix.com"
+LABEL org.opencontainers.image.base.name="postgres:17.5-alpine"
+
+# Installazione di estensioni PostgreSQL utili (opzionale)
+RUN apk add --no-cache postgresql-contrib
+
+# Copia script di inizializzazione personalizzati
+COPY ./db-init/ /docker-entrypoint-initdb.d/
+
+# Impostazioni personalizzate PostgreSQL
+ENV POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C"
+
+# Esporre la porta standard
+EXPOSE 5432

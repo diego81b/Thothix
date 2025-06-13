@@ -28,8 +28,8 @@ func (c *Channel) LoadIsPrivate(db *gorm.DB) error {
 // swagger:model ChannelMember
 type ChannelMember struct {
 	BaseModel
-	ChannelID string  `json:"channel_id"`
 	Channel   Channel `gorm:"foreignKey:ChannelID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"channel,omitempty"`
-	UserID    string  `json:"user_id"`
 	User      User    `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user,omitempty"`
+	ChannelID string  `json:"channel_id"`
+	UserID    string  `json:"user_id"`
 }

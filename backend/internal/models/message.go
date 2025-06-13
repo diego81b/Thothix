@@ -17,9 +17,9 @@ type Message struct {
 // swagger:model File
 type File struct {
 	BaseModel
-	URL       string   `json:"url"`
-	MessageID *string  `json:"message_id,omitempty"`
 	Message   *Message `gorm:"foreignKey:MessageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"message,omitempty"`
-	ProjectID *string  `json:"project_id,omitempty"` // Optional, can be null for files in direct messages
 	Project   *Project `gorm:"foreignKey:ProjectID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"project,omitempty"`
+	MessageID *string  `json:"message_id,omitempty"`
+	ProjectID *string  `json:"project_id,omitempty"` // Optional, can be null for files in direct messages
+	URL       string   `json:"url"`
 }

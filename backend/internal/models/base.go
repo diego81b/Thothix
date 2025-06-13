@@ -9,11 +9,11 @@ import (
 
 // BaseModel provides common fields for all entities
 type BaseModel struct {
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	ID        string    `gorm:"primaryKey" json:"id"`
 	CreatedBy string    `json:"created_by"`
-	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedBy string    `json:"updated_by"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 // BeforeCreate hook to set ID, timestamps and creator automatically

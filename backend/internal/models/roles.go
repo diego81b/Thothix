@@ -94,11 +94,11 @@ var RolePermissions = map[RoleType][]Permission{
 // swagger:model UserRole
 type UserRole struct {
 	BaseModel
-	UserID       string   `json:"user_id"`
-	User         User     `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user,omitempty"`
-	Role         RoleType `json:"role"`
 	ResourceID   *string  `json:"resource_id,omitempty"`   // For project/channel specific roles (not used in simplified system)
 	ResourceType *string  `json:"resource_type,omitempty"` // "project", "channel", null for system roles (not used in simplified system)
+	User         User     `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user,omitempty"`
+	UserID       string   `json:"user_id"`
+	Role         RoleType `json:"role"`
 }
 
 // HasPermission checks if a role has a specific permission

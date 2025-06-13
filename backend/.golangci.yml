@@ -1,6 +1,5 @@
 # yaml-language-server: $schema=https://json.schemastore.org/golangci-lint.json
 # golangci-lint configuration for Thothix backend
-# See https://golangci-lint.run/usage/configuration/
 
 run:
   timeout: 5m
@@ -58,6 +57,7 @@ linters-settings:
 
   staticcheck:
     checks: ["all"]
+    
   govet:
     enable-all: true
 

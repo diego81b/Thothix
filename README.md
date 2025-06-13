@@ -100,6 +100,29 @@ cp .env.example .env
 notepad .env
 ```
 
+**Configure your `.env` file with secure credentials:**
+
+```bash
+# Database Configuration
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_DB=thothix-db
+
+# Clerk Authentication
+CLERK_SECRET_KEY=your_clerk_secret_key_here
+
+# Application Configuration
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_secure_password_here
+DB_NAME=thothix-db
+PORT=30000
+ENVIRONMENT=development
+```
+
+⚠️ **Security Note**: Never commit the `.env` file to version control. It's already included in `.gitignore`.
+
 ### 3. Start the complete stack
 
 ```bash

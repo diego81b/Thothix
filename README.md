@@ -1,6 +1,21 @@
 # Thothix - Messaggistica Aziendale
 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-diego81b%2FThothix-blue?style=flat&logo=github)](https://github.com/diego81b/Thothix)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat&logo=docker)](https://docker.com)
+[![Go](https://img.shields.io/badge/Go-1.23-blue?style=flat&logo=go)](https://golang.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=flat&logo=postgresql)](https://postgresql.org)
+
 Thothix è una piattaforma di messaggistica aziendale moderna che permette la gestione di progetti, chat di gruppo e conversazioni private 1:1. Costruita con architettura a microservizi containerizzata.
+
+## 🚀 Repository GitHub
+
+Il progetto è disponibile su GitHub: **[https://github.com/diego81b/Thothix](https://github.com/diego81b/Thothix)**
+
+```bash
+# Clona il repository
+git clone https://github.com/diego81b/Thothix.git
+cd Thothix
+```
 
 ## 📋 Indice
 
@@ -412,8 +427,70 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 
 ## 📡 API Reference
 
-TODO
+L'API REST è documentata con Swagger UI e disponibile all'indirizzo: `http://localhost:30000/swagger/index.html`
+
+### Sistema di Ruoli e Permessi (RBAC)
+
+Thothix implementa un sistema di controllo accessi basato su ruoli (RBAC) semplificato:
+
+#### Ruoli Disponibili:
+- **Admin**: Può gestire tutto il sistema
+- **Manager**: Può gestire tutto tranne la gestione degli utenti  
+- **User**: Può partecipare ai progetti e canali assegnati, creare chat 1:1
+- **External**: Può solo partecipare ai canali pubblici
+
+#### Strategia Canali Pubblici/Privati:
+- **Canali Pubblici**: Nessun membro esplicito nella tabella `channel_members`
+- **Canali Privati**: Almeno un membro nella tabella `channel_members`
+
+Per maggiori dettagli consultare: [`backend/RBAC_SIMPLIFIED.md`](backend/RBAC_SIMPLIFIED.md)
+
+### Endpoint Principali:
+
+#### Autenticazione
+- `POST /api/v1/auth/sync` - Sincronizza utente con Clerk
+- `GET /api/v1/auth/me` - Informazioni utente corrente
+
+#### Progetti
+- `GET /api/v1/projects` - Lista progetti
+- `POST /api/v1/projects` - Crea progetto (Manager/Admin)
+- `GET /api/v1/projects/{id}` - Dettagli progetto
+
+#### Canali
+- `GET /api/v1/channels` - Lista canali accessibili
+- `POST /api/v1/channels` - Crea canale (Manager/Admin)
+- `POST /api/v1/channels/{id}/join` - Unisciti a canale pubblico
+
+#### Messaggi
+- `GET /api/v1/channels/{id}/messages` - Messaggi del canale
+- `POST /api/v1/channels/{id}/messages` - Invia messaggio
+- `POST /api/v1/messages/direct` - Messaggio diretto 1:1
+
+#### Gestione Ruoli (Solo Admin)
+- `POST /api/v1/roles` - Assegna ruolo
+- `DELETE /api/v1/roles/{roleId}` - Revoca ruolo
+
 ---
+
+## 🤝 Contribuire
+
+1. Fai fork del repository
+2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
+3. Committa le modifiche (`git commit -m 'Add some AmazingFeature'`)
+4. Push al branch (`git push origin feature/AmazingFeature`)
+5. Apri una Pull Request
+
+---
+
+## 📄 Licenza
+
+Questo progetto è distribuito sotto licenza MIT. Vedi `LICENSE` per maggiori informazioni.
+
+---
+
+## 👥 Team
+
+- **Diego** - [@diego81b](https://github.com/diego81b) - Sviluppo iniziale e architettura
 
 ## 📚 Roadmap
 

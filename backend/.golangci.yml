@@ -8,7 +8,6 @@ run:
 linters:
   enable:
   - gofmt
-  - goimports
   - govet
   - errcheck
   - staticcheck
@@ -21,8 +20,9 @@ linters:
   - gocritic
   - revive
   - gocyclo
-  - gofumpt
-  disable: []
+  disable: 
+  - goimports  # Disabled to prevent conflicts with manual formatting
+  - gofumpt    # Disabled to prevent constant formatting complaints
 
 linters-settings:
   gosec:

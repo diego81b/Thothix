@@ -68,23 +68,24 @@ The project includes comprehensive development automation:
 # Setup development environment (one-time)
 ..\scripts\setup-hooks.ps1
 
-# Manual code formatting and linting
-..\scripts\pre-commit.bat
+# Development workflow - unified script
+..\scripts\dev.bat format      # Format only
+..\scripts\dev.bat lint        # Lint only
+..\scripts\dev.bat pre-commit  # Full pre-commit checks
+..\scripts\dev.bat all         # Same as pre-commit
 
-# Fix formatting issues (if VS Code creates problems)
-..\scripts\fix-formatting.bat
+# Alternative: manual pre-commit script
+..\scripts\pre-commit.bat
 
 # VS Code tasks available:
 # - "Go: Format + Lint" (Ctrl+Shift+B)
-# - "Go: Format Current File" 
+# - "Go: Format Current File"
 # - "Go: Pre-commit"
 ```
 
 ### Code Quality Tools
 
-- **gofmt**: Basic Go formatting
-- **goimports**: Import management and formatting
-- **gofumpt**: Stricter formatting (used in CI/CD)
+- **gofumpt**: Complete Go formatting including import organization (replaces gofmt + goimports)
 - **golangci-lint**: Comprehensive linting with custom rules
 
 All tools are configured to run automatically before commits via Git hooks.

@@ -33,6 +33,14 @@
 - ✅ **NUOVO**: Configurazione VS Code ottimizzata per evitare spazi extra
 - ✅ **NUOVO**: Task VS Code per formattazione file singolo
 - ✅ **NUOVO**: Script batch per correzione formattazione massive
+- ✅ **RISOLTO**: Conflitto tra goimports e gofumpt che causava errori di formattazione persistenti
+
+### 🧹 Pulizia e Ottimizzazione Script
+
+- ✅ **NUOVO**: Script unificato `dev.bat/sh` con azioni multiple (format|lint|pre-commit|all)
+- ✅ **RIMOSSI**: Script duplicati `format.bat/sh`, `fix-formatting.bat`
+- ✅ **CONSOLIDATO**: Tutte le funzionalità di sviluppo in script unici
+- ✅ **SEMPLIFICATO**: Workflow sviluppo con comandi chiari e intuitivi
 
 ### 📚 Documentazione
 

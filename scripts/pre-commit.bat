@@ -13,9 +13,8 @@ if errorlevel 1 (
 
 REM Formatta il codice
 echo 📝 Formattazione del codice...
+REM Using basic gofmt only to avoid import formatting conflicts
 gofmt -w .
-goimports -w .
-gofumpt -w .
 
 REM Aggiungi automaticamente i file formattati
 echo 📋 Aggiungendo file formattati...

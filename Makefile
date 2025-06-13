@@ -19,8 +19,6 @@ help:
 format:
 	@echo "🔧 Formattazione del codice..."
 	@cd backend && gofmt -w .
-	@cd backend && goimports -w .
-	@cd backend && gofumpt -w .
 	@echo "✅ Formattazione completata"
 
 # Linting

@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"thothix-backend/internal/models"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	"thothix-backend/internal/models"
 )
 
 type AuthHandler struct {

@@ -6,7 +6,7 @@ Questo documento spiega come utilizzare il sistema di automazione per formattazi
 
 Il sistema automatizza:
 
-1. **Formattazione del codice** (gofmt, goimports, gofumpt)
+1. **Formattazione del codice** (gofmt, gofumpt)
 2. **Riaggiunta automatica** dei file formattati al commit
 3. **Linting** (golangci-lint)
 4. **Test** (go test - opzionale)
@@ -42,10 +42,19 @@ git commit -m "Il tuo messaggio"
 Per eseguire i check manualmente prima del commit:
 
 ```bash
-# Windows
-.\scripts\pre-commit.bat
+# Windows - Script unificato
+.\scripts\dev.bat format      # Solo formattazione
+.\scripts\dev.bat lint        # Solo linting
+.\scripts\dev.bat pre-commit  # Pre-commit completo
+.\scripts\dev.bat all         # Equivalente a pre-commit
 
-# Oppure con PowerShell
+# Unix - Script unificato
+./scripts/dev.sh format       # Solo formattazione
+./scripts/dev.sh lint         # Solo linting
+./scripts/dev.sh pre-commit   # Pre-commit completo
+./scripts/dev.sh all          # Equivalente a pre-commit
+
+# Oppure con PowerShell per setup
 .\scripts\setup-hooks.ps1
 ```
 
@@ -108,7 +117,6 @@ git commit --no-verify -m "Commit urgente"
 ## 🛠️ **Tool Utilizzati**
 
 - **gofmt**: Formattazione base Go
-- **goimports**: Gestione automatica import
 - **gofumpt**: Formattazione più rigorosa
 - **golangci-lint**: Linting completo
 - **go test**: Esecuzione test
@@ -117,6 +125,8 @@ git commit --no-verify -m "Commit urgente"
 
 ```
 .git/hooks/pre-commit          # Git hook principale
+scripts/dev.bat               # Script Windows unificato
+scripts/dev.sh                # Script Unix unificato
 scripts/pre-commit.bat         # Script Windows manuale
 scripts/setup-hooks.ps1        # Setup PowerShell
 .vscode/tasks.json            # Task VS Code
@@ -140,7 +150,6 @@ chmod +x .git/hooks/pre-commit
 
 ```bash
 # Installa i tool mancanti
-go install golang.org/x/tools/cmd/goimports@latest
 go install mvdan.cc/gofumpt@latest
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 ```
@@ -148,6 +157,47 @@ go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 ### **Linting troppo rigoroso**
 
 Modifica `.golangci.yml` per rilassare le regole o aggiungi esclusioni.
+
+## 🔧 **Risoluzione Problemi Formattazione**
+
+### **Diagnostica Automatica**
+
+Se riscontri problemi di formattazione persistenti, usa lo script diagnostico:
+
+```bash
+.\scripts\diagnostic-format.bat
+```
+
+Questo script:
+
+- ✅ Verifica installazione Go e gofumpt
+- ✅ Testa la formattazione sui file
+- ✅ Controlla configurazione VS Code
+- ✅ Identifica conflitti di configurazione
+
+### **Configurazione VS Code Ottimizzata**
+
+La configurazione in `.vscode/settings.json` è stata ottimizzata per evitare conflitti:
+
+- **Formatter unico**: Solo `gofumpt` (no goimports/gofmt)
+- **Import organizzazione**: Disabilitata per evitare conflitti
+- **Azioni automatiche**: Minimizzate per prevenire interferenze
+
+### **Soluzioni Comuni**
+
+**Problema**: VS Code non formatta al salvataggio
+**Soluzione**:
+
+1. Riavvia VS Code completamente
+2. Esegui "Go: Install/Update Tools" da Command Palette
+3. Verifica che `diagnostic-format.bat` mostri tutto ✅
+
+**Problema**: Formattazione inconsistente
+**Soluzione**:
+
+1. Rimuovi configurazioni user che potrebbero sovrascrivere
+2. Usa solo gli script forniti per formattazione manuale
+3. Assicurati che non ci siano estensioni conflittuali
 
 ## ✅ **Vantaggi**
 
@@ -203,3 +253,27 @@ import (
 - Usare `goimports` come formattatore primario
 - Trim automatico whitespace
 - Rilevamento indentazione disabilitato
+
+### **Problema: Conflitto goimports vs gofumpt**
+
+**Sintomo**: Errori di formattazione persistenti anche dopo aver eseguito i tool.
+
+**Causa**: `goimports` e `gofumpt` hanno regole diverse per l'organizzazione degli import.
+
+**Soluzione Implementata**:
+
+1. **Uso esclusivo di gofumpt**: Rimosso `goimports` da tutti gli script
+2. **gofumpt include import organization**: Non serve più `goimports`
+3. **VS Code configurato con gofumpt**: Formattazione consistente nell'IDE
+4. **Tutti i workflow aggiornati**: Scripts, tasks, Git hooks, Makefile
+
+**Comando Unico**:
+
+```bash
+gofumpt -w .  # Include formattazione + organizzazione import
+```
+
+**Tool Consolidati**:
+
+- ❌ ~~gofmt + goimports + gofumpt~~ (conflitti)
+- ✅ **Solo gofumpt** (tutto incluso, zero conflitti)

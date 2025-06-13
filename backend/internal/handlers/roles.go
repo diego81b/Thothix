@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+
 	"thothix-backend/internal/models"
 
 	"github.com/gin-gonic/gin"

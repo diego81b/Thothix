@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+
 	_ "thothix-backend/docs" // Importa i documenti Swagger generati
 	"thothix-backend/internal/config"
 	"thothix-backend/internal/database"

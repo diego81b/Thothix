@@ -32,58 +32,58 @@ linters-settings:
     - "G302" # Poor file permissions used when creating file or using chmod
   gocritic:
     enabled-tags:
-      - diagnostic
-      - style
+    - diagnostic
+    - style
     disabled-checks:
-      - unnamedResult
-      - hugeParam
-      - rangeValCopy    # Allow copying in range loops for readability
-      - ifElseChain     # Allow if-else chains when they're clear
+    - unnamedResult
+    - hugeParam
+    - rangeValCopy # Allow copying in range loops for readability
+    - ifElseChain # Allow if-else chains when they're clear
 
   gocyclo:
-    min-complexity: 20  # Increased from 15 to 20
+    min-complexity: 20 # Increased from 15 to 20
 
   revive:
     rules:
-      - name: exported
-        disabled: false
+    - name: exported
+      disabled: false
 
   gofmt:
     simplify: true
 
   errcheck:
     exclude-functions:
-      - fmt.Fprintf
-      - fmt.Printf
-      - fmt.Print
+    - fmt.Fprintf
+    - fmt.Printf
+    - fmt.Print
 
   staticcheck:
-    checks: ["all"]
+    checks: [ "all" ]
 
   govet:
     disable:
-      - fieldalignment  # Disable field alignment checks for flexibility
+    - fieldalignment # Disable field alignment checks for flexibility
 
 issues:
   exclude-rules:
-    # Exclude some linters from running on test files
-    - path: _test\.go
-      linters:
-        - gosec
-        - gocritic
-        - gocyclo
-        - errcheck
-    # Exclude specific issues in generated files
-    - path: docs/
-      linters:
-        - all
-    # Exclude gofumpt issues in specific files that are hard to format
-    - path: internal/database/database.go
-      linters:
-        - gofumpt
-    # Allow higher complexity in auth handlers (complex business logic)
-    - path: internal/handlers/auth.go
-      linters:
-        - gocyclo
+  # Exclude some linters from running on test files
+  - path: _test\.go
+    linters:
+    - gosec
+    - gocritic
+    - gocyclo
+    - errcheck
+  # Exclude specific issues in generated files
+  - path: docs/
+    linters:
+    - all
+  # Exclude gofumpt issues in specific files that are hard to format
+  - path: internal/database/database.go
+    linters:
+    - gofumpt
+  # Allow higher complexity in auth handlers (complex business logic)
+  - path: internal/handlers/auth.go
+    linters:
+    - gocyclo
   max-issues-per-linter: 0
   max-same-issues: 0

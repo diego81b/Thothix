@@ -92,7 +92,21 @@ git clone <repository-url>
 cd Thothix
 ```
 
-### 2. Environment Configuration
+### 2. Development Setup (Recommended)
+
+```bash
+# Setup development tools and automation
+.\scripts\setup-hooks.ps1
+
+# This configures:
+# - Git pre-commit hooks for automatic code formatting and linting
+# - VS Code tasks for development workflow
+# - Quality checks before every commit
+```
+
+For more details, see [AUTOMATION.md](AUTOMATION.md).
+
+### 3. Environment Configuration
 
 ```bash
 # Copy and configure environment variables
@@ -123,7 +137,7 @@ ENVIRONMENT=development
 
 ⚠️ **Security Note**: Never commit the `.env` file to version control. It's already included in `.gitignore`.
 
-### 3. Start the complete stack
+### 4. Start the complete stack
 
 ```bash
 # Start all services
@@ -133,7 +147,7 @@ docker-compose up -d --build
 docker-compose ps
 ```
 
-### 4. Database initialization
+### 5. Database initialization
 
 ```bash
 # Run database migrations
@@ -143,14 +157,14 @@ docker-compose exec thothix-api go run cmd/migrate/main.go
 docker-compose exec thothix-api go run cmd/seed/main.go
 ```
 
-### 5. Access services
+### 6. Access services
 
-| Service | URL | Credentials |
-|----------|-----|-------------|
-| **API Swagger** | <http://localhost:30000/swagger/index.html> | - |
-| **Thothix Web** | <http://localhost:30001> | - |
-| **MinIO Console** | <http://localhost:30002> | admin/password123 |
-| **pgAdmin** | <http://localhost:5432> | postgres/@Admin123 |
+| Service           | URL                                         | Credentials        |
+| ----------------- | ------------------------------------------- | ------------------ |
+| **API Swagger**   | <http://localhost:30000/swagger/index.html> | -                  |
+| **Thothix Web**   | <http://localhost:30001>                    | -                  |
+| **MinIO Console** | <http://localhost:30002>                    | admin/password123  |
+| **pgAdmin**       | <http://localhost:5432>                     | postgres/@Admin123 |
 
 ## ⚙️ Docker Configuration
 
@@ -171,13 +185,13 @@ services:
       POSTGRES_DB: thothix-db
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d thothix-db"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d thothix-db']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -190,7 +204,7 @@ services:
     container_name: thothix-api
     restart: unless-stopped
     ports:
-      - "30000:30000"
+      - '30000:30000'
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -510,12 +524,14 @@ The REST API is documented with Swagger UI and available at: `http://localhost:3
 Thothix implements a simplified role-based access control (RBAC) system:
 
 #### Available Roles:
+
 - **Admin**: Can manage the entire system
-- **Manager**: Can manage everything except user management  
+- **Manager**: Can manage everything except user management
 - **User**: Can participate in assigned projects and channels, create 1:1 chats
 - **External**: Can only participate in public channels
 
 #### Public/Private Channel Strategy:
+
 - **Public Channels**: No explicit members in the `channel_members` table
 - **Private Channels**: At least one member in the `channel_members` table
 
@@ -524,25 +540,30 @@ For more details see: [`backend/RBAC_SIMPLIFIED.md`](backend/RBAC_SIMPLIFIED.md)
 ### Main Endpoints:
 
 #### Authentication
+
 - `POST /api/v1/auth/sync` - Sync user with Clerk
 - `GET /api/v1/auth/me` - Current user information
 
 #### Projects
+
 - `GET /api/v1/projects` - List projects
 - `POST /api/v1/projects` - Create project (Manager/Admin)
 - `GET /api/v1/projects/{id}` - Project details
 
 #### Channels
+
 - `GET /api/v1/channels` - List accessible channels
 - `POST /api/v1/channels` - Create channel (Manager/Admin)
 - `POST /api/v1/channels/{id}/join` - Join public channel
 
 #### Messages
+
 - `GET /api/v1/channels/{id}/messages` - Channel messages
 - `POST /api/v1/channels/{id}/messages` - Send message
 - `POST /api/v1/messages/direct` - Direct message 1:1
 
 #### Role Management (Admin Only)
+
 - `POST /api/v1/roles` - Assign role
 - `DELETE /api/v1/roles/{roleId}` - Revoke role
 

@@ -59,3 +59,34 @@ backend/
 - **RBAC Details**: See [RBAC_SIMPLIFIED.md](RBAC_SIMPLIFIED.md)
 
 For complete setup instructions, Docker usage, and deployment, see the [main project README](../README.md).
+
+## Development Tools & Automation
+
+The project includes comprehensive development automation:
+
+```bash
+# Setup development environment (one-time)
+..\scripts\setup-hooks.ps1
+
+# Manual code formatting and linting
+..\scripts\pre-commit.bat
+
+# Fix formatting issues (if VS Code creates problems)
+..\scripts\fix-formatting.bat
+
+# VS Code tasks available:
+# - "Go: Format + Lint" (Ctrl+Shift+B)
+# - "Go: Format Current File" 
+# - "Go: Pre-commit"
+```
+
+### Code Quality Tools
+
+- **gofmt**: Basic Go formatting
+- **goimports**: Import management and formatting
+- **gofumpt**: Stricter formatting (used in CI/CD)
+- **golangci-lint**: Comprehensive linting with custom rules
+
+All tools are configured to run automatically before commits via Git hooks.
+
+For details, see [AUTOMATION.md](../AUTOMATION.md).

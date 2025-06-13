@@ -158,3 +158,14 @@ docker-compose exec postgres psql -U postgres -c "\l"
 # Execute single SQL command
 docker-compose exec postgres psql -U postgres -d thothix-db -c "SELECT version();"
 ```
+
+### Line Endings Configuration
+
+The project includes a `.gitattributes` file to ensure consistent line endings across different operating systems:
+
+- **Shell scripts** (`.sh`) always use LF (Unix) line endings for compatibility
+- **Batch scripts** (`.bat`) always use CRLF (Windows) line endings  
+- **Source code files** (Go, JSON, YAML, etc.) use LF line endings
+- **Docker files** use LF line endings for container compatibility
+
+This prevents Git warnings about line ending conversions and ensures scripts work correctly on their target platforms.

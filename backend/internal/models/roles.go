@@ -126,7 +126,7 @@ func GetUserRole(db *gorm.DB, userID string) (RoleType, error) {
 }
 
 // HasUserPermission checks if a user has a specific permission
-func HasUserPermission(db *gorm.DB, userID string, permission Permission, resourceType *string, resourceID *string) bool {
+func HasUserPermission(db *gorm.DB, userID string, permission Permission, resourceType, resourceID *string) bool {
 	// Get user's system role
 	userRole, err := GetUserRole(db, userID)
 	if err != nil {
@@ -150,7 +150,7 @@ func HasUserPermission(db *gorm.DB, userID string, permission Permission, resour
 }
 
 // hasChannelAccess checks if user has access to a specific channel
-func hasChannelAccess(db *gorm.DB, userID string, channelID string, permission Permission) bool {
+func hasChannelAccess(db *gorm.DB, userID, channelID string, permission Permission) bool {
 	var channel Channel
 	if err := db.Where("id = ?", channelID).First(&channel).Error; err != nil {
 		return false
@@ -188,7 +188,7 @@ func hasChannelAccess(db *gorm.DB, userID string, channelID string, permission P
 }
 
 // hasProjectAccess checks if user has access to a specific project
-func hasProjectAccess(db *gorm.DB, userID string, projectID string, permission Permission) bool {
+func hasProjectAccess(db *gorm.DB, userID, projectID string, permission Permission) bool {
 	userRole, err := GetUserRole(db, userID)
 	if err != nil {
 		return false

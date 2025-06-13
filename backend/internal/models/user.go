@@ -17,13 +17,13 @@ type User struct {
 // UserResponse represents the API response for a user
 // swagger:model UserResponse
 type UserResponse struct {
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	SystemRole RoleType  `json:"system_role"`
 	ID         string    `json:"id"`
 	Email      string    `json:"email"`
 	Name       string    `json:"name"`
 	AvatarURL  string    `json:"avatar_url"`
-	SystemRole RoleType  `json:"system_role"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 func (u *User) ToResponse() UserResponse {

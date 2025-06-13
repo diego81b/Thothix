@@ -229,15 +229,16 @@ func (h *ChannelHandler) JoinChannel(c *gin.Context) {
 		return
 	}
 	// Check if user can join this channel
-	if channel.IsPrivate {
+	switch {
+	case channel.IsPrivate:
 		// Only admins/managers can join private channels without invitation
 		if userRole != models.RoleAdmin && userRole != models.RoleManager {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Cannot join private channel without invitation"})
 			return
 		}
-	} else if !channel.IsPrivate && userRole == models.RoleExternal {
+	case !channel.IsPrivate && userRole == models.RoleExternal:
 		// External users can join public channels
-	} else if userRole == models.RoleUser {
+	case userRole == models.RoleUser:
 		// Regular users can join any public channel if they have project access
 		resourceType := "project"
 		if !models.HasUserPermission(h.db, userID.(string), models.PermissionProjectRead, &resourceType, &channel.ProjectID) {
@@ -270,6 +271,6 @@ func (h *ChannelHandler) JoinChannel(c *gin.Context) {
 // CreateChannelRequest represents the request body for channel creation
 type CreateChannelRequest struct {
 	Name      string `json:"name" binding:"required"`
-	IsPrivate bool   `json:"is_private"` // If true, creator will be added as member
 	ProjectID string `json:"project_id" binding:"required"`
+	IsPrivate bool   `json:"is_private"` // If true, creator will be added as member
 }

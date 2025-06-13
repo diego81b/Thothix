@@ -34,8 +34,8 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 	}
 
 	var userResponses []models.UserResponse
-	for _, user := range users {
-		userResponses = append(userResponses, user.ToResponse())
+	for i := range users {
+		userResponses = append(userResponses, users[i].ToResponse())
 	}
 
 	c.JSON(http.StatusOK, userResponses)

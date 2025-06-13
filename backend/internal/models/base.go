@@ -7,6 +7,11 @@ import (
 	"gorm.io/gorm"
 )
 
+// contextKey is a type for context keys to avoid collisions
+type contextKey string
+
+const userIDKey contextKey = "user_id"
+
 // BaseModel provides common fields for all entities
 type BaseModel struct {
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
@@ -27,7 +32,7 @@ func (b *BaseModel) BeforeCreate(tx *gorm.DB) error {
 
 	// Set CreatedBy from context if not already set
 	if b.CreatedBy == "" {
-		if userID := tx.Statement.Context.Value("user_id"); userID != nil {
+		if userID := tx.Statement.Context.Value(userIDKey); userID != nil {
 			if uid, ok := userID.(string); ok {
 				b.CreatedBy = uid
 			}
@@ -42,7 +47,7 @@ func (b *BaseModel) BeforeUpdate(tx *gorm.DB) error {
 
 	// Set UpdatedBy from context if not already set
 	if b.UpdatedBy == "" {
-		if userID := tx.Statement.Context.Value("user_id"); userID != nil {
+		if userID := tx.Statement.Context.Value(userIDKey); userID != nil {
 			if uid, ok := userID.(string); ok {
 				b.UpdatedBy = uid
 			}

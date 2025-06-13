@@ -16,10 +16,10 @@ type Project struct {
 // swagger:model ProjectMember
 type ProjectMember struct {
 	BaseModel
-	UserID    string    `json:"user_id"`
-	User      User      `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user,omitempty"`
-	ProjectID string    `json:"project_id"`
-	Project   Project   `gorm:"foreignKey:ProjectID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"project,omitempty"`
-	Role      string    `json:"role"`
 	JoinedAt  time.Time `gorm:"autoCreateTime" json:"joined_at"`
+	User      User      `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user,omitempty"`
+	Project   Project   `gorm:"foreignKey:ProjectID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"project,omitempty"`
+	UserID    string    `json:"user_id"`
+	ProjectID string    `json:"project_id"`
+	Role      string    `json:"role"`
 }

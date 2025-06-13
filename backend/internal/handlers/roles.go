@@ -98,8 +98,8 @@ func (h *RoleHandler) RevokeUserRole(c *gin.Context) {
 
 // AssignRoleRequest represents the request body for role assignment
 type AssignRoleRequest struct {
-	UserID       string          `json:"user_id" binding:"required"`
 	Role         models.RoleType `json:"role" binding:"required"`
 	ResourceType *string         `json:"resource_type,omitempty"`
 	ResourceID   *string         `json:"resource_id,omitempty"`
+	UserID       string          `json:"user_id" binding:"required"`
 }

@@ -52,33 +52,33 @@ func ClerkAuth(clerkSecretKey string) gin.HandlerFunc {
 
 // Struttura completa per la risposta di Clerk
 type ClerkUser struct {
-	ID                  string                 `json:"id"`
+	CreatedAt           int64                  `json:"created_at"`
+	UpdatedAt           int64                  `json:"updated_at"`
+	LastSignInAt        *int64                 `json:"last_sign_in_at"`
+	PrimaryEmailAddress *ClerkEmailAddress     `json:"primary_email_address"`
+	PrimaryPhoneNumber  *ClerkPhoneNumber      `json:"primary_phone_number"`
 	Username            *string                `json:"username"`
 	FirstName           *string                `json:"first_name"`
 	LastName            *string                `json:"last_name"`
-	ImageURL            string                 `json:"image_url"`
-	PrimaryEmailAddress *ClerkEmailAddress     `json:"primary_email_address"`
 	EmailAddresses      []ClerkEmailAddress    `json:"email_addresses"`
-	PrimaryPhoneNumber  *ClerkPhoneNumber      `json:"primary_phone_number"`
 	PhoneNumbers        []ClerkPhoneNumber     `json:"phone_numbers"`
 	PublicMetadata      map[string]interface{} `json:"public_metadata"`
 	PrivateMetadata     map[string]interface{} `json:"private_metadata"`
 	UnsafeMetadata      map[string]interface{} `json:"unsafe_metadata"`
-	CreatedAt           int64                  `json:"created_at"`
-	UpdatedAt           int64                  `json:"updated_at"`
-	LastSignInAt        *int64                 `json:"last_sign_in_at"`
+	ID                  string                 `json:"id"`
+	ImageURL            string                 `json:"image_url"`
 }
 
 type ClerkEmailAddress struct {
+	Verification *ClerkVerification `json:"verification"`
 	ID           string             `json:"id"`
 	EmailAddress string             `json:"email_address"`
-	Verification *ClerkVerification `json:"verification"`
 }
 
 type ClerkPhoneNumber struct {
+	Verification *ClerkVerification `json:"verification"`
 	ID           string             `json:"id"`
 	PhoneNumber  string             `json:"phone_number"`
-	Verification *ClerkVerification `json:"verification"`
 }
 
 type ClerkVerification struct {
@@ -92,7 +92,7 @@ func verifyClerkToken(token, secretKey string) (*ClerkUser, error) {
 	defer cancel()
 
 	// Crea richiesta per ottenere le informazioni dell'utente
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.clerk.com/v1/users/me", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.clerk.com/v1/users/me", http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

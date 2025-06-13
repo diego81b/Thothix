@@ -7,72 +7,72 @@ run:
 
 linters:
   enable:
-    - gofmt
-    - goimports
-    - govet
-    - errcheck
-    - staticcheck
-    - unused
-    - gosimple
-    - ineffassign
-    - typecheck
-    - gosec
-    - misspell
-    - gocritic
-    - revive
-    - gocyclo
-    - gofumpt
+  - gofmt
+  - goimports
+  - govet
+  - errcheck
+  - staticcheck
+  - unused
+  - gosimple
+  - ineffassign
+  - typecheck
+  - gosec
+  - misspell
+  - gocritic
+  - revive
+  - gocyclo
+  - gofumpt
   disable: []
 
 linters-settings:
   gosec:
     excludes:
-      - "G204" # Subprocess launched with variable
-      - "G301" # Poor file permissions used when creating a directory
-      - "G302" # Poor file permissions used when creating file or using chmod
+    - "G204" # Subprocess launched with variable
+    - "G301" # Poor file permissions used when creating a directory
+    - "G302" # Poor file permissions used when creating file or using chmod
 
   gocritic:
     enabled-tags:
-      - diagnostic
-      - style
-      - performance
+    - diagnostic
+    - style
+    - performance
     disabled-checks:
-      - unnamedResult
-      - hugeParam
+    - unnamedResult
+    - hugeParam
 
   gocyclo:
     min-complexity: 15
 
   revive:
     rules:
-      - name: exported
-        disabled: false
+    - name: exported
+      disabled: false
 
   gofmt:
     simplify: true
 
   errcheck:
     exclude-functions:
-      - fmt.Fprintf
+    - fmt.Fprintf
 
   staticcheck:
-    checks: ["all"]
-    
+    checks: [ "all" ]
+
   govet:
     enable-all: true
 
 issues:
   exclude-rules:
-    # Exclude some linters from running on test files
-    - path: _test\.go
-      linters:
-        - gosec
-        - gocritic
-        - gocyclo
-        - errcheck
-    # Exclude specific issues in generated files
-    - path: docs/
-      linters:
-        - all
+  # Exclude some linters from running on test files
+  - path: _test\.go
+    linters:
+    - gosec
+    - gocritic
+    - gocyclo
+    - errcheck
+  # Exclude specific issues in generated files
+  - path: docs/
+    linters:
+    - all
   max-issues-per-linter: 0
   max-same-issues: 0

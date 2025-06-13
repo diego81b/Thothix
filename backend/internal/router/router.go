@@ -55,6 +55,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	authProtected := protected.Group("/auth")
 	authProtected.POST("/sync", authHandler.SyncUser)
 	authProtected.GET("/me", authHandler.GetCurrentUser)
+	authProtected.POST("/import-users", middleware.RequireSystemRole(db, models.RoleAdmin), authHandler.ImportUsers)
 
 	// Users
 	users := protected.Group("/users")

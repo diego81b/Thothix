@@ -456,8 +456,8 @@ scripts\db-verify.bat status
 
 ```bash
 # Same usage but with .sh extension
-chmod +x scripts/db-verify.sh
-./scripts/db-verify.sh check-basemodel
+chmod +x scripts/db-verify.bat
+.\scripts\db-verify.bat check-basemodel
 ```
 
 ### Manual SQL Commands

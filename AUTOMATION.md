@@ -1,6 +1,10 @@
 # 🤖 Automazione Pre-Commit per Thothix
 
-Questo documento spiega come utilizzare il sistema di automazione per formattazione, linting e test prima di ogni commit.
+Questo documento spiega come utilizzare il sistema di automazione per formattazioscripts/pre-commit.bat # Script Windows manuale
+scripts/setup-hooks.ps1 # Setup PowerShell
+.vscode/tasks.json # Task VS Code
+.golangci.yml # Configurazione linting
+Makefile # Target Makenting e test prima di ogni commit.
 
 ## 🎯 **Cosa Viene Automatizzato**
 
@@ -47,12 +51,6 @@ Per eseguire i check manualmente prima del commit:
 .\scripts\dev.bat lint        # Solo linting
 .\scripts\dev.bat pre-commit  # Pre-commit completo
 .\scripts\dev.bat all         # Equivalente a pre-commit
-
-# Unix - Script unificato
-./scripts/dev.sh format       # Solo formattazione
-./scripts/dev.sh lint         # Solo linting
-./scripts/dev.sh pre-commit   # Pre-commit completo
-./scripts/dev.sh all          # Equivalente a pre-commit
 
 # Oppure con PowerShell per setup
 .\scripts\setup-hooks.ps1

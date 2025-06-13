@@ -324,3 +324,25 @@ func (h *AuthHandler) handleUserDeleted(data map[string]interface{}) error {
 	// o gestire la cancellazione in modo diverso secondo le business rules
 	return h.db.Where("id = ?", userID).Delete(&models.User{}).Error
 }
+
+// ImportUsers importa tutti gli utenti da Clerk al database locale
+// @Summary Import all users from Clerk
+// @Description Import all users from Clerk to local database (development only)
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/auth/import-users [post]
+func (h *AuthHandler) ImportUsers(c *gin.Context) {
+	// TODO: Add admin check here
+	// Only allow admins to import users
+
+	// This would call Clerk API to get all users and sync them
+	// For now, return a placeholder response
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User import functionality - to be implemented",
+		"note":    "This will call Clerk Users API and sync all users to local DB",
+	})
+}

@@ -1,0 +1,67 @@
+# golangci-lint configuration for Thothix backend
+# See https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+  - vendor
+  - docs
+
+linters:
+  enable:
+  - gofmt
+  - goimports
+  - govet
+  - errcheck
+  - staticcheck
+  - unused
+  - gosimple
+  - ineffassign
+  - typecheck
+  - gosec
+  - misspell
+  - gocritic
+  - revive
+  - gocyclo
+  - gofumpt
+  disable: []
+
+linters-settings:
+  gosec:
+    excludes:
+    - "G204" # Subprocess launched with variable
+    - "G301" # Poor file permissions used when creating a directory
+    - "G302" # Poor file permissions used when creating file or using chmod
+
+  gocritic:
+    enabled-tags:
+    - diagnostic
+    - style
+    - performance
+    disabled-checks:
+    - unnamedResult
+    - hugeParam
+
+  gocyclo:
+    min-complexity: 15
+
+  revive:
+    rules:
+    - name: exported
+      disabled: false
+
+issues:
+  exclude-rules:
+  # Exclude some linters from running on test files
+  - path: _test\.go
+    linters:
+    - gosec
+    - gocritic
+    - gocyclo
+  # Exclude specific issues in generated files
+  - path: docs/
+    linters:
+    - all
+  max-issues-per-linter: 0
+  max-same-issues: 0

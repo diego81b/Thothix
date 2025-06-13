@@ -84,3 +84,77 @@ For future schema changes, consider:
 1. Creating proper migration scripts
 2. Adding database migration automation to the startup process
 3. Version tracking for schema changes
+
+### Useful Database Verification Commands
+
+#### Check BaseModel columns alignment
+
+```sql
+-- Count BaseModel columns per table (should be 5 for all tables)
+SELECT table_name, COUNT(*) as basemodel_columns 
+FROM information_schema.columns 
+WHERE table_schema = 'public' 
+  AND column_name IN ('id', 'created_by', 'created_at', 'updated_by', 'updated_at') 
+GROUP BY table_name 
+ORDER BY table_name;
+```
+
+#### List all tables in database
+
+```sql
+-- List all tables
+\d
+
+-- Or with SQL query
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE' 
+ORDER BY table_name;
+```
+
+#### Check specific table structure
+
+```sql
+-- Check detailed table structure
+\d table_name
+
+-- Or get all columns for a table
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns 
+WHERE table_name = 'table_name' AND table_schema = 'public' 
+ORDER BY ordinal_position;
+```
+
+#### Check which tables have specific fields
+
+```sql
+-- Check which tables have updated_by field
+SELECT table_name 
+FROM information_schema.columns 
+WHERE table_schema = 'public' AND column_name = 'updated_by' 
+GROUP BY table_name;
+
+-- Check which tables are missing a specific field
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+  AND table_name NOT IN (
+    SELECT table_name 
+    FROM information_schema.columns 
+    WHERE column_name = 'updated_by' AND table_schema = 'public'
+  )
+ORDER BY table_name;
+```
+
+#### Docker connection commands
+
+```bash
+# Connect to PostgreSQL container
+docker-compose exec postgres psql -U postgres -d thothix-db
+
+# List all databases
+docker-compose exec postgres psql -U postgres -c "\l"
+
+# Execute single SQL command
+docker-compose exec postgres psql -U postgres -d thothix-db -c "SELECT version();"
+```

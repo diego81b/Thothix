@@ -39,7 +39,7 @@ func (b *BaseModel) BeforeCreate(tx *gorm.DB) error {
 // BeforeUpdate hook to update timestamps and updater
 func (b *BaseModel) BeforeUpdate(tx *gorm.DB) error {
 	b.UpdatedAt = time.Now()
-	
+
 	// Set UpdatedBy from context if not already set
 	if b.UpdatedBy == "" {
 		if userID := tx.Statement.Context.Value("user_id"); userID != nil {

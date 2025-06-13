@@ -384,6 +384,59 @@ docker volume rm thothix_postgres_data
 docker-compose up -d thothix-postgres
 ```
 
+## 🔍 Database Verification Tools
+
+### Utility Scripts
+
+Il progetto include script per verificare facilmente l'allineamento del database con i modelli Go:
+
+#### Windows (cmd/PowerShell)
+
+```cmd
+# Verifica allineamento BaseModel (tutte le tabelle dovrebbero avere 5 colonne)
+scripts\db-verify.bat check-basemodel
+
+# Lista tutte le tabelle
+scripts\db-verify.bat list-tables
+
+# Controlla struttura di una tabella specifica
+scripts\db-verify.bat check-table users
+
+# Trova tabelle che mancano di un campo specifico
+scripts\db-verify.bat missing-field updated_by
+
+# Trova tabelle che hanno un campo specifico
+scripts\db-verify.bat has-field system_role
+
+# Connetti al database interattivamente
+scripts\db-verify.bat connect
+
+# Stato del database
+scripts\db-verify.bat status
+```
+
+#### Linux/MacOS (bash)
+
+```bash
+# Stesso utilizzo ma con estensione .sh
+chmod +x scripts/db-verify.sh
+./scripts/db-verify.sh check-basemodel
+```
+
+### Comandi SQL Manuali
+
+Per eseguire comandi SQL direttamente:
+
+```bash
+# Connessione diretta al database
+docker-compose exec postgres psql -U postgres -d thothix-db
+
+# Esecuzione comando singolo
+docker-compose exec postgres psql -U postgres -d thothix-db -c "SELECT version();"
+```
+
+Per più dettagli sui comandi di verifica, consulta `DB_MIGRATION.md`.
+
 ## 💻 Sviluppo
 
 ### Struttura del progetto

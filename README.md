@@ -22,12 +22,19 @@ cd Thothix
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
 - [Quick Start with Docker](#quick-start-with-docker)
+- [🔐 HashiCorp Vault Integration](#hashicorp-vault-integration)
 - [Docker Configuration](#docker-configuration)
 - [Useful Docker Commands](#useful-docker-commands)
 - [Database Verification Tools](#database-verification-tools)
 - [Development](#development)
 - [API Reference](#api-reference)
 - [Contributing](#contributing)
+
+### 📖 Additional Documentation
+
+- **[🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
+- **[📁 Scripts Documentation](./scripts/README.md)** - Development automation and tools
+- **[🤖 Automation Guide](./AUTOMATION.md)** - Pre-commit hooks and formatting
 
 ## 🏗️ Architecture
 
@@ -168,6 +175,24 @@ docker-compose exec thothix-api go run cmd/seed/main.go
 | **Thothix Web**   | <http://localhost:30001>                    | -                  |
 | **MinIO Console** | <http://localhost:30002>                    | admin/password123  |
 | **pgAdmin**       | <http://localhost:5432>                     | postgres/@Admin123 |
+
+---
+
+## 🔐 HashiCorp Vault Integration
+
+Vault è integrato per gestire in modo sicuro segreti e configurazioni sensibili.
+
+📖 **[📋 Guida Completa all'Integrazione Vault →](./VAULT_INTEGRATION.md)**
+
+### Quick Start
+
+1. **Abilita Vault**: Imposta `USE_VAULT=true` nel tuo `.env`
+2. **Avvia servizi**: `docker-compose up -d --build`
+3. **Accedi a Vault UI**: <http://localhost:8200> (token: `thothix-dev-root-token`)
+
+Vault gestisce automaticamente credenziali database, API keys Clerk e segreti applicazione.
+
+Per setup completo, troubleshooting e configurazione produzione → **[VAULT_INTEGRATION.md](./VAULT_INTEGRATION.md)**
 
 ---
 
@@ -691,7 +716,6 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 # Using deployment script for any environment
 .\scripts\deploy.bat dev up      # Development
 .\scripts\deploy.bat prod up     # Production with Vault
-```
 ```
 
 ### Vault Management

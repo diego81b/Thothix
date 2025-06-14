@@ -1,5 +1,65 @@
-# Production overrides
+# Production overrides with HashiCorp Vault
 services:
+  # Override vault service for production (always enabled)
+  vault:
+    image: vault:1.15.0
+    container_name: thothix-vault-prod
+    restart: unless-stopped
+    environment:
+      VAULT_LOCAL_CONFIG: |
+        {
+          "storage": {
+            "file": {
+              "path": "/vault/data"
+            }
+          },
+          "listener": {
+            "tcp": {
+              "address": "0.0.0.0:8200",
+              "tls_disable": true
+            }
+          },
+          "ui": true,
+          "log_level": "INFO",
+          "default_lease_ttl": "168h",
+          "max_lease_ttl": "720h",
+          "disable_mlock": true
+        }
+    ports:
+      - '8200:8200'
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault_prod_data:/vault/data
+      - vault_prod_logs:/vault/logs
+      - ./vault/config:/vault/config:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'vault', 'status']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  vault-init:
+    image: vault:1.15.0
+    container_name: thothix-vault-init
+    depends_on:
+      vault:
+        condition: service_healthy
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
+      VAULT_MOUNT: thothix
+      ENVIRONMENT: production
+    volumes:
+      - ./vault/scripts:/scripts:ro
+    command: ['/bin/sh', '/scripts/init-secrets.sh']
+    networks:
+      - app-network
+    restart: 'no'
+
   postgres:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -9,9 +69,24 @@ services:
 
   thothix-api:
     environment:
+      # Vault configuration
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_APP_TOKEN}
+      VAULT_MOUNT: thothix
+      USE_VAULT: 'true'
+
+      # Application settings
       ENVIRONMENT: production
       GIN_MODE: release
       DB_NAME: thothix-prod
+      PORT: '30000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+      vault-init:
+        condition: service_completed_successfully
     restart: always
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:30000/health']
@@ -21,4 +96,8 @@ services:
 
 volumes:
   postgres_prod_data:
+    driver: local
+  vault_prod_data:
+    driver: local
+  vault_prod_logs:
     driver: local

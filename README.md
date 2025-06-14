@@ -97,26 +97,46 @@ cp .env.example .env
 notepad .env
 ```
 
-**Configure your `.env` file with secure credentials:**
+**Configure your `.env` file with your credentials:**
+
+The `.env.example` file contains unified configuration for all environments (development, staging, production). Key settings include:
 
 ```bash
 # Database Configuration
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_PASSWORD=change_me_in_production
 POSTGRES_DB=thothix-db
 
-# Clerk Authentication
+# Clerk Authentication (get from https://dashboard.clerk.com)
 CLERK_SECRET_KEY=your_clerk_secret_key_here
+CLERK_WEBHOOK_SECRET=your_clerk_webhook_secret_here
+CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
 
 # Application Configuration
-DB_HOST=postgres
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=your_secure_password_here
-DB_NAME=thothix-db
 PORT=30000
 ENVIRONMENT=development
+GIN_MODE=debug
+
+# Optional: HashiCorp Vault for secret management
+USE_VAULT=false  # Set to true for production
 ```
+
+**For Vault Integration (Optional):**
+
+The Vault service is available for both development and production but starts automatically by default. To control when vault starts:
+
+```bash
+# Development without Vault (standard)
+docker-compose up -d --build
+
+# Development with Vault initialization (when USE_VAULT=true in .env)
+# Vault service will start automatically and initialize secrets
+docker-compose up -d --build
+
+# Production with Vault (always enabled)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+**Note**: Vault services are defined but won't be used unless `USE_VAULT=true` in your `.env` file.
 
 ⚠️ **Security Note**: Never commit the `.env` file to version control. It's already included in `.gitignore`.
 
@@ -643,39 +663,48 @@ To contribute to the project, see the [developer guide](./docs/CONTRIBUTING.md).
 
 ## 🌍 Multi-Environment Management
 
-Thothix supports multiple deployment environments using Docker Compose.
+Thothix supports multiple deployment environments using a single unified environment file.
 
-### Environment Files
+### Environment Configuration
 
 ```bash
-.env                    # Development (default)
-.env.prod              # Production
-.env.staging           # Staging
+.env                    # Unified configuration for all environments
+                       # Copy from .env.example and customize per environment
 ```
+
+**Environment-specific settings are controlled by variables in your `.env` file:**
+
+- `ENVIRONMENT=development|staging|production`
+- `USE_VAULT=false|true` (recommended for staging/production)
+- `GIN_MODE=debug|release`
+- Different Clerk keys (test vs live)
 
 ### Deployment Commands
 
 ```bash
-# Development
+# Development (vault services available but only used if USE_VAULT=true)
 docker-compose up -d --build
 
-# Production
-docker-compose --env-file .env.prod up -d --build
+# Production (with integrated Vault - USE_VAULT automatically set to true)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
-# Staging
-docker-compose --env-file .env.staging up -d --build
+# Using deployment script for any environment
+.\scripts\deploy.bat dev up      # Development
+.\scripts\deploy.bat prod up     # Production with Vault
+```
 ```
 
-### Advanced Multi-File Setup
-
-For complex configurations, you can use multiple compose files:
+### Vault Management
 
 ```bash
-# Production with additional services
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Initialize Vault (production)
+.\scripts\deploy.bat prod vault init
 
-# Staging with monitoring
-docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+# Open Vault UI
+.\scripts\deploy.bat prod vault ui
+
+# Check Vault status
+.\scripts\deploy.bat prod vault status
 ```
 
 ### Environment Variables

@@ -25,7 +25,13 @@ go.work
 .env.production
 .env.prod
 .env.staging
+.env.vault
 .env.*.local
+
+# Vault secrets and data - NEVER commit!
+vault/data/
+vault/logs/
+*.vault_token
 
 # Database
 *.db

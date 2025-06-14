@@ -56,8 +56,7 @@ var RolePermissions = map[RoleType][]Permission{
 	RoleAdmin: {
 		PermissionUserManage,
 		PermissionProjectCreate, PermissionProjectRead, PermissionProjectUpdate, PermissionProjectDelete, PermissionProjectManage,
-		PermissionChannelCreate, PermissionChannelRead, PermissionChannelUpdate, PermissionChannelDelete, PermissionChannelManage,
-		PermissionChannelReadAssigned,
+		PermissionChannelCreate, PermissionChannelRead, PermissionChannelUpdate, PermissionChannelDelete, PermissionChannelManage, PermissionChannelReadAssigned,
 		PermissionMessageCreate, PermissionMessageRead, PermissionMessageUpdate, PermissionMessageDelete,
 		PermissionDMCreate,
 		PermissionFileUpload, PermissionFileRead, PermissionFileDelete,
@@ -66,8 +65,7 @@ var RolePermissions = map[RoleType][]Permission{
 	// Manager: can manage everything except users
 	RoleManager: {
 		PermissionProjectCreate, PermissionProjectRead, PermissionProjectUpdate, PermissionProjectDelete, PermissionProjectManage,
-		PermissionChannelCreate, PermissionChannelRead, PermissionChannelUpdate, PermissionChannelDelete, PermissionChannelManage,
-		PermissionChannelReadAssigned,
+		PermissionChannelCreate, PermissionChannelRead, PermissionChannelUpdate, PermissionChannelDelete, PermissionChannelManage, PermissionChannelReadAssigned,
 		PermissionMessageCreate, PermissionMessageRead, PermissionMessageUpdate, PermissionMessageDelete,
 		PermissionDMCreate,
 		PermissionFileUpload, PermissionFileRead, PermissionFileDelete,
@@ -86,7 +84,7 @@ var RolePermissions = map[RoleType][]Permission{
 	RoleExternal: {
 		PermissionChannelRead,                          // Only public channels (controlled by hasChannelAccess)
 		PermissionMessageCreate, PermissionMessageRead, // Only in public channels
-		PermissionFileRead, // Only read files
+		PermissionFileUpload, PermissionFileRead,
 	},
 }
 

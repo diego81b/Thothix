@@ -121,11 +121,10 @@ git commit --no-verify -m "Commit urgente"
 
 ## 📁 **File Coinvolti**
 
-```
+```text
 .git/hooks/pre-commit          # Git hook principale
-scripts/dev.bat               # Script Windows unificato
-scripts/dev.sh                # Script Unix unificato
-scripts/pre-commit.bat         # Script Windows manuale
+scripts/dev.bat               # Script Windows per sviluppo
+scripts/pre-commit.bat         # Script Windows pre-commit manuale
 scripts/setup-hooks.ps1        # Setup PowerShell
 .vscode/tasks.json            # Task VS Code
 .golangci.yml                 # Configurazione linting
@@ -160,25 +159,25 @@ Modifica `.golangci.yml` per rilassare le regole o aggiungi esclusioni.
 
 ### **Diagnostica Automatica**
 
-Se riscontri problemi di formattazione persistenti, usa lo script diagnostico:
+Se riscontri problemi di formattazione persistenti, usa lo script di sviluppo per diagnosticare:
 
 ```bash
-.\scripts\diagnostic-format.bat
+.\scripts\dev.bat format
 ```
 
-Questo script:
+Questo comando:
 
-- ✅ Verifica installazione Go e gofumpt
-- ✅ Testa la formattazione sui file
-- ✅ Controlla configurazione VS Code
-- ✅ Identifica conflitti di configurazione
+- ✅ Verifica installazione Go e gofmt
+- ✅ Applica la formattazione corretta sui file
+- ✅ Mostra eventuali errori di formattazione
+- ✅ Funziona con la configurazione VS Code ottimizzata
 
 ### **Configurazione VS Code Ottimizzata**
 
 La configurazione in `.vscode/settings.json` è stata ottimizzata per evitare conflitti:
 
-- **Formatter unico**: Solo `gofumpt` (no goimports/gofmt)
-- **Import organizzazione**: Disabilitata per evitare conflitti
+- **Formatter unico**: Solo `gofmt` (formato standard Go)
+- **Import organizzazione**: Gestita automaticamente da gofmt
 - **Azioni automatiche**: Minimizzate per prevenire interferenze
 
 ### **Soluzioni Comuni**
@@ -188,7 +187,7 @@ La configurazione in `.vscode/settings.json` è stata ottimizzata per evitare co
 
 1. Riavvia VS Code completamente
 2. Esegui "Go: Install/Update Tools" da Command Palette
-3. Verifica che `diagnostic-format.bat` mostri tutto ✅
+3. Verifica che `.\scripts\dev.bat format` funzioni correttamente
 
 **Problema**: Formattazione inconsistente
 **Soluzione**:
@@ -226,7 +225,7 @@ Se vedi errori come "File is not properly formatted (gofumpt)", il sistema li co
 
 1. **Configurazione VS Code Corretta**: Il file `.vscode/settings.json` è configurato per evitare questo problema
 2. **Task Manuale**: Usa `Ctrl+Shift+P` → "Tasks: Run Task" → "Go: Format Current File"
-3. **Script di Correzione**: `.\scripts\fix-formatting.bat` per correggere tutti i file
+3. **Script di Correzione**: `.\scripts\dev.bat format` per correggere tutti i file
 4. **Formattazione Automatica**: Il pre-commit hook corregge automaticamente questi errori
 
 **Formato Import Corretto**:

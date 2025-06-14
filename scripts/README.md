@@ -14,7 +14,7 @@
 
 ### � **Development & Build**
 
-- **`dev.bat`** / **`dev.sh`** - Main development script
+- **`dev.bat`** - Main development script
 
   - Handles formatting, linting, and pre-commit workflow
   - Uses `gofmt` for simple, reliable formatting
@@ -31,30 +31,11 @@
   - Configures pre-commit automation
   - PowerShell script for Windows
 
-- **`start-local-dev.bat`** - Complete Clerk development environment
-  - Starts backend server
-  - Launches ngrok tunnel with pre-configured URL
-  - Provides testing URLs and next steps
-
 ### 🗄️ **Database & Verification**
 
 - **`db-verify.bat`** - Database connectivity testing (Windows)
   - Database schema verification
   - Focused on Windows development environment
-
----
-
-## 🗑️ **Removed Scripts**
-
-The following scripts have been removed to eliminate redundancy:
-
-❌ `test-api.bat` - Replaced by Swagger UI (`/swagger/index.html`)
-❌ `test-ngrok.bat` - Functionality merged into `start-local-dev.bat`
-❌ `diagnostic-format.bat` - No longer needed with simplified `gofmt` workflow
-❌ `fix-formatting.bat` - Empty file, removed
-❌ `fix-imports.bat` - Obsolete with `gofmt`-only approach
-❌ `dev.sh` - Removed to focus on Windows development environment
-❌ `db-verify.sh` - Removed to simplify maintenance
 
 ---
 
@@ -70,8 +51,11 @@ The following scripts have been removed to eliminate redundancy:
 ### **Daily Development**
 
 ```bash
-# Start complete development environment (with Clerk + ngrok)
-.\scripts\start-local-dev.bat
+# Start backend for development
+.\scripts\dev.bat
+
+# For Clerk + webhook testing, also run ngrok in a separate terminal:
+ngrok http --url=flying-mullet-socially.ngrok-free.app 30000
 
 # Quick formatting and linting
 .\scripts\dev.bat format
@@ -100,4 +84,6 @@ curl http://localhost:30000/health
 ✅ **Documentation accuracy** - README matches actual available scripts
 ✅ **Easier onboarding** - New developers have fewer tools to learn
 
-**The scripts directory is now clean, focused, and maintainable! 🎉**
+## Conclusion
+
+The scripts directory is now clean, focused, and maintainable! 🎉

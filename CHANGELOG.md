@@ -66,6 +66,32 @@
 
 ---
 
+## v1.3.0 - Consolidamento Documentazione (2025-06-14)
+
+### 📚 Consolidamento Documentazione
+
+- ✅ **CLERK_INTEGRATION_COMPLETE.md**: Consolidata tutta la documentazione Clerk in un unico file completo
+- ❌ **RIMOSSI**: `CLERK_INTEGRATION.md` e `CLERK_WEBHOOK_SETUP.md` (duplicati)
+- ❌ **RIMOSSO**: `backend/README.md` (integrato nel README principale)
+- ✅ **README.md**: Semplificato rimuovendo sezioni specifiche ora documentate separatamente
+- ✅ **README.md**: Integrata struttura backend e guida sviluppo
+- ✅ **Aggiornati riferimenti**: Rimossi link a script eliminati (`start-local-dev.bat`, `test-*.bat`)
+
+### 🧹 Pulizia Struttura
+
+- ✅ **Eliminazione ridondanze**: Un singolo README principale con sezioni ben definite
+- ✅ **Specializzazione**: Documentazione tecnica specifica in file dedicati
+- ✅ **README principale**: Focus su Docker, setup, e overview generale
+- ✅ **Documentazione specifica**: Clerk, Automation, RBAC in file separati
+
+### 🔗 Aggiornamenti Riferimenti
+
+- ✅ Corretti tutti i link alla documentazione consolidata
+- ✅ Aggiornati script README per riflettere la nuova struttura
+- ✅ Rimossi riferimenti a script obsoleti nelle guide
+
+---
+
 ## Setup Rapido per Nuovi Sviluppatori
 
 ```bash

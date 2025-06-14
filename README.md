@@ -23,11 +23,11 @@ cd Thothix
 - [Prerequisites](#prerequisites)
 - [Quick Start with Docker](#quick-start-with-docker)
 - [Docker Configuration](#docker-configuration)
-- [Kubernetes Deployment](#kubernetes-deployment)
 - [Useful Docker Commands](#useful-docker-commands)
+- [Database Verification Tools](#database-verification-tools)
 - [Development](#development)
 - [API Reference](#api-reference)
-- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
 ## 🏗️ Architecture
 
@@ -71,8 +71,6 @@ cd Thothix
 
 - [Docker](https://docs.docker.com/get-docker/) (version 20.10+)
 - [Docker Compose](https://docs.docker.com/compose/install/) (version 2.0+)
-- [Kubernetes](https://kubernetes.io/docs/setup/) (for deployment)
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) (for K8s management)
 - Git
 
 ### Installation Verification
@@ -80,7 +78,6 @@ cd Thothix
 ```bash
 docker --version
 docker-compose --version
-kubectl version --client
 ```
 
 ## 🐳 Quick Start with Docker
@@ -92,21 +89,7 @@ git clone <repository-url>
 cd Thothix
 ```
 
-### 2. Development Setup (Recommended)
-
-```bash
-# Setup development tools and automation
-.\scripts\setup-hooks.ps1
-
-# This configures:
-# - Git pre-commit hooks for automatic code formatting and linting
-# - VS Code tasks for development workflow
-# - Quality checks before every commit
-```
-
-For more details, see [AUTOMATION.md](AUTOMATION.md).
-
-### 3. Environment Configuration
+### 2. Environment Configuration
 
 ```bash
 # Copy and configure environment variables
@@ -137,7 +120,7 @@ ENVIRONMENT=development
 
 ⚠️ **Security Note**: Never commit the `.env` file to version control. It's already included in `.gitignore`.
 
-### 4. Start the complete stack
+### 3. Start the complete stack
 
 ```bash
 # Start all services
@@ -147,7 +130,7 @@ docker-compose up -d --build
 docker-compose ps
 ```
 
-### 5. Database initialization
+### 4. Database initialization
 
 ```bash
 # Run database migrations
@@ -157,7 +140,7 @@ docker-compose exec thothix-api go run cmd/migrate/main.go
 docker-compose exec thothix-api go run cmd/seed/main.go
 ```
 
-### 6. Access services
+### 5. Access services
 
 | Service           | URL                                         | Credentials        |
 | ----------------- | ------------------------------------------- | ------------------ |
@@ -165,6 +148,8 @@ docker-compose exec thothix-api go run cmd/seed/main.go
 | **Thothix Web**   | <http://localhost:30001>                    | -                  |
 | **MinIO Console** | <http://localhost:30002>                    | admin/password123  |
 | **pgAdmin**       | <http://localhost:5432>                     | postgres/@Admin123 |
+
+---
 
 ## ⚙️ Docker Configuration
 
@@ -304,9 +289,9 @@ LOG_LEVEL=debug
 GIN_MODE=debug
 ```
 
-## 🛠️ Comandi Docker Utili
+## 🛠️ Useful Docker Commands
 
-### Comandi utili
+### Development Commands
 
 ```bash
 # Avvia tutti i servizi in background
@@ -481,25 +466,76 @@ For more details on verification commands, see `DB_MIGRATION.md`.
 ```
 thothix/
 ├── backend/                 # Go API + Gin
-│   ├── cmd/                # Entry points
 │   ├── internal/           # Business logic
-│   ├── pkg/               # Shared packages
-│   ├── migrations/        # Database migrations
-│   └── Dockerfile
+│   │   ├── config/         # Application configuration
+│   │   ├── database/       # Database setup and migrations
+│   │   ├── handlers/       # HTTP handlers for APIs
+│   │   ├── middleware/     # Custom middleware
+│   │   ├── models/         # Data models
+│   │   └── router/         # Route setup
+│   ├── docs/              # Generated Swagger documentation
+│   ├── main.go            # Application entry point
+│   ├── go.mod            # Go dependencies
+│   └── Dockerfile        # Docker configuration
 ├── frontend/              # Nuxt.js app
 │   ├── components/       # Vue components
 │   ├── pages/           # Route pages
 │   ├── plugins/         # Nuxt plugins
 │   └── Dockerfile
-├── k8s/                 # Kubernetes manifests
+├── scripts/             # Development scripts
 ├── docker-compose.yml
 └── README.md
 ```
 
+### Data Models
+
+- **User**: Platform users (synchronized with Clerk authentication)
+- **Project**: Enterprise projects with members
+- **Channel**: Communication channels (public/private)
+- **Message**: Channel messages and direct messages
+- **File**: Shared files in projects
+
+### Backend Quick Development
+
+For backend-specific development:
+
+```bash
+# Install dependencies
+cd backend
+go mod tidy
+
+# Generate Swagger documentation
+go install github.com/swaggo/swag/cmd/swag@latest
+swag init
+
+# Start the server (requires database)
+go run main.go
+```
+
+### Development Tools
+
+The project includes development automation scripts:
+
+```bash
+# Setup development environment (one-time)
+.\scripts\setup-hooks.ps1
+
+# Development workflow
+.\scripts\dev.bat            # Start backend with hot reload
+.\scripts\pre-commit.bat     # Run formatting and linting
+.\scripts\db-verify.bat      # Verify database schema
+```
+
+For complete automation details, see [AUTOMATION.md](AUTOMATION.md).
+
+### Authentication Integration
+
+Thothix uses Clerk for secure authentication. For complete setup and integration guide, see [CLERK_INTEGRATION_COMPLETE.md](CLERK_INTEGRATION_COMPLETE.md).
+
 ### Hot Reload
 
 - **Frontend**: Nuxt with automatic hot reload
-- **Backend**: Air for Go server auto-restart
+- **Backend**: Air for Go server auto-restart (via dev.bat)
 - **Database**: Persists through Docker volumes
 
 ### Testing
@@ -523,21 +559,21 @@ The REST API is documented with Swagger UI and available at: `http://localhost:3
 
 Thothix implements a simplified role-based access control (RBAC) system:
 
-#### Available Roles:
+#### Available Roles
 
 - **Admin**: Can manage the entire system
 - **Manager**: Can manage everything except user management
 - **User**: Can participate in assigned projects and channels, create 1:1 chats
 - **External**: Can only participate in public channels
 
-#### Public/Private Channel Strategy:
+#### Public/Private Channel Strategy
 
 - **Public Channels**: No explicit members in the `channel_members` table
 - **Private Channels**: At least one member in the `channel_members` table
 
 For more details see: [`backend/RBAC_SIMPLIFIED.md`](backend/RBAC_SIMPLIFIED.md)
 
-### Main Endpoints:
+### Main Endpoints
 
 #### Authentication
 

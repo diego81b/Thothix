@@ -1,4 +1,4 @@
-# 🔐 Clerk Authentication Integration Guide
+# 🔐 Thothix - Clerk Authentication Integration
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ Thothix integrates with Clerk to provide secure, scalable authentication for the
 - ✅ Multi-provider support (Google, GitHub, email)
 - ✅ Pre-built UI components
 - ✅ Local development with ngrok tunneling
-- ✅ Comprehensive testing scripts
+- ✅ Comprehensive testing via Swagger UI
 
 ## Quick Start
 
@@ -45,14 +45,14 @@ CLERK_WEBHOOK_SECRET=whsec_your_webhook_signing_secret
 PORT=30000
 ```
 
-### 3. Quick Start Script
+### 3. Quick Start
 
 ```bash
-# Windows - Start complete local development environment
-scripts\start-local-dev.bat
-
-# Or manually:
+# Start the backend manually
 cd backend && go run main.go
+
+# Or using the development script
+scripts\dev.bat
 ```
 
 ## Authentication Architecture
@@ -69,10 +69,10 @@ cd backend && go run main.go
         │                        │───────────────────────▶│
         │                        │                        │
         │ 3. Auth with Clerk     │                        │
-        │◀───────────────────────────────────────────────│
+        │◀───────────────────────────────────────────────-│
         │                        │                        │
         │ 4. API calls with JWT  │                        │
-        │───────────────────────▶│ 5. Verify JWT         │
+        │───────────────────────▶│ 5. Verify JWT          │
         │                        │───────────────────────▶│
         │                        │ 6. User info           │
         │                        │◀───────────────────────│
@@ -142,11 +142,11 @@ After user login on the frontend, call the sync endpoint:
 ```javascript
 // Frontend - after successful Clerk authentication
 const response = await fetch('/api/v1/auth/sync', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${clerkToken}`,
-    'Content-Type': 'application/json'
-  }
+	method: 'POST',
+	headers: {
+		Authorization: `Bearer ${clerkToken}`,
+		'Content-Type': 'application/json',
+	},
 });
 ```
 
@@ -155,20 +155,21 @@ const response = await fetch('/api/v1/auth/sync', {
 Webhooks automatically sync user data when changes occur in Clerk.
 
 **Supported Events**:
+
 - `user.created` - New user registration
 - `user.updated` - Profile updates (name, email, avatar)
 - `user.deleted` - Account deletion
 
 **User Data Mapping**:
 
-| Clerk Field | Thothix Field | Notes |
-|-------------|---------------|-------|
-| `id` | `id` | Primary key |
-| `primary_email_address.email_address` | `email` | Primary email |
-| `first_name + last_name` | `name` | Full name |
-| `image_url` | `avatar_url` | User avatar |
-| `username` | `name` | Fallback if name missing |
-| (default) | `system_role` | Always `user` for new users |
+| Clerk Field                           | Thothix Field | Notes                       |
+| ------------------------------------- | ------------- | --------------------------- |
+| `id`                                  | `id`          | Primary key                 |
+| `primary_email_address.email_address` | `email`       | Primary email               |
+| `first_name + last_name`              | `name`        | Full name                   |
+| `image_url`                           | `avatar_url`  | User avatar                 |
+| `username`                            | `name`        | Fallback if name missing    |
+| (default)                             | `system_role` | Always `user` for new users |
 
 ### Manual User Import
 
@@ -185,6 +186,7 @@ curl -X POST http://localhost:30000/api/v1/auth/import-users \
 ### 1. Ngrok Setup
 
 **Install Ngrok**:
+
 ```bash
 # Download from https://ngrok.com/download
 # Or via package managers:
@@ -194,6 +196,7 @@ npm install -g @ngrok/ngrok      # Node.js
 ```
 
 **Configure Ngrok**:
+
 ```bash
 # Get auth token from ngrok.com dashboard
 ngrok config add-authtoken YOUR_NGROK_TOKEN
@@ -201,19 +204,21 @@ ngrok config add-authtoken YOUR_NGROK_TOKEN
 
 ### 2. Start Development Environment
 
-**Option A: Automated Script (Windows)**:
+**Option A: Using Development Script**:
+
 ```bash
-# Starts backend + ngrok with pre-configured URL
-scripts\start-local-dev.bat
+# Start backend with automatic reload and debugging
+scripts\dev.bat
 ```
 
 **Option B: Manual Setup**:
+
 ```bash
 # Terminal 1: Start backend
 cd backend
 go run main.go
 
-# Terminal 2: Start ngrok tunnel
+# Terminal 2: Start ngrok tunnel (for webhook testing)
 ngrok http --url=flying-mullet-socially.ngrok-free.app 30000
 ```
 
@@ -222,11 +227,13 @@ ngrok http --url=flying-mullet-socially.ngrok-free.app 30000
 1. **Navigate**: Go to [Clerk Dashboard](https://dashboard.clerk.com)
 2. **Select Project**: Choose your application
 3. **Configure Webhook**:
+
    - **URL**: `https://flying-mullet-socially.ngrok-free.app/api/v1/auth/webhooks/clerk`
    - **Events**: `user.created`, `user.updated`, `user.deleted`
    - **Version**: `v1`
 
 4. **Copy Signing Secret**: Add to your `.env` file:
+
    ```bash
    CLERK_WEBHOOK_SECRET=whsec_your_webhook_signing_secret
    ```
@@ -234,6 +241,7 @@ ngrok http --url=flying-mullet-socially.ngrok-free.app 30000
 ### 4. Testing Setup
 
 **Verify Installation**:
+
 ```bash
 # Test backend health
 curl http://localhost:30000/health
@@ -243,6 +251,7 @@ curl https://flying-mullet-socially.ngrok-free.app/health
 ```
 
 **Verification URLs**:
+
 - **Local Health**: http://localhost:30000/health
 - **Ngrok Health**: https://flying-mullet-socially.ngrok-free.app/health
 - **Swagger (Local)**: http://localhost:30000/swagger/index.html
@@ -252,12 +261,12 @@ curl https://flying-mullet-socially.ngrok-free.app/health
 
 ### Authentication Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/api/v1/auth/sync` | Sync current user from Clerk | Yes (JWT) |
-| `GET` | `/api/v1/auth/me` | Get current user info | Yes (JWT) |
-| `POST` | `/api/v1/auth/webhooks/clerk` | Webhook for auto-sync | No (Webhook signature) |
-| `POST` | `/api/v1/auth/import-users` | Import all users from Clerk | Yes (Admin) |
+| Method | Endpoint                      | Description                  | Auth Required          |
+| ------ | ----------------------------- | ---------------------------- | ---------------------- |
+| `POST` | `/api/v1/auth/sync`           | Sync current user from Clerk | Yes (JWT)              |
+| `GET`  | `/api/v1/auth/me`             | Get current user info        | Yes (JWT)              |
+| `POST` | `/api/v1/auth/webhooks/clerk` | Webhook for auto-sync        | No (Webhook signature) |
+| `POST` | `/api/v1/auth/import-users`   | Import all users from Clerk  | Yes (Admin)            |
 
 ### Protected Endpoints
 
@@ -272,18 +281,17 @@ curl -X GET "http://localhost:30000/api/v1/users" \
 ### Webhook Payload Examples
 
 **User Created**:
+
 ```json
 {
-  "type": "user.created",
-  "data": {
-    "id": "user_2abc123def456",
-    "email_addresses": [
-      {"email_address": "user@example.com"}
-    ],
-    "first_name": "John",
-    "last_name": "Doe",
-    "image_url": "https://img.clerk.com/avatar.jpg"
-  }
+	"type": "user.created",
+	"data": {
+		"id": "user_2abc123def456",
+		"email_addresses": [{ "email_address": "user@example.com" }],
+		"first_name": "John",
+		"last_name": "Doe",
+		"image_url": "https://img.clerk.com/avatar.jpg"
+	}
 }
 ```
 
@@ -292,12 +300,15 @@ curl -X GET "http://localhost:30000/api/v1/users" \
 ### 1. API Testing
 
 **Using Swagger UI** (recommended):
+
 ```bash
 # Open in browser
 http://localhost:30000/swagger/index.html
 ```
 
 **Manual testing examples**:
+
+```bash
 # Health check
 curl http://localhost:30000/health
 
@@ -345,29 +356,31 @@ cd backend && go run main.go
 ### Nuxt.js Setup
 
 **Configuration**:
+
 ```javascript
 // nuxt.config.js
 export default {
-  runtimeConfig: {
-    public: {
-      clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY
-    }
-  }
-}
+	runtimeConfig: {
+		public: {
+			clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+		},
+	},
+};
 ```
 
 **Plugin Setup**:
+
 ```javascript
 // plugins/clerk.client.js
-import { ClerkProvider } from '@clerk/vue'
+import { ClerkProvider } from '@clerk/vue';
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const config = useRuntimeConfig()
-  
-  nuxtApp.vueApp.use(ClerkProvider, {
-    publishableKey: config.public.clerkPublishableKey
-  })
-})
+	const config = useRuntimeConfig();
+
+	nuxtApp.vueApp.use(ClerkProvider, {
+		publishableKey: config.public.clerkPublishableKey,
+	});
+});
 ```
 
 ### Authentication Composable
@@ -375,38 +388,38 @@ export default defineNuxtPlugin((nuxtApp) => {
 ```javascript
 // composables/useAuth.js
 export const useAuth = () => {
-  const { isSignedIn, user, getToken } = useClerk()
-  
-  const syncUser = async () => {
-    if (!isSignedIn.value) return
-    
-    const token = await getToken()
-    await $fetch('/api/v1/auth/sync', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-  }
-  
-  const apiCall = async (url, options = {}) => {
-    const token = await getToken()
-    return $fetch(url, {
-      ...options,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        ...options.headers
-      }
-    })
-  }
-  
-  return {
-    isSignedIn,
-    user,
-    syncUser,
-    apiCall
-  }
-}
+	const { isSignedIn, user, getToken } = useClerk();
+
+	const syncUser = async () => {
+		if (!isSignedIn.value) return;
+
+		const token = await getToken();
+		await $fetch('/api/v1/auth/sync', {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+	};
+
+	const apiCall = async (url, options = {}) => {
+		const token = await getToken();
+		return $fetch(url, {
+			...options,
+			headers: {
+				Authorization: `Bearer ${token}`,
+				...options.headers,
+			},
+		});
+	};
+
+	return {
+		isSignedIn,
+		user,
+		syncUser,
+		apiCall,
+	};
+};
 ```
 
 ### Authentication Flow Example
@@ -467,6 +480,7 @@ GIN_MODE=release
 **Error**: `Invalid token: clerk verification failed with status: 401`
 
 **Solutions**:
+
 - ✅ Verify `CLERK_SECRET_KEY` is correct for your environment
 - ✅ Check token hasn't expired (frontend should refresh automatically)
 - ✅ Ensure you're using the correct environment keys (dev vs prod)
@@ -477,6 +491,7 @@ GIN_MODE=release
 **Error**: `Clerk user ID not found`
 
 **Solutions**:
+
 - ✅ Verify `ClerkAuth` middleware is properly configured
 - ✅ Check endpoint is protected by authentication middleware
 - ✅ Ensure token is valid and not expired
@@ -487,6 +502,7 @@ GIN_MODE=release
 **Error**: User not created in local database
 
 **Solutions**:
+
 - ✅ Always call `/api/v1/auth/sync` after each login
 - ✅ Verify database connection and configuration
 - ✅ Check application logs for database errors
@@ -497,6 +513,7 @@ GIN_MODE=release
 **Issues**: Automatic synchronization doesn't happen
 
 **Solutions**:
+
 - ✅ Verify webhook URL in Clerk Dashboard is correct
 - ✅ Check webhook endpoint is public (not protected by auth)
 - ✅ Confirm events are configured: `user.created`, `user.updated`, `user.deleted`
@@ -509,6 +526,7 @@ GIN_MODE=release
 **Common Problems**:
 
 **Ngrok not working**:
+
 ```bash
 # Check if ngrok is installed
 ngrok version
@@ -521,6 +539,7 @@ ngrok http --url=flying-mullet-socially.ngrok-free.app 30000
 ```
 
 **Backend not accessible**:
+
 ```bash
 # Check if backend is running
 curl http://localhost:30000/health
@@ -530,6 +549,7 @@ cd backend && go run main.go
 ```
 
 **Webhook signature validation fails**:
+
 ```bash
 # Verify webhook secret is correctly set
 echo $CLERK_WEBHOOK_SECRET
@@ -565,7 +585,7 @@ This integration provides a robust, secure authentication system for Thothix wit
 - 🔐 **Enterprise-grade security** with JWT verification
 - 🔄 **Automatic user synchronization** via webhooks
 - 🛠️ **Developer-friendly** local development setup
-- 🧪 **Comprehensive testing** tools and scripts
+- 🧪 **Comprehensive testing** tools via Swagger UI
 - 📚 **Complete documentation** and troubleshooting guides
 
 The system is designed to handle both development and production environments seamlessly, with proper error handling, security measures, and monitoring capabilities.

@@ -1,0 +1,24 @@
+# Production overrides
+services:
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: thothix-prod
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+
+  thothix-api:
+    environment:
+      ENVIRONMENT: production
+      GIN_MODE: release
+      DB_NAME: thothix-prod
+    restart: always
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:30000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_prod_data:
+    driver: local

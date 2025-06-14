@@ -638,3 +638,60 @@ This project is distributed under the MIT License. See `LICENSE` for more inform
 - [ ] CI/CD pipeline
 
 To contribute to the project, see the [developer guide](./docs/CONTRIBUTING.md).
+
+---
+
+## 🌍 Multi-Environment Management
+
+Thothix supports multiple deployment environments using Docker Compose.
+
+### Environment Files
+
+```bash
+.env                    # Development (default)
+.env.prod              # Production
+.env.staging           # Staging
+```
+
+### Deployment Commands
+
+```bash
+# Development
+docker-compose up -d --build
+
+# Production
+docker-compose --env-file .env.prod up -d --build
+
+# Staging
+docker-compose --env-file .env.staging up -d --build
+```
+
+### Advanced Multi-File Setup
+
+For complex configurations, you can use multiple compose files:
+
+```bash
+# Production with additional services
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Staging with monitoring
+docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+```
+
+### Environment Variables
+
+Each environment file should contain:
+
+- **Database credentials** (different per environment)
+- **Clerk API keys** (development vs production)
+- **Application settings** (debug mode, logging level)
+- **External service URLs** (different endpoints per environment)
+
+### Security Notes
+
+- ⚠️ **Never commit production secrets** to version control
+- ✅ Use `.env.local` for local overrides (ignored by git)
+- ✅ Store production secrets in secure vault systems
+- ✅ Use different database names/passwords per environment
+
+---

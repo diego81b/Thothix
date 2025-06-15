@@ -16,8 +16,7 @@ if "%1"=="" (
     echo   status   - Show container status
     echo   vault    - Vault-specific commands ^(init, ui, status^)
     echo.
-    echo Options:
-    echo   --vault  - Force enable Vault for dev/staging
+    echo Note: Vault is now integrated in all environments
     exit /b 1
 )
 
@@ -30,24 +29,14 @@ if "%CMD%"=="" set CMD=up
 REM Set environment file and compose files
 if "%ENV%"=="dev" (
     set ENV_FILE=.env
-    if "%OPT%"=="--vault" (
-        set COMPOSE_FILES=-f docker-compose.yml -f docker-compose.vault.yml
-        set ENV_FILE=.env.vault
-    ) else (
-        set COMPOSE_FILES=-f docker-compose.yml
-    )
+    set COMPOSE_FILES=-f docker-compose.yml
 ) else if "%ENV%"=="staging" (
     set ENV_FILE=.env.staging
-    if "%OPT%"=="--vault" (
-        set COMPOSE_FILES=-f docker-compose.yml -f docker-compose.vault.yml
-    ) else (
-        set COMPOSE_FILES=-f docker-compose.yml
-    )
+    set COMPOSE_FILES=-f docker-compose.yml
 ) else if "%ENV%"=="prod" (
     set ENV_FILE=.env.prod
     set COMPOSE_FILES=-f docker-compose.yml -f docker-compose.prod.yml
-) else if "%ENV%"=="prod" (
-    set ENV_FILE=.env.prod
+) else (
     set COMPOSE_FILES=docker-compose.yml docker-compose.prod.yml
 ) else (
     echo Error: Unknown environment '%ENV%'

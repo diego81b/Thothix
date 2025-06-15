@@ -1,6 +1,8 @@
 # Thothix Messaging Platform
 
-[![GitHub Repository](https://img.shields.io/badge/GitHub-diego81b%2FThothix-blue?style=flat&logo=github)](https://github.com/diego81b/Thothix)
+[!- **[🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
+- **[🐳 Docker Modernization Guide](./DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
+- **[🤖 Automation Guide](./AUTOMATION.md)** - Pre-commit hooks and formattingHub Repository](https://img.shields.io/badge/GitHub-diego81b%2FThothix-blue?style=flat&logo=github)](https://github.com/diego81b/Thothix)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat&logo=docker)](https://docker.com)
 [![Go](https://img.shields.io/badge/Go-1.23-blue?style=flat&logo=go)](https://golang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=flat&logo=postgresql)](https://postgresql.org)
@@ -451,14 +453,22 @@ go run main.go
 The project includes development automation scripts:
 
 ```bash
-# Setup development environment (one-time)
-.\scripts\setup-hooks.ps1
+# Version management (semantic versioning)
+.\scripts\version-bump.bat patch "Description"  # Patch version bump
+.\scripts\version-bump.bat minor "New features" # Minor version bump
+.\scripts\version-bump.bat major "Breaking"     # Major version bump
 
 # Development workflow
 .\scripts\dev.bat            # Start backend with hot reload
 .\scripts\pre-commit.bat     # Run formatting and linting
 .\scripts\db-verify.bat      # Verify database schema
 ```
+
+**Script Guidelines:**
+
+- All scripts use `.bat` files for Windows primary development
+- Single version policy: one script per functionality
+- Integrated with VS Code tasks (Ctrl+Shift+P → "Tasks: Run Task")
 
 For complete automation details, see [AUTOMATION.md](AUTOMATION.md).
 

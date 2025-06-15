@@ -28,7 +28,7 @@ if not "%BUMP_TYPE%"=="major" if not "%BUMP_TYPE%"=="minor" if not "%BUMP_TYPE%"
 echo 🔍 Lettura versione corrente dal CHANGELOG...
 
 :: Trova la prima versione nel CHANGELOG (metodo semplificato)
-set "CURRENT_VERSION=v1.3.0"
+set "CURRENT_VERSION=v1.3.1"
 echo 📋 Versione corrente trovata: %CURRENT_VERSION%
 
 :: Estrae i numeri di versione (rimuove la 'v')

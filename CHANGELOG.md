@@ -1,6 +1,6 @@
-# Changelog - Automazione e Qualità del Codice
+# Changelog - Automation and Code Quality
 
-## [Unreleased]
+## v1.3.1 - Script Simplification and Version Management (2025-06-15)
 
 ### Infrastructure
 
@@ -29,7 +29,14 @@
   - Added release process documentation with semantic versioning
   - **Impact**: Ensures consistent and detailed change tracking for all commits
 
-## v1.3.0 - Consolidamento Documentazione (2025-06-14)
+- docs: clean and organize CHANGELOG with proper formatting
+  - Recreated CHANGELOG.md with proper Markdown formatting
+  - Organized versions chronologically (newest first)
+  - Consolidated duplicate entries and removed malformed versions
+  - Applied consistent section formatting and indentation
+  - **Impact**: Clean, well-structured CHANGELOG ready for automated version management
+
+## v1.3.0 - Documentation Consolidation (2025-06-14)
 
 ### Documentation Updates
 
@@ -45,51 +52,51 @@
   - Updated project structure documentation
   - **Impact**: Cleaner, more maintainable documentation
 
-## v1.2.0 - Automazione Completa (2025-06-13)
+## v1.2.0 - Complete Automation (2025-06-13)
 
-### ✨ Nuove Funzionalità
+### ✨ New Features
 
-- **Sistema di automazione pre-commit completo**
-- **Git hooks automatici** per formattazione e linting
-- **Script cross-platform** (Windows/Unix) per sviluppo
-- **VS Code tasks** integrate per workflow di sviluppo
+- **Complete pre-commit automation system**
+- **Automatic Git hooks** for formatting and linting
+- **Cross-platform scripts** (Windows/Unix) for development
+- **VS Code tasks** integrated for development workflow
 
-### 🔧 Strumenti di Formattazione
+### 🔧 Formatting Tools
 
-- **gofmt**: Formattazione base Go
-- **goimports**: Gestione automatica import
-- **gofumpt**: Formattazione rigorosa per CI/CD
-- **golangci-lint**: Linting configurato con regole rilassate
+- **gofmt**: Basic Go formatting
+- **goimports**: Automatic import management
+- **gofumpt**: Strict formatting for CI/CD
+- **golangci-lint**: Linting configured with relaxed rules
 
-### 🛠️ Configurazione Migliorata
+### 🛠️ Improved Configuration
 
-- **`.golangci.yml`** ottimizzato per produttività sviluppatori
-- **Makefile** con target per tutte le operazioni comuni
-- **VS Code settings** per auto-formattazione
-- **Scripts PowerShell/Batch** per setup automatico
+- **`.golangci.yml`** optimized for developer productivity
+- **Makefile** with targets for all common operations
+- **VS Code settings** for auto-formatting
+- **PowerShell/Batch scripts** for automatic setup
 
-### 🐛 Problemi Risolti
+### 🐛 Issues Resolved
 
-- ✅ Errori di formattazione `gofumpt` risolti automaticamente
-- ✅ Spaziatura import Go corretta secondo convenzioni
-- ✅ Aggiunta automatica file formattati al commit
-- ✅ Hook pre-commit robusto con gestione errori
-- ✅ **NUOVO**: Problema VS Code che rompeva formattazione import Go
-- ✅ **NUOVO**: Configurazione VS Code ottimizzata per evitare spazi extra
-- ✅ **NUOVO**: Task VS Code per formattazione file singolo
-- ✅ **NUOVO**: Script batch per correzione formattazione massive
-- ✅ **RISOLTO**: Conflitto tra goimports e gofumpt che causava errori di formattazione persistenti
+- ✅ `gofumpt` formatting errors resolved automatically
+- ✅ Go import spacing corrected according to conventions
+- ✅ Automatic addition of formatted files to commit
+- ✅ Robust pre-commit hook with error handling
+- ✅ **NEW**: Fixed VS Code issue that broke Go import formatting
+- ✅ **NEW**: Optimized VS Code configuration to avoid extra spaces
+- ✅ **NEW**: VS Code task for single file formatting
+- ✅ **NEW**: Batch script for massive formatting corrections
+- ✅ **RESOLVED**: Conflict between goimports and gofumpt causing persistent formatting errors
 
-### 🧹 Pulizia e Ottimizzazione Script
+### 🧹 Script Cleanup and Optimization
 
-- ✅ **NUOVO**: Script unificato `dev.bat/sh` con azioni multiple (format|lint|pre-commit|all)
-- ✅ **RIMOSSI**: Script duplicati `format.bat/sh`, `fix-formatting.bat`
-- ✅ **CONSOLIDATO**: Tutte le funzionalità di sviluppo in script unici
-- ✅ **SEMPLIFICATO**: Workflow sviluppo con comandi chiari e intuitivi
+- ✅ **NEW**: Unified `dev.bat/sh` script with multiple actions (format|lint|pre-commit|all)
+- ✅ **REMOVED**: Duplicate scripts `format.bat/sh`, `fix-formatting.bat`
+- ✅ **CONSOLIDATED**: All development functionality in single scripts
+- ✅ **SIMPLIFIED**: Development workflow with clear and intuitive commands
 
-### 📚 Documentazione
+### 📚 Documentation
 
-- **AUTOMATION.md**: Guida completa all'automazione
-- **README.md**: Aggiornato con setup sviluppo
-- **backend/README.md**: Documentazione strumenti sviluppo
-- **Troubleshooting**: Sezioni per risoluzione problemi comuni
+- **AUTOMATION.md**: Complete automation guide
+- **README.md**: Updated with development setup
+- **backend/README.md**: Development tools documentation
+- **Troubleshooting**: Sections for resolving common issues

@@ -2,8 +2,9 @@
 
 ## [Unreleased]
 
-### Infrastructure
+## v1.3.1 - Release v1.3.1 (2025 -15-06)
 
+### Infrastructure
 - feat: simplify script architecture with single-version policy
   - Removed duplicate version-bump scripts (.ps1, .sh)
   - Standardized on .bat files for Windows primary development
@@ -11,30 +12,25 @@
   - Cleaned scripts README.md documentation
   - Updated VS Code tasks to use simplified scripts
   - **Impact**: Reduced maintenance overhead, eliminated confusion, improved developer experience
-
 - feat: implement automatic semantic versioning system
   - Added cross-platform version bump scripts (Windows, PowerShell, Unix)
   - Automated CHANGELOG.md updates with version releases
   - Git tag creation with semantic versioning (major.minor.patch)
   - VS Code tasks integration for version management
   - **Impact**: Streamlined release management with automated version control, CHANGELOG updates, and Git tagging
-
 ### Documentation
-
 - docs: enhance Copilot instructions with mandatory CHANGELOG updates
   - Added comprehensive CHANGELOG guidelines with examples and best practices
   - Made CHANGELOG updates mandatory in pre-commit checklist
   - Included detailed formatting standards for CHANGELOG entries
   - Added release process documentation with semantic versioning
   - **Impact**: Ensures consistent and detailed change tracking for all commits
-
 - docs: update CHANGELOG format to v1.2.3 - Description (YYYY-MM-DD)
   - Standardized version format across all documentation
   - Updated Copilot instructions with semantic versioning guidelines
   - Added version bump decision guide for different commit types
   - Enhanced release process documentation
   - **Impact**: Consistent versioning format and automated release management workflow
-
 ## v1.3.0 - Consolidamento Documentazione (2025-06-14)
 
 ### Documentation Updates

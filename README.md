@@ -2,7 +2,7 @@
 
 - **[🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** Complete setup, troubleshooting & production guide
 - **[🐳 Docker Modernization Guide](./DOCKER_MODERNIZATION.md)** Docker architecture updates and migration guide
-- **[🤖 Automation Guide](./AUTOMATION.md)**
+- **[🌍 Node.js Development Guide](./NODE_JS_GUIDE.md)** Cross-platform automation with Node.js/Zx
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat&logo=docker)](https://docker.com)
 [![Go](https://img.shields.io/badge/Go-1.23-blue?style=flat&logo=go)](https://golang.org)
@@ -36,7 +36,7 @@ cd Thothix
 - **[🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
 - **[� Docker Modernization Guide](./DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
 - **[�📁 Scripts Documentation](./scripts/README.md)** - Development automation and tools
-- **[🤖 Automation Guide](./AUTOMATION.md)** - Pre-commit hooks and formatting
+- **[🌍 Node.js Development Guide](./NODE_JS_GUIDE.md)** - Cross-platform automation with Node.js/Zx
 
 ## 🏗️ Architecture
 
@@ -91,7 +91,7 @@ docker --version
 docker compose version
 ```
 
-## 🐳 Quick Start with Docker
+## � Quick Start
 
 ### 1. Repository Clone
 
@@ -100,12 +100,19 @@ git clone <repository-url>
 cd Thothix
 ```
 
-### 2. Environment Configuration
+### 2. Install Node.js Dependencies
+
+```bash
+# Install Node.js from https://nodejs.org/
+npm install
+```
+
+### 3. Environment Configuration
 
 ```bash
 # Copy and configure environment variables
 cp .env.example .env
-notepad .env
+notepad .env  # or your preferred editor
 ```
 
 **Configure your `.env` file with your credentials:**
@@ -118,6 +125,24 @@ notepad .env
 - Vault integration settings
 
 ⚠️ **Security Note**: Never commit the `.env` file to version control. It's already included in `.gitignore`.
+
+### 4. Development Commands
+
+```bash
+# Format code
+npm run format
+
+# Run pre-commit checks
+npm run pre-commit
+
+# Start development environment
+npm run dev
+
+# Check database
+npm run db:status
+```
+
+**All commands are natively cross-platform with Node.js!** 🎯
 
 **For Vault Integration (Optional):**
 
@@ -474,7 +499,7 @@ The project includes development automation scripts:
 - `dev.bat` replaces multiple separate scripts with unified interface
 - Integrated with VS Code tasks (Ctrl+Shift+P → "Tasks: Run Task")
 
-For complete automation details, see [AUTOMATION.md](AUTOMATION.md).
+For complete development details, see [NODE_JS_GUIDE.md](NODE_JS_GUIDE.md).
 
 ### Authentication Integration
 

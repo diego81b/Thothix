@@ -1,0 +1,31 @@
+{
+  "name": "thothix-scripts",
+  "version": "0.0.1",
+  "description": "Cross-platform scripts for Thothix development",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format": "zx scripts/dev.mjs format",
+    "lint": "zx scripts/dev.mjs lint",
+    "test": "zx scripts/dev.mjs test",
+    "pre-commit": "zx scripts/dev.mjs pre-commit",
+    "all": "zx scripts/dev.mjs all",
+    "dev": "zx scripts/deploy.mjs dev up",
+    "dev:down": "zx scripts/deploy.mjs dev down",
+    "dev:logs": "zx scripts/deploy.mjs dev logs",
+    "staging": "zx scripts/deploy.mjs staging up",
+    "staging:down": "zx scripts/deploy.mjs staging down",
+    "prod": "zx scripts/deploy.mjs prod up",
+    "prod:down": "zx scripts/deploy.mjs prod down",
+    "db:status": "zx scripts/db-verify.mjs status",
+    "db:connect": "zx scripts/db-verify.mjs connect",
+    "db:tables": "zx scripts/db-verify.mjs list-tables",
+    "db:check": "zx scripts/db-verify.mjs check-basemodel"
+  },
+  "devDependencies": {
+    "zx": "^8.1.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

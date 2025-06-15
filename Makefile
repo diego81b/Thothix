@@ -1,31 +1,56 @@
-# Makefile per il progetto Thothix
+# Makefile per il progetto Thothix - Node.js/Zx Integration
 # Uso: make <target>
 
-.PHONY: help format lint test build clean dev
+.PHONY: help format lint test build clean dev pre-commit install node-check
 
 # Default target
-help:
-	@echo "🚀 Comandi disponibili per Thothix:"
+help: node-check
+	@echo "🚀 Comandi disponibili per Thothix (Node.js/Zx):"
 	@echo ""
+	@echo "  install    - Installa le dipendenze Node.js"
 	@echo "  format     - Formatta tutto il codice Go"
 	@echo "  lint       - Esegue golangci-lint"
 	@echo "  test       - Esegue i test"
+	@echo "  pre-commit - Esegue format + lint + test (equivale a dev script)"
 	@echo "  build      - Compila l'applicazione"
 	@echo "  clean      - Pulisce i file temporanei"
 	@echo "  dev        - Avvia in modalità sviluppo"
-	@echo "  install    - Installa le dipendenze"
+	@echo ""
+	@echo "💡 Raccomandato: usa direttamente Node.js/Zx:"
+	@echo "  npm run format"
+	@echo "  npm run pre-commit"
+	@echo "  npm run dev"
+	@echo "  ./run format      # Wrapper universale"
 
-# Formattazione del codice
-format:
-	@echo "🔧 Formattazione del codice..."
-	@cd backend && gofmt -w .
-	@echo "✅ Formattazione completata"
+# Check Node.js availability
+node-check:
+	@which node >/dev/null || (echo "❌ Node.js not found! Install: https://nodejs.org/" && exit 1)
+	@test -f package.json || (echo "❌ package.json not found!" && exit 1)
 
-# Linting
-lint:
-	@echo "🔍 Eseguendo golangci-lint..."
-	@cd backend && golangci-lint run --timeout=3m
-	@echo "✅ Linting completato"
+# Install Node.js dependencies
+install: node-check
+	@echo "� Installing Node.js dependencies..."
+	@npm install
+
+# Formattazione del codice (via Node.js/Zx)
+format: node-check
+	@echo "🔧 Formattazione del codice (via Node.js/Zx)..."
+	@npm run format
+
+# Linting (via Node.js/Zx)
+lint: node-check
+	@echo "🔍 Eseguendo golangci-lint (via Node.js/Zx)..."
+	@npm run lint
+
+# Test (via Node.js/Zx)
+test: node-check
+	@echo "🧪 Eseguendo test (via Node.js/Zx)..."
+	@npm run test
+
+# Pre-commit completo (via Node.js/Zx)
+pre-commit: node-check
+	@echo "� Pre-commit checks (via Node.js/Zx)..."
+	@npm run pre-commit
 
 # Test
 test:

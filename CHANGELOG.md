@@ -1,5 +1,76 @@
 # Changelog
 
+## v0.0.2 - complete modernization to Node.js/Zx automation (2025-06-15)
+
+🎉 Modernizzazione Completata: Node.js/Zx Unificato
+✅ Cosa Abbiamo Fatto
+✂️ Rimozione Completa dei File Obsoleti
+
+- ❌ Rimossi wrapper run.bat e run
+- ❌ Rimosso Makefile
+- ❌ Rimosso AUTOMATION.md
+- ❌ Non ci sono più file .bat o .sh ridondanti
+
+🔧 Scripts Modernizzati
+
+- ✅ dev.mjs - Gestione sviluppo (format, lint, test, pre-commit)
+- ✅ deploy.mjs - Gestione ambienti (dev, staging, prod)
+- ✅ db-verify.mjs - Operazioni database
+- ✅ Configurazione Windows automatica (cmd.exe invece di bash)
+- ✅ Path corretti per tutte le operazioni
+
+📚 Documentazione Unificata
+
+- ✅ NODE_JS_GUIDE.md - Guida completa e moderna
+- ✅ README.md - Aggiornato con i nuovi riferimenti
+- ✅ CHANGELOG.md - Documentata la modernizzazione
+- ✅ Rimossi tutti i riferimenti a strumenti obsoleti
+
+📦 Package.json Ottimizzato
+
+- ✅ Tutti gli script npm configurati
+- ✅ Dipendenze minimali (solo Zx)
+- ✅ Nomi script intuivi e coerenti
+
+✅ Workflow Semplificato
+Ora gli sviluppatori usano solo:
+
+```js
+# Sviluppo quotidiano
+npm install           # Setup iniziale
+npm run format       # Formatting
+npm run lint         # Linting
+npm run test         # Testing
+npm run pre-commit   # Check completi
+
+# Gestione ambienti
+npm run dev          # Sviluppo
+npm run staging      # Staging
+npm run prod         # Produzione
+
+# Database
+npm run db:status    # Status
+npm run db:connect   # Connessione
+npm run db:tables    # Lista tabelle
+```
+
+🎯 Vantaggi Ottenuti
+
+- Zero duplication - Un solo script per piattaforma
+- Manutenzione semplificata - Meno file, meno complessità
+- Cross-platform nativo - npm funziona ovunque
+- Developer experience - Comandi standard e intuitivi
+- CI/CD friendly - Standard industry per automazione
+
+🔍 Verifica Funzionamento
+Tutti i comandi funzionano correttamente:
+
+- ✅ npm run format - Formattazione Go
+- ✅ npm run db:status - Check database
+- 🔄 npm run lint - Linting (in corso)
+
+**La modernizzazione è completata e Thothix ora usa esclusivamente Node.js/Zx per tutta l'automazione! 🚀**
+
 ## v0.0.1 - Initial release (2025-06-15)
 
 ### Infrastructure

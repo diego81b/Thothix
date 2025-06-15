@@ -1,5 +1,7 @@
 # Changelog - Automation and Code Quality
 
+## [Unreleased]
+
 ## v1.3.1 - Script Simplification and Version Management (2025-06-15)
 
 ### Infrastructure

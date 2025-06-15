@@ -22,8 +22,8 @@ cd Thothix
 
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
-- [Quick Start with Docker](#quick-start-with-docker)
-- [🔐 HashiCorp Vault Integration](#hashicorp-vault-integration)
+- [Quick Start](#quick-start)
+- [HashiCorp Vault Integration](#hashicorp-vault-integration)
 - [Docker Configuration](#docker-configuration)
 - [Useful Docker Commands](#useful-docker-commands)
 - [Database Verification Tools](#database-verification-tools)
@@ -33,9 +33,10 @@ cd Thothix
 
 ### 📖 Additional Documentation
 
-- **[🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
-- **[� Docker Modernization Guide](./DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
-- **[�📁 Scripts Documentation](./scripts/README.md)** - Development automation and tools
+- **[� Backend Documentation](./backend/README.md)** - Complete Go API documentation, data models, and development guide
+- **[�🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
+- **[🐳 Docker Modernization Guide](./DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
+- **[📁 Scripts Documentation](./scripts/README.md)** - Development automation and tools
 - **[🌍 Node.js Development Guide](./NODE_JS_GUIDE.md)** - Cross-platform automation with Node.js/Zx
 
 ## 🏗️ Architecture
@@ -368,42 +369,30 @@ docker-compose up -d thothix-postgres
 
 ## 🔍 Database Verification Tools
 
-### Utility Scripts
+### Database Operations
 
-The project includes scripts to easily verify database alignment with Go models:
-
-#### Windows (cmd/PowerShell)
-
-```cmd
-# Verify BaseModel alignment (all tables should have 5 columns)
-scripts\db-verify.bat check-basemodel
-
-# List all tables
-scripts\db-verify.bat list-tables
-
-# Check structure of a specific table
-scripts\db-verify.bat check-table users
-
-# Find tables missing a specific field
-scripts\db-verify.bat missing-field updated_by
-
-# Find tables that have a specific field
-scripts\db-verify.bat has-field system_role
-
-# Connect to database interactively
-scripts\db-verify.bat connect
-
-# Database status
-scripts\db-verify.bat status
-```
-
-#### Linux/MacOS (bash)
+The project includes cross-platform database utilities via npm scripts:
 
 ```bash
-# Same usage but with .sh extension
-chmod +x scripts/db-verify.bat
-.\scripts\db-verify.bat check-basemodel
+# Check database status
+npm run db:status
+
+# Connect to database interactively  
+npm run db:connect
+
+# List all tables
+npm run db:tables
+
+# Verify BaseModel alignment (all tables should have 5 columns)
+npm run db:check
+
+# Advanced operations (direct Zx script usage)
+npx zx scripts/db-verify.mjs check-table users
+npx zx scripts/db-verify.mjs has-field users email
+npx zx scripts/db-verify.mjs missing-field users created_by
 ```
+
+**Cross-platform**: Same commands work on Windows, Linux, and macOS! 🌍
 
 ### Manual SQL Commands
 
@@ -425,78 +414,60 @@ For more details on verification commands, see `DB_MIGRATION.md`.
 
 ```
 thothix/
-├── backend/                 # Go API + Gin
-│   ├── internal/           # Business logic
-│   │   ├── config/         # Application configuration
-│   │   ├── database/       # Database setup and migrations
-│   │   ├── handlers/       # HTTP handlers for APIs
-│   │   ├── middleware/     # Custom middleware
-│   │   ├── models/         # Data models
-│   │   └── router/         # Route setup
-│   ├── docs/              # Generated Swagger documentation
-│   ├── main.go            # Application entry point
-│   ├── go.mod            # Go dependencies
-│   └── Dockerfile        # Docker configuration
-├── frontend/              # Nuxt.js app
-│   ├── components/       # Vue components
-│   ├── pages/           # Route pages
-│   ├── plugins/         # Nuxt plugins
-│   └── Dockerfile
-├── scripts/             # Development scripts
-├── docker-compose.yml
-└── README.md
+├── backend/                 # Go API + Gin (see backend/README.md)
+├── frontend/                # Nuxt.js app  
+├── scripts/                 # Development automation (Node.js/Zx)
+├── docker-compose.yml       # Development environment
+└── README.md               # This file
 ```
 
-### Data Models
+### Backend Development
 
-- **User**: Platform users (synchronized with Clerk authentication)
-- **Project**: Enterprise projects with members
-- **Channel**: Communication channels (public/private)
-- **Message**: Channel messages and direct messages
-- **File**: Shared files in projects
+**For detailed backend documentation, API reference, data models, and development guide:**
 
-### Backend Quick Development
+📖 **[Backend Documentation →](./backend/README.md)**
 
-For backend-specific development:
-
+Quick backend commands:
 ```bash
-# Install dependencies
+# Backend development via npm scripts
+npm run format      # Format Go code
+npm run lint        # Run golangci-lint
+npm run test        # Run Go tests
+npm run pre-commit  # Complete checks
+
+# Direct backend development
 cd backend
 go mod tidy
-
-# Generate Swagger documentation
-go install github.com/swaggo/swag/cmd/swag@latest
-swag init
-
-# Start the server (requires database)
 go run main.go
 ```
 
 ### Development Tools
 
-The project includes development automation scripts:
+The project uses modern Node.js/Zx automation for all development tasks:
 
 ```bash
-# Development workflow (unified script)
-.\scripts\dev.bat format     # Format Go code only
-.\scripts\dev.bat lint       # Run linting only
-.\scripts\dev.bat pre-commit # Full pre-commit workflow (format + lint + test)
-.\scripts\dev.bat all        # Same as pre-commit (default)
+# Development workflow
+npm run format      # Format Go code
+npm run lint        # Run golangci-lint  
+npm run test        # Run Go tests
+npm run pre-commit  # Complete pre-commit checks
 
-# Docker deployment
-.\scripts\deploy.bat dev up      # Start development environment
-.\scripts\deploy.bat prod up     # Start production environment
-.\scripts\deploy.bat dev down    # Stop environment
+# Environment management
+npm run dev         # Start development environment
+npm run dev:down    # Stop development environment
+npm run staging     # Deploy to staging
+npm run prod        # Deploy to production
 
-# Database tools
-.\scripts\db-verify.bat      # Verify database schema
+# Database operations
+npm run db:status   # Check database status
+npm run db:check    # Verify BaseModel schema
 ```
 
-**Script Guidelines:**
+**Modern Automation:**
 
-- All scripts use `.bat` files for Windows primary development
-- Single version policy: one script per functionality, no duplicates
-- `dev.bat` replaces multiple separate scripts with unified interface
+- Cross-platform Node.js/Zx scripts work on Windows, Linux, macOS
+- Zero logic duplication - single codebase for all platforms
+- NPM scripts provide familiar, universal interface
 - Integrated with VS Code tasks (Ctrl+Shift+P → "Tasks: Run Task")
 
 For complete development details, see [NODE_JS_GUIDE.md](NODE_JS_GUIDE.md).
@@ -508,73 +479,44 @@ Thothix uses Clerk for secure authentication. For complete setup and integration
 ### Hot Reload
 
 - **Frontend**: Nuxt with automatic hot reload
-- **Backend**: Air for Go server auto-restart (via dev.bat)
+- **Backend**: Air for Go server auto-restart (via npm scripts)
 - **Database**: Persists through Docker volumes
 
 ### Testing
 
 ```bash
-# Go backend tests
-docker-compose exec thothix-api go test ./...
+# Go backend tests (via npm)
+npm run test
+
+# Go backend tests (via Docker)
+docker compose exec thothix-api go test ./...
 
 # Frontend tests
-docker-compose exec thothix-web npm run test
+docker compose exec thothix-web npm run test
 
 # Integration tests
-docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+docker compose -f docker-compose.test.yml up --abort-on-container-exit
 ```
 
 ## 📡 API Reference
 
-The REST API is documented with Swagger UI and available at: `http://localhost:30000/swagger/index.html`
+**For complete API documentation, endpoints, and examples:**
 
-### Role-Based Access Control (RBAC) System
+📖 **[Backend API Documentation →](./backend/README.md#api-reference)**
 
-Thothix implements a simplified role-based access control (RBAC) system:
+### Quick API Access
 
-#### Available Roles
+- **Swagger UI**: `http://localhost:30000/swagger/index.html`
+- **API Base**: `http://localhost:30000/api/v1`
+- **Health Check**: `http://localhost:30000/health`
 
-- **Admin**: Can manage the entire system
-- **Manager**: Can manage everything except user management
-- **User**: Can participate in assigned projects and channels, create 1:1 chats
-- **External**: Can only participate in public channels
+### Authentication & RBAC
 
-#### Public/Private Channel Strategy
+Thothix uses **Clerk** for authentication and implements a simplified **Role-Based Access Control (RBAC)** system.
 
-- **Public Channels**: No explicit members in the `channel_members` table
-- **Private Channels**: At least one member in the `channel_members` table
-
-For more details see: [`backend/RBAC_SIMPLIFIED.md`](backend/RBAC_SIMPLIFIED.md)
-
-### Main Endpoints
-
-#### Authentication
-
-- `POST /api/v1/auth/sync` - Sync user with Clerk
-- `GET /api/v1/auth/me` - Current user information
-
-#### Projects
-
-- `GET /api/v1/projects` - List projects
-- `POST /api/v1/projects` - Create project (Manager/Admin)
-- `GET /api/v1/projects/{id}` - Project details
-
-#### Channels
-
-- `GET /api/v1/channels` - List accessible channels
-- `POST /api/v1/channels` - Create channel (Manager/Admin)
-- `POST /api/v1/channels/{id}/join` - Join public channel
-
-#### Messages
-
-- `GET /api/v1/channels/{id}/messages` - Channel messages
-- `POST /api/v1/channels/{id}/messages` - Send message
-- `POST /api/v1/messages/direct` - Direct message 1:1
-
-#### Role Management (Admin Only)
-
-- `POST /api/v1/roles` - Assign role
-- `DELETE /api/v1/roles/{roleId}` - Revoke role
+**For complete authentication and RBAC documentation:**
+- 📖 **[Backend RBAC Guide →](./backend/RBAC_SIMPLIFIED.md)**  
+- 📖 **[Clerk Integration Guide →](./CLERK_INTEGRATION.md)**
 
 ---
 
@@ -636,27 +578,28 @@ Thothix supports multiple deployment environments using a single unified environ
 
 ```bash
 # Development (vault services available but only used if USE_VAULT=true)
-docker-compose up -d --build
+docker compose up -d --build
 
 # Production (with integrated Vault - USE_VAULT automatically set to true)
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
-# Using deployment script for any environment
-.\scripts\deploy.bat dev up      # Development
-.\scripts\deploy.bat prod up     # Production with Vault
+# Using npm scripts for environment management
+npm run dev         # Development
+npm run staging     # Staging
+npm run prod        # Production with Vault
 ```
 
 ### Vault Management
 
 ```bash
 # Initialize Vault (production)
-.\scripts\deploy.bat prod vault init
+npx zx scripts/deploy.mjs prod vault init
 
 # Open Vault UI
-.\scripts\deploy.bat prod vault ui
+npx zx scripts/deploy.mjs prod vault ui
 
 # Check Vault status
-.\scripts\deploy.bat prod vault status
+npx zx scripts/deploy.mjs prod vault status
 ```
 
 ### Environment Variables

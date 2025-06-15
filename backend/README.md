@@ -356,7 +356,7 @@ POSTGRES_DB=thothix_dev
 POSTGRES_USER=thothix_user
 POSTGRES_PASSWORD=secure_password
 
-# Clerk Authentication  
+# Clerk Authentication
 CLERK_SECRET_KEY=sk_test_...
 CLERK_PUBLISHABLE_KEY=pk_test_...
 

@@ -377,7 +377,7 @@ The project includes cross-platform database utilities via npm scripts:
 # Check database status
 npm run db:status
 
-# Connect to database interactively  
+# Connect to database interactively
 npm run db:connect
 
 # List all tables
@@ -415,7 +415,7 @@ For more details on verification commands, see `DB_MIGRATION.md`.
 ```
 thothix/
 ├── backend/                 # Go API + Gin (see backend/README.md)
-├── frontend/                # Nuxt.js app  
+├── frontend/                # Nuxt.js app
 ├── scripts/                 # Development automation (Node.js/Zx)
 ├── docker-compose.yml       # Development environment
 └── README.md               # This file
@@ -448,7 +448,7 @@ The project uses modern Node.js/Zx automation for all development tasks:
 ```bash
 # Development workflow
 npm run format      # Format Go code
-npm run lint        # Run golangci-lint  
+npm run lint        # Run golangci-lint
 npm run test        # Run Go tests
 npm run pre-commit  # Complete pre-commit checks
 
@@ -515,7 +515,7 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 Thothix uses **Clerk** for authentication and implements a simplified **Role-Based Access Control (RBAC)** system.
 
 **For complete authentication and RBAC documentation:**
-- 📖 **[Backend RBAC Guide →](./backend/RBAC_SIMPLIFIED.md)**  
+- 📖 **[Backend RBAC Guide →](./backend/RBAC_SIMPLIFIED.md)**
 - 📖 **[Clerk Integration Guide →](./CLERK_INTEGRATION.md)**
 
 ---

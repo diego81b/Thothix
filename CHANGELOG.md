@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## v1.3.4 - CompleteMessageCapture (2025-06-15)
+
+B
+
+## [Unreleased]
+
 ## v1.3.3 - SingleCommitTest (2025-06-15)
 
 ## v1.3.2 - TestVersionWorkingCorrectly (2025-06-15)

@@ -31,8 +31,9 @@ cd Thothix
 
 - **[⚡ Backend Documentation](./backend/README.md)** - Complete Go API documentation, data models, and development guide
 - **[🔐 Vault Integration Guide](./docs/VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
-- **[🐳 Docker Guide](./docs/DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
-- **[🌍 Node.js Automation](./docs/NODE_JS_GUIDE.md)** - Cross-platform automation with Node.js/Zx
+- **[🐳 Docker Modernization Guide](./docs/DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
+- **[📁 Scripts Documentation](./scripts/README.md)** - Development automation and tools
+- **[🌍 Node.js Development Guide](./docs/NODE_JS_GUIDE.md)** - Cross-platform automation with Node.js/Zx
 
 ## 🏗️ Architecture
 
@@ -467,7 +468,7 @@ For complete development details, see [NODE_JS_GUIDE.md](./docs/NODE_JS_GUIDE.md
 
 ### Authentication Integration
 
-Thothix uses Clerk for secure authentication. For complete setup and integration guide, see [CLERK_INTEGRATION.md](./docs/CLERK_INTEGRATION.md).
+Thothix uses Clerk for secure authentication. For complete setup and integration guide, see [CLERK_INTEGRATION_COMPLETE.md](CLERK_INTEGRATION_COMPLETE.md).
 
 ### Hot Reload
 

@@ -525,10 +525,10 @@ db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 ## 📚 Additional Resources
 
 - **[Main Project README](../README.md)** - Overall project documentation
-- **[Vault Integration](../VAULT_INTEGRATION.md)** - HashiCorp Vault setup
-- **[Clerk Integration](../CLERK_INTEGRATION.md)** - Authentication setup
-- **[Node.js Development Guide](../NODE_JS_GUIDE.md)** - Cross-platform automation
-- **[Database Migration](../DB_MIGRATION.md)** - Database schema management
+- **[Vault Integration](../docs/VAULT_INTEGRATION.md)** - HashiCorp Vault setup
+- **[Clerk Integration](../docs/CLERK_INTEGRATION.md)** - Authentication setup
+- **[Node.js Development Guide](../docs/NODE_JS_GUIDE.md)** - Cross-platform automation
+- **[Database Migration](../docs/DB_MIGRATION.md)** - Database schema management
 
 ---
 

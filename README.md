@@ -188,7 +188,7 @@ Vault è integrato per gestire in modo sicuro segreti e configurazioni sensibili
 
 1. **Abilita Vault**: Imposta `USE_VAULT=true` nel tuo `.env`
 2. **Avvia servizi**: `docker-compose up -d --build`
-3. **Accedi a Vault UI**: <http://localhost:8200> (token: `thothix-dev-root-token`)
+3. **Accedi a Vault UI**: <http://localhost:8200> (token: da tuo `.env`)
 
 Vault gestisce automaticamente credenziali database, API keys Clerk e segreti applicazione.
 

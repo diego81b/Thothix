@@ -2,7 +2,10 @@
 services:
   # Override vault service for production (always enabled)
   vault:
-    image: hashicorp/vault:1.15.0
+    build:
+      context: .
+      dockerfile: Dockerfile.vault
+    image: thothix/vault:1.15.0-thothix1.0
     container_name: thothix-vault-prod
     restart: unless-stopped
     environment:

@@ -22,9 +22,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # Optional Vault service for local development with secret management
+  # Vault service with custom configuration for secret management
   vault:
-    image: hashicorp/vault:1.15.0
+    build:
+      context: .
+      dockerfile: Dockerfile.vault
+    image: thothix/vault:1.15.0-thothix1.0
     container_name: thothix-vault-dev
     restart: unless-stopped
     environment:
@@ -68,7 +71,7 @@ services:
   thothix-api:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.backend
     image: thothix/api:1.0.0
     container_name: thothix-api
     restart: unless-stopped

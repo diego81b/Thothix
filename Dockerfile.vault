@@ -1,0 +1,43 @@
+FROM hashicorp/vault:1.15.0
+
+# Metadata dell'immagine
+LABEL org.opencontainers.image.title="Thothix Vault"
+LABEL org.opencontainers.image.description="HashiCorp Vault configurato per la piattaforma Thothix"
+LABEL org.opencontainers.image.version="1.15.0-thothix1.0"
+LABEL org.opencontainers.image.vendor="Thothix"
+LABEL org.opencontainers.image.authors="Thothix Team"
+LABEL org.opencontainers.image.source="https://github.com/thothix/thothix"
+LABEL org.opencontainers.image.documentation="https://docs.thothix.com"
+
+# Installa strumenti aggiuntivi per lo scripting di inizializzazione
+USER root
+RUN apk add --no-cache \
+  curl \
+  jq \
+  openssl \
+  bash
+
+# Crea directory per configurazione personalizzata
+RUN mkdir -p /vault/config /vault/policies /vault/scripts /vault/logs
+
+# Copia configurazioni personalizzate
+COPY vault/config/ /vault/config/
+COPY vault/scripts/ /vault/scripts/
+
+# Rende eseguibili gli script
+RUN chmod +x /vault/scripts/*.sh
+
+# Torna all'utente vault
+USER vault
+
+# Espone la porta standard di Vault
+EXPOSE 8200
+
+# Entry point personalizzato che supporta sia dev che production mode
+COPY vault/docker-entrypoint.sh /usr/local/bin/docker-entrypoint-thothix.sh
+USER root
+RUN chmod +x /usr/local/bin/docker-entrypoint-thothix.sh
+USER vault
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-thothix.sh"]
+CMD ["vault", "server"]

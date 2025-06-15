@@ -31,7 +31,7 @@ docker-compose up -d --build
 
 ### 3. Accedi a Vault UI
 - **URL**: http://localhost:8200
-- **Token**: `thothix-dev-root-token` (dal tuo .env)
+- **Token**: Dal tuo `.env` (vedi `VAULT_ROOT_TOKEN`)
 
 ### 4. Verifica l'integrazione
 ```bash
@@ -94,7 +94,7 @@ USE_VAULT=true
 
 # Configurazione Vault per sviluppo
 VAULT_ADDR=http://vault:8200
-VAULT_ROOT_TOKEN=thothix-dev-root-token
+VAULT_ROOT_TOKEN=thothix-secure-root-token-2025-v1
 VAULT_APP_TOKEN=will-be-set-after-init
 VAULT_MOUNT=thothix
 VAULT_DEV_MODE=true
@@ -134,7 +134,7 @@ docker-compose exec vault vault status
 
 1. Apri browser su: `http://localhost:8200`
 2. Seleziona "Token" come metodo di login
-3. Usa il token dal tuo `.env`: `thothix-dev-root-token`
+3. Usa il token dal tuo `.env`: (vedi `VAULT_ROOT_TOKEN`)
 4. Dovresti vedere la dashboard di Vault
 
 ### 4. Verifica Inizializzazione

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Infrastructure
+
+- feat: implement automatic semantic versioning system
+  - Added cross-platform version bump scripts (Windows, PowerShell, Unix)
+  - Automated CHANGELOG.md updates with version releases
+  - Git tag creation with semantic versioning (major.minor.patch)
+  - VS Code tasks integration for version management
+  - **Impact**: Streamlined release management with automated version control, CHANGELOG updates, and Git tagging
+
 ### Documentation
 
 - docs: enhance Copilot instructions with mandatory CHANGELOG updates
@@ -11,110 +20,74 @@
   - Added release process documentation with semantic versioning
   - **Impact**: Ensures consistent and detailed change tracking for all commits
 
-## v1.2.0 - Automazione Completa (2025-06-13)
-
-### ✨ Nuove Funzionalità
-
-- **Sistema di automazione pre-commit completo**
-- **Git hooks automatici** per formattazione e linting
-- **Script cross-platform** (Windows/Unix) per sviluppo
-- **VS Code tasks** integrate per workflow di sviluppo
-
-### 🔧 Strumenti di Formattazione
-
-- **gofmt**: Formattazione base Go
-- **goimports**: Gestione automatica import
-- **gofumpt**: Formattazione rigorosa per CI/CD
-- **golangci-lint**: Linting configurato con regole rilassate
-
-### 🛠️ Configurazione Migliorata
-
-- **`.golangci.yml`** ottimizzato per produttività sviluppatori
-- **Makefile** con target per tutte le operazioni comuni
-- **VS Code settings** per auto-formattazione
-- **Scripts PowerShell/Batch** per setup automatico
-
-### 🐛 Problemi Risolti
-
-- ✅ Errori di formattazione `gofumpt` risolti automaticamente
-- ✅ Spaziatura import Go corretta secondo convenzioni
-- ✅ Aggiunta automatica file formattati al commit
-- ✅ Hook pre-commit robusto con gestione errori
-- ✅ **NUOVO**: Problema VS Code che rompeva formattazione import Go
-- ✅ **NUOVO**: Configurazione VS Code ottimizzata per evitare spazi extra
-- ✅ **NUOVO**: Task VS Code per formattazione file singolo
-- ✅ **NUOVO**: Script batch per correzione formattazione massive
-- ✅ **RISOLTO**: Conflitto tra goimports e gofumpt che causava errori di formattazione persistenti
-
-### 🧹 Pulizia e Ottimizzazione Script
-
-- ✅ **NUOVO**: Script unificato `dev.bat/sh` con azioni multiple (format|lint|pre-commit|all)
-- ✅ **RIMOSSI**: Script duplicati `format.bat/sh`, `fix-formatting.bat`
-- ✅ **CONSOLIDATO**: Tutte le funzionalità di sviluppo in script unici
-- ✅ **SEMPLIFICATO**: Workflow sviluppo con comandi chiari e intuitivi
-
-### 📚 Documentazione
-
-- **AUTOMATION.md**: Guida completa all'automazione
-- **README.md**: Aggiornato con setup sviluppo
-- **backend/README.md**: Documentazione strumenti sviluppo
-- **Troubleshooting**: Sezioni per risoluzione problemi comuni
-
-### 🚀 Workflow di Sviluppo
-
-1. **Setup one-time**: `.\scripts\setup-hooks.ps1`
-2. **Sviluppo normale**: Il pre-commit hook si attiva automaticamente
-3. **Check manuali**: `.\scripts\pre-commit.bat` quando necessario
-4. **VS Code**: Tasks integrate (Ctrl+Shift+B)
-
-### 🎯 Benefici
-
-- **Qualità del codice** garantita ad ogni commit
-- **Formattazione consistente** automatica
-- **Zero configurazione** per nuovi sviluppatori
-- **Feedback immediato** su problemi di qualità
-- **CI/CD ottimizzato** con controlli preliminari
-
----
+- docs: update CHANGELOG format to v1.2.3 - Description (YYYY-MM-DD)
+  - Standardized version format across all documentation
+  - Updated Copilot instructions with semantic versioning guidelines
+  - Added version bump decision guide for different commit types
+  - Enhanced release process documentation
+  - **Impact**: Consistent versioning format and automated release management workflow
 
 ## v1.3.0 - Consolidamento Documentazione (2025-06-14)
 
-### 📚 Consolidamento Documentazione
+### Documentation Updates
 
-- ✅ **CLERK_INTEGRATION_COMPLETE.md**: Consolidata tutta la documentazione Clerk in un unico file completo
-- ❌ **RIMOSSI**: `CLERK_INTEGRATION.md` e `CLERK_WEBHOOK_SETUP.md` (duplicati)
-- ❌ **RIMOSSO**: `backend/README.md` (integrato nel README principale)
-- ✅ **README.md**: Semplificato rimuovendo sezioni specifiche ora documentate separatamente
-- ✅ **README.md**: Integrata struttura backend e guida sviluppo
-- ✅ **Aggiornati riferimenti**: Rimossi link a script eliminati (`start-local-dev.bat`, `test-*.bat`)
+- docs: consolidate Clerk documentation into single comprehensive file
+  - Merged CLERK_INTEGRATION.md and CLERK_WEBHOOK_SETUP.md into CLERK_INTEGRATION_COMPLETE.md
+  - Removed duplicate and obsolete documentation files
+  - Updated all references to consolidated documentation
+  - **Impact**: Simplified documentation structure with single source of truth for Clerk integration
 
-### 🧹 Pulizia Struttura
+- docs: simplify README structure and remove redundancies
+  - Integrated backend documentation into main README
+  - Removed obsolete script references
+  - Specialized technical documentation in dedicated files
+  - **Impact**: Cleaner project structure with focused documentation
 
-- ✅ **Eliminazione ridondanze**: Un singolo README principale con sezioni ben definite
-- ✅ **Specializzazione**: Documentazione tecnica specifica in file dedicati
-- ✅ **README principale**: Focus su Docker, setup, e overview generale
-- ✅ **Documentazione specifica**: Clerk, Automation, RBAC in file separati
+## v1.2.0 - Automazione Completa (2025-06-13)
 
-### 🔗 Aggiornamenti Riferimenti
+### Added Features
 
-- ✅ Corretti tutti i link alla documentazione consolidata
-- ✅ Aggiornati script README per riflettere la nuova struttura
-- ✅ Rimossi riferimenti a script obsoleti nelle guide
+- feat: complete pre-commit automation system
+  - Automatic Git hooks for formatting and linting
+  - Cross-platform scripts (Windows/Unix) for development
+  - VS Code tasks integration for development workflow
+  - **Impact**: Guaranteed code quality on every commit
 
----
+### Build & Infrastructure
 
-## Setup Rapido per Nuovi Sviluppatori
+- build: comprehensive formatting tools configuration
+  - gofmt for basic Go formatting
+  - goimports for automatic import management
+  - gofumpt for strict formatting in CI/CD
+  - golangci-lint with relaxed rules for developer productivity
+  - **Impact**: Consistent code formatting with zero developer configuration
 
-```bash
-# 1. Clone del repository
-git clone <repository-url>
-cd Thothix
+- build: optimized configuration files
+  - Enhanced .golangci.yml for developer productivity
+  - Makefile with all common operations
+  - VS Code settings for auto-formatting
+  - PowerShell/Batch scripts for automatic setup
+  - **Impact**: Streamlined development environment setup
 
-# 2. Setup automazione (una sola volta)
-.\scripts\setup-hooks.ps1
+### Bug Fixes
 
-# 3. Sviluppo normale
-# I controlli di qualità si attivano automaticamente ad ogni commit!
-```
+- fix: resolve gofumpt formatting errors automatically
+  - Correct Go import spacing according to conventions
+  - Automatic addition of formatted files to commit
+  - Robust pre-commit hook with error handling
+  - **Impact**: Eliminates formatting conflicts and ensures consistent code style
 
-Il sistema è completamente **plug-and-play**! 🎉
+- fix: VS Code configuration breaking Go import formatting
+  - Optimized VS Code configuration to avoid extra spaces
+  - Added VS Code task for single file formatting
+  - Batch script for massive formatting correction
+  - **Impact**: Seamless development experience in VS Code
+
+### Documentation Enhancements
+
+- docs: comprehensive automation guide (AUTOMATION.md)
+  - Complete automation setup guide
+  - Updated README with development setup
+  - Backend development tools documentation
+  - Troubleshooting sections for common issues
+  - **Impact**: Clear guidance for developers on automation tools and workflows

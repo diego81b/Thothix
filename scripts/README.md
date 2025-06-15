@@ -37,6 +37,22 @@
   - Database schema verification
   - Focused on Windows development environment
 
+### 🏷️ **Version Management**
+
+- **`version-bump.bat`** - Automatic version bumping (Windows)
+  - Semantic versioning automation (major/minor/patch)
+  - Automatic CHANGELOG.md updates
+  - Git tag creation and release management
+
+- **`version-bump.ps1`** - PowerShell version bumping (Cross-platform)
+  - Enhanced error handling and validation
+  - Interactive prompts for release descriptions
+  - Git status verification before bumping
+
+- **`version-bump.sh`** - Unix/Linux version bumping
+  - Cross-platform compatibility for Unix environments
+  - Consistent functionality across all platforms
+
 ---
 
 ## 🎯 **Recommended Workflow**
@@ -72,6 +88,30 @@ http://localhost:30000/swagger/index.html
 # Or quick health checks
 curl http://localhost:30000/health
 ```
+
+### **Version Management & Releases**
+
+```bash
+# Patch release (bug fixes)
+.\scripts\version-bump.bat patch "Fix authentication timeout bug"
+
+# Minor release (new features)
+.\scripts\version-bump.ps1 minor "Add user role management"
+
+# Major release (breaking changes)
+.\scripts\version-bump.sh major "Restructure API endpoints"
+
+# Publish the release
+git push origin main
+git push origin v1.3.0
+```
+
+### **Release Process**
+
+1. **Update CHANGELOG.md** - Scripts automatically move [Unreleased] content to new version
+2. **Create Git commit** - Automatic commit with conventional message
+3. **Create Git tag** - Semantic versioning tag (v1.2.3)
+4. **Ready to publish** - Push to remote repository
 
 ---
 

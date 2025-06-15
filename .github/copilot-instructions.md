@@ -533,21 +533,26 @@ Always update `CHANGELOG.md` before committing significant changes:
 ## [Unreleased]
 
 ### Added
+
 - feat: new feature description with benefits and usage details
 - feat: another feature with comprehensive explanation
 
-### Changed  
+### Changed
+
 - refactor: refactoring description with impact on existing functionality
 - perf: performance improvement details with metrics if available
 
 ### Fixed
+
 - fix: bug fix description with root cause and resolution details
 - fix: security fix description (without exposing vulnerability details)
 
 ### Documentation
+
 - docs: documentation update description with scope and improvements
 
 ### Infrastructure
+
 - build: build system changes with impact on development workflow
 - ci: CI/CD improvements with deployment and testing benefits
 ```
@@ -559,21 +564,47 @@ Always update `CHANGELOG.md` before committing significant changes:
 - **Impact Description**: Explain how changes affect users/developers
 - **Migration Notes**: Include breaking changes and migration steps
 - **Links**: Reference issues, PRs, and documentation when helpful
+- **Consistent Format**: Use format `v1.2.3 - Description (YYYY-MM-DD)` for releases
+- **Recent First**: Keep most recent versions at the top
+
+#### Semantic Versioning Guidelines
+
+Follow [Semantic Versioning 2.0.0](https://semver.org/) (MAJOR.MINOR.PATCH):
+
+- **MAJOR** (1.0.0 → 2.0.0): Breaking changes, incompatible API changes
+- **MINOR** (1.0.0 → 1.1.0): New features, backward compatible functionality
+- **PATCH** (1.0.0 → 1.0.1): Bug fixes, backward compatible fixes
+
+#### Version Bump Decision Guide
+
+Based on commit type, determine version increment:
+
+- **feat**: MINOR version (new functionality)
+- **fix**: PATCH version (bug fixes)
+- **BREAKING CHANGE**: MAJOR version (breaking changes)
+- **perf**: PATCH version (performance improvements)
+- **refactor**: PATCH version (code refactoring)
+- **docs**: No version bump (documentation only)
+- **style**: No version bump (formatting, no code changes)
+- **test**: No version bump (tests only)
+- **build/ci**: PATCH version if affects production builds
+- **chore**: No version bump (maintenance tasks)
 
 #### Example CHANGELOG Entry
 
 ```markdown
 ### Added
+
 - feat: comprehensive Copilot instructions with Git best practices
   - Added complete development guidelines in `.github/copilot-instructions.md`
   - Includes Go coding standards with clean architecture patterns
-  - Provides Docker multi-stage build conventions and naming standards  
+  - Provides Docker multi-stage build conventions and naming standards
   - Documents security guidelines for environment variables and Vault integration
   - Establishes documentation standards following single source of truth principle
   - Defines comprehensive Git commit best practices with conventional commits
   - Includes pre-commit checklist and Git hooks examples
   - Provides branch naming conventions and collaborative workflows
-  - **Impact**: GitHub Copilot now has complete context for maintaining code quality, 
+  - **Impact**: GitHub Copilot now has complete context for maintaining code quality,
     security standards, and consistent development practices across the project
 ```
 
@@ -581,22 +612,25 @@ Always update `CHANGELOG.md` before committing significant changes:
 
 When creating a release:
 
-1. **Move entries** from "Unreleased" to new version section
-2. **Add release date** in ISO format (YYYY-MM-DD)
+1. **Determine version bump** based on changes in [Unreleased] section
+2. **Move entries** from "Unreleased" to new version section with format: `v1.2.3 - Description (YYYY-MM-DD)`
 3. **Create Git tag** with semantic versioning
 4. **Generate release notes** from CHANGELOG entries
 
 ```markdown
-## [1.2.0] - 2025-06-15
+## v1.2.0 - Enhanced Development Workflow (2025-06-15)
 
 ### Added
+
 - feat: comprehensive Copilot instructions with Git best practices
   [... detailed description ...]
 
 ### Changed
+
 - refactor: Docker configuration modernization with multi-stage builds
   [... detailed description ...]
 ```
+
 - [ ] **CHANGELOG.md updated** with commit details (see CHANGELOG Guidelines below)
 
 ### CHANGELOG Guidelines
@@ -609,77 +643,6 @@ Always update `CHANGELOG.md` before committing significant changes:
 2. **Use same format as commit message** but with more details
 3. **Include impact and benefits** for users/developers
 4. **Link to related issues/PRs** when applicable
-
-#### CHANGELOG Entry Format
-
-```markdown
-## [Unreleased]
-
-### Added
-- feat: new feature description with benefits and usage details
-- feat: another feature with comprehensive explanation
-
-### Changed  
-- refactor: refactoring description with impact on existing functionality
-- perf: performance improvement details with metrics if available
-
-### Fixed
-- fix: bug fix description with root cause and resolution details
-- fix: security fix description (without exposing vulnerability details)
-
-### Documentation
-- docs: documentation update description with scope and improvements
-
-### Infrastructure
-- build: build system changes with impact on development workflow
-- ci: CI/CD improvements with deployment and testing benefits
-```
-
-#### CHANGELOG Best Practices
-
-- **User-Focused**: Write for end users and developers using the project
-- **Detailed Context**: Include more context than commit messages
-- **Impact Description**: Explain how changes affect users/developers
-- **Migration Notes**: Include breaking changes and migration steps
-- **Links**: Reference issues, PRs, and documentation when helpful
-
-#### Example CHANGELOG Entry
-
-```markdown
-### Added
-- feat: comprehensive Copilot instructions with Git best practices
-  - Added complete development guidelines in `.github/copilot-instructions.md`
-  - Includes Go coding standards with clean architecture patterns
-  - Provides Docker multi-stage build conventions and naming standards  
-  - Documents security guidelines for environment variables and Vault integration
-  - Establishes documentation standards following single source of truth principle
-  - Defines comprehensive Git commit best practices with conventional commits
-  - Includes pre-commit checklist and Git hooks examples
-  - Provides branch naming conventions and collaborative workflows
-  - **Impact**: GitHub Copilot now has complete context for maintaining code quality, 
-    security standards, and consistent development practices across the project
-```
-
-#### Release Process
-
-When creating a release:
-
-1. **Move entries** from "Unreleased" to new version section
-2. **Add release date** in ISO format (YYYY-MM-DD)
-3. **Create Git tag** with semantic versioning
-4. **Generate release notes** from CHANGELOG entries
-
-```markdown
-## [1.2.0] - 2025-06-15
-
-### Added
-- feat: comprehensive Copilot instructions with Git best practices
-  [... detailed description ...]
-
-### Changed
-- refactor: Docker configuration modernization with multi-stage builds
-  [... detailed description ...]
-```
 
 ### Git Hooks Integration
 

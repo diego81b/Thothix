@@ -44,7 +44,7 @@ docker-compose logs thothix-api | findstr vault
 
 **✅ Fatto!** Vault è ora integrato e gestisce automaticamente:
 - **Database**: Credenziali PostgreSQL
-- **Clerk**: API keys e webhook secrets  
+- **Clerk**: API keys e webhook secrets
 - **App**: JWT secrets e encryption keys
 
 📖 **Per configurazione avanzata, troubleshooting e produzione continua a leggere...**
@@ -153,13 +153,13 @@ Secrets Engines:
 
 ### 1. Differenze Produzione vs Sviluppo
 
-| Aspetto | Sviluppo | Produzione |
-|---------|----------|------------|
-| **Vault Mode** | Dev Mode (in-memory) | Production (persistent) |
-| **TLS** | Disabilitato | Abilitato con certificati |
-| **Autenticazione** | Root token | Policy-based tokens |
-| **Storage** | Locale/temporaneo | Volumi persistenti |
-| **Backup** | Non necessario | Schedulato |
+| Aspetto            | Sviluppo             | Produzione                |
+| ------------------ | -------------------- | ------------------------- |
+| **Vault Mode**     | Dev Mode (in-memory) | Production (persistent)   |
+| **TLS**            | Disabilitato         | Abilitato con certificati |
+| **Autenticazione** | Root token           | Policy-based tokens       |
+| **Storage**        | Locale/temporaneo    | Volumi persistenti        |
+| **Backup**         | Non necessario       | Schedulato                |
 
 ### 2. Configurazione .env Produzione
 

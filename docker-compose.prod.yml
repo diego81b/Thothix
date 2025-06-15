@@ -2,7 +2,7 @@
 services:
   # Override vault service for production (always enabled)
   vault:
-    image: vault:1.15.0
+    image: hashicorp/vault:1.15.0
     container_name: thothix-vault-prod
     restart: unless-stopped
     environment:
@@ -43,13 +43,13 @@ services:
       start_period: 40s
 
   vault-init:
-    image: vault:1.15.0
+    image: hashicorp/vault:1.15.0
     container_name: thothix-vault-init
     depends_on:
       vault:
         condition: service_healthy
     environment:
-      VAULT_ADDR: http://vault:8200
+      VAULT_ADDR: http://localhost:8200
       VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
       VAULT_MOUNT: thothix
       ENVIRONMENT: production
@@ -70,7 +70,7 @@ services:
   thothix-api:
     environment:
       # Vault configuration
-      VAULT_ADDR: http://vault:8200
+      VAULT_ADDR: http://localhost:8200
       VAULT_TOKEN: ${VAULT_APP_TOKEN}
       VAULT_MOUNT: thothix
       USE_VAULT: 'true'

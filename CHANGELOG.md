@@ -1,18 +1,7 @@
 # Changelog - Automation and Code Quality
 
-## [Unreleased]
 
-## v1.3.4 - CompleteMessageCapture (2025-06-15)
-
-B
-
-## [Unreleased]
-
-## v1.3.3 - SingleCommitTest (2025-06-15)
-
-## v1.3.2 - TestVersionWorkingCorrectly (2025-06-15)
-
-## v1.3.1 - Script Simplification and Version Management (2025-06-15)
+## v0.0.1 - CompleteMessageCapture (2025-06-15)
 
 ### Infrastructure
 
@@ -48,8 +37,6 @@ B
   - Applied consistent section formatting and indentation
   - **Impact**: Clean, well-structured CHANGELOG ready for automated version management
 
-## v1.3.0 - Documentation Consolidation (2025-06-14)
-
 ### Documentation Updates
 
 - docs: consolidate Clerk documentation into single comprehensive file
@@ -63,8 +50,6 @@ B
   - Removed duplicate setup instructions
   - Updated project structure documentation
   - **Impact**: Cleaner, more maintainable documentation
-
-## v1.2.0 - Complete Automation (2025-06-13)
 
 ### ✨ New Features
 

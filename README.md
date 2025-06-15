@@ -453,11 +453,6 @@ go run main.go
 The project includes development automation scripts:
 
 ```bash
-# Version management (semantic versioning)
-.\scripts\version-bump.bat patch "Description"  # Patch version bump
-.\scripts\version-bump.bat minor "New features" # Minor version bump
-.\scripts\version-bump.bat major "Breaking"     # Major version bump
-
 # Development workflow
 .\scripts\dev.bat            # Start backend with hot reload
 .\scripts\pre-commit.bat     # Run formatting and linting

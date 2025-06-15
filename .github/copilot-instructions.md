@@ -243,7 +243,7 @@ VAULT_ROOT_TOKEN=thothix-secure-root-token-2025-v1
 - **Single Version Policy**: Create only ONE version of each script per functionality
 - **Windows Priority**: Prefer `.bat` files for Windows environments (primary development OS)
 - **Cross-Platform**: Only create multiple versions if truly necessary for cross-platform support
-- **Naming Convention**: Use descriptive names (e.g., `version-bump.bat`, `dev.bat`, `setup-hooks.ps1`)
+- **Naming Convention**: Use descriptive names (e.g., `dev.bat`, `deploy.bat`, `db-verify.bat`)
 - **Documentation**: Each script must be documented in `scripts/README.md`
 - **Functionality**: Each script should have a single, clear purpose
 - **Error Handling**: Include proper error handling and user feedback

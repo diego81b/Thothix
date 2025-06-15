@@ -115,11 +115,23 @@ if exist CHANGELOG.md del CHANGELOG_BACKUP.md
 
 echo ✅ CHANGELOG updated with new version
 
-:: Create Git commit and tag
+:: Create Git commit and tag using file for multi-line message
 echo 🏷️  Creating Git commit and tag...
+
+:: Create commit message file with title and captured commit body
+(
+    echo release: %NEW_VERSION% - %DESCRIPTION%
+    echo.
+    type temp_commit_msg.txt
+) > temp_release_msg.txt
+
 git add CHANGELOG.md
-git commit -m "release: %NEW_VERSION% - %DESCRIPTION%"
+git commit -F temp_release_msg.txt
 git tag -a "%NEW_VERSION%" -m "Release %NEW_VERSION% - %DESCRIPTION%"
+
+:: Clean up temporary files
+del temp_commit_msg.txt
+del temp_release_msg.txt
 
 echo.
 echo ✅ Version bump completed!

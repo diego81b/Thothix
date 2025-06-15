@@ -1,10 +1,15 @@
 # 🤖 Automazione Pre-Commit per Thothix
 
-Questo documento spiega come utilizzare il sistema di automazione per formattazioscripts/pre-commit.bat # Script Windows manuale
-scripts/setup-hooks.ps1 # Setup PowerShell
-.vscode/tasks.json # Task VS Code
-.golangci.yml # Configurazione linting
-Makefile # Target Makenting e test prima di ogni commit.
+Questo documento spiega come utilizzare il sistema di automazione per formattazione, linting e test prima di ogni commit.
+
+## 📁 **File Coinvolti**
+
+```text
+scripts/dev.bat           # Script Windows unificato per sviluppo
+.vscode/tasks.json        # Task VS Code
+.golangci.yml             # Configurazione linting
+Makefile                  # Target Make
+```
 
 ## 🎯 **Cosa Viene Automatizzato**
 
@@ -28,20 +33,7 @@ Quando esegui `git commit`, il sistema:
 
 ## 🚀 **Metodi di Utilizzo**
 
-### **1. Git Hook Automatico** (Raccomandato)
-
-Il pre-commit hook si attiva automaticamente ad ogni `git commit`:
-
-```bash
-# Configura una sola volta
-.\scripts\setup-hooks.ps1
-
-# Poi ogni commit attiverà automaticamente i check
-git add .
-git commit -m "Il tuo messaggio"
-```
-
-### **2. Script Manuale**
+### **1. Script Manuale** (Raccomandato)
 
 Per eseguire i check manualmente prima del commit:
 
@@ -51,23 +43,20 @@ Per eseguire i check manualmente prima del commit:
 .\scripts\dev.bat lint        # Solo linting
 .\scripts\dev.bat pre-commit  # Pre-commit completo
 .\scripts\dev.bat all         # Equivalente a pre-commit
-
-# Oppure con PowerShell per setup
-.\scripts\setup-hooks.ps1
 ```
 
-### **3. VS Code Tasks**
+### **2. VS Code Tasks**
 
 Nel Command Palette (`Ctrl+Shift+P`):
 
-- **"Tasks: Run Task"** → **"Go: Pre-commit"**
-- **"Tasks: Run Task"** → **"Git: Setup Hooks"**
+- **"Tasks: Run Task"** → **"Dev: Pre-commit"**
+- **"Tasks: Run Task"** → **"Dev: Format"**
+- **"Tasks: Run Task"** → **"Dev: Lint"**
 
-### **4. Makefile** (se hai Make installato)
+### **3. Makefile** (se hai Make installato)
 
 ```bash
 make pre-commit    # Esegue formattazione + lint + test
-make setup-hooks   # Configura Git hooks
 make commit        # Pre-commit + prepara per git commit
 ```
 
@@ -76,40 +65,40 @@ make commit        # Pre-commit + prepara per git commit
 ### **Setup Iniziale** (una sola volta)
 
 ```bash
-# 1. Configura i Git hooks
-.\scripts\setup-hooks.ps1
-
-# 2. Verifica che tutto funzioni
-.\scripts\pre-commit.bat
+# 1. Verifica che tutto funzioni
+.\scripts\dev.bat all
 ```
 
 ### **Workflow Quotidiano**
 
 ```bash
 # 1. Modifica il codice
-# 2. Commit normale - l'automazione si attiva automaticamente
+# 2. Esegui pre-commit check prima del commit
+.\scripts\dev.bat pre-commit
+
+# 3. Se tutto è corretto, procedi con il commit
 git add .
 git commit -m "Aggiunta nuova funzionalità"
-
-# Se il pre-commit fallisce, risolvi gli errori e riprova
-git commit -m "Fix dopo linting"
 ```
 
 ## ⚙️ **Configurazione**
 
 ### **Personalizzazione del Pre-commit**
 
-Modifica `.git/hooks/pre-commit` per:
+Modifica lo script `.\scripts\dev.bat` per:
 
-- Disabilitare i test (commenta la sezione test)
+- Disabilitare i test (rimuovi la chiamata a `go test`)
 - Cambiare il timeout del linting
 - Aggiungere altri check personalizzati
 
 ### **Disabilitare Temporaneamente**
 
 ```bash
-# Salta il pre-commit hook per un commit urgente
+# Salta i check pre-commit per un commit urgente
 git commit --no-verify -m "Commit urgente"
+
+# Oppure esegui solo formattazione senza linting
+.\scripts\dev.bat format
 ```
 
 ## 🛠️ **Tool Utilizzati**
@@ -119,29 +108,7 @@ git commit --no-verify -m "Commit urgente"
 - **golangci-lint**: Linting completo
 - **go test**: Esecuzione test
 
-## 📁 **File Coinvolti**
-
-```text
-.git/hooks/pre-commit          # Git hook principale
-scripts/dev.bat               # Script Windows per sviluppo
-scripts/pre-commit.bat         # Script Windows pre-commit manuale
-scripts/setup-hooks.ps1        # Setup PowerShell
-.vscode/tasks.json            # Task VS Code
-.golangci.yml                 # Configurazione linting
-Makefile                      # Target Make
-```
-
-## 🔧 **Troubleshooting**
-
-### **Errore: Hook non eseguibile**
-
-```bash
-# Su Linux/macOS
-chmod +x .git/hooks/pre-commit
-
-# Su Windows
-.\scripts\setup-hooks.ps1
-```
+## 🔧 Troubleshooting
 
 ### **Errore: Tool non trovati**
 

@@ -1,8 +1,9 @@
 # Thothix Messaging Platform
 
-[!- **[🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
-- **[🐳 Docker Modernization Guide](./DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
-- **[🤖 Automation Guide](./AUTOMATION.md)** - Pre-commit hooks and formattingHub Repository](https://img.shields.io/badge/GitHub-diego81b%2FThothix-blue?style=flat&logo=github)](https://github.com/diego81b/Thothix)
+- **[🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** Complete setup, troubleshooting & production guide
+- **[🐳 Docker Modernization Guide](./DOCKER_MODERNIZATION.md)** Docker architecture updates and migration guide
+- **[🤖 Automation Guide](./AUTOMATION.md)**
+
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat&logo=docker)](https://docker.com)
 [![Go](https://img.shields.io/badge/Go-1.23-blue?style=flat&logo=go)](https://golang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=flat&logo=postgresql)](https://postgresql.org)
@@ -10,8 +11,6 @@
 Thothix is a modern enterprise messaging platform that enables project management, group chats, and private 1:1 conversations. Built with containerized microservices architecture.
 
 ## 🚀 GitHub Repository
-
-The project is available on GitHub: **[https://github.com/diego81b/Thothix](https://github.com/diego81b/Thothix)**
 
 ```bash
 # Clone the repository
@@ -453,16 +452,26 @@ go run main.go
 The project includes development automation scripts:
 
 ```bash
-# Development workflow
-.\scripts\dev.bat            # Start backend with hot reload
-.\scripts\pre-commit.bat     # Run formatting and linting
+# Development workflow (unified script)
+.\scripts\dev.bat format     # Format Go code only
+.\scripts\dev.bat lint       # Run linting only
+.\scripts\dev.bat pre-commit # Full pre-commit workflow (format + lint + test)
+.\scripts\dev.bat all        # Same as pre-commit (default)
+
+# Docker deployment
+.\scripts\deploy.bat dev up      # Start development environment
+.\scripts\deploy.bat prod up     # Start production environment
+.\scripts\deploy.bat dev down    # Stop environment
+
+# Database tools
 .\scripts\db-verify.bat      # Verify database schema
 ```
 
 **Script Guidelines:**
 
 - All scripts use `.bat` files for Windows primary development
-- Single version policy: one script per functionality
+- Single version policy: one script per functionality, no duplicates
+- `dev.bat` replaces multiple separate scripts with unified interface
 - Integrated with VS Code tasks (Ctrl+Shift+P → "Tasks: Run Task")
 
 For complete automation details, see [AUTOMATION.md](AUTOMATION.md).

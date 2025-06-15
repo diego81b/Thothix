@@ -58,17 +58,11 @@ install:
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	@echo "✅ Installazione completata"
 
-# Pre-commit (formatta + lint + test)
-pre-commit: format lint test
+# Pre-commit (unified script)
+pre-commit:
+	@echo "🔧 Eseguendo pre-commit con script unificato..."
+	@.\scripts\dev.bat pre-commit
 	@echo "🎉 Pre-commit completato con successo!"
-	@echo "📝 Aggiungendo file modificati a git..."
-	@git add backend/
-
-# Setup git hooks
-setup-hooks:
-	@echo "🔧 Configurando Git hooks..."
-	@chmod +x .git/hooks/pre-commit
-	@echo "✅ Git hooks configurati!"
 
 # Commit con pre-checks automatici
 commit: pre-commit

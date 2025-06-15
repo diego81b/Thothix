@@ -4,14 +4,6 @@
 
 ### Infrastructure
 
-- feat: create simplified version-bump.bat script
-  - Implemented pure Windows batch script for version bumping
-  - Supports semantic versioning (major/minor/patch)
-  - Automatic version parsing from CHANGELOG.md
-  - No external dependencies (PowerShell, Unix tools)
-  - Simplified single-file approach following project guidelines
-  - **Impact**: Functional version management tool ready for testing and refinement
-
 - feat: simplify script architecture with single-version policy
   - Removed duplicate version-bump scripts (.ps1, .sh)
   - Standardized on .bat files for Windows primary development

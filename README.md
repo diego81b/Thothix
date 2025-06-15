@@ -112,7 +112,7 @@ notepad .env
 📋 **Reference**: See [`.env.example`](./.env.example) for all available configuration options including:
 
 - Database settings
-- Clerk authentication keys  
+- Clerk authentication keys
 - Application configuration
 - Vault integration settings
 

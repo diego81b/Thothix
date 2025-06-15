@@ -46,7 +46,7 @@ Tutti i Dockerfile ora supportano:
 ```
 📁 Thothix/
 ├── 🐳 Dockerfile.backend (multi-stage: dev/prod)
-├── 🐳 Dockerfile.postgres (multi-stage: dev/prod) 
+├── 🐳 Dockerfile.postgres (multi-stage: dev/prod)
 ├── 🐳 Dockerfile.vault (multi-stage: dev/prod, con strumenti)
 ├── 📋 docker-compose.yml (dev: -dev suffixes, dev targets)
 ├── 📋 docker-compose.prod.yml (prod: -prod suffixes, prod targets)
@@ -66,19 +66,19 @@ Tutti i Dockerfile ora supportano:
 
 ### Immagini Docker
 
-| Servizio | Development | Production |
-|----------|-------------|------------|
-| Backend API | `thothix/api:1.0.0-dev` | `thothix/api:1.0.0-prod` |
-| PostgreSQL | `thothix/postgres:17.5-thothix1.0-dev` | `thothix/postgres:17.5-thothix1.0-prod` |
-| Vault | `thothix/vault:1.15.0-thothix1.0-dev` | `thothix/vault:1.15.0-thothix1.0-prod` |
+| Servizio    | Development                            | Production                              |
+| ----------- | -------------------------------------- | --------------------------------------- |
+| Backend API | `thothix/api:1.0.0-dev`                | `thothix/api:1.0.0-prod`                |
+| PostgreSQL  | `thothix/postgres:17.5-thothix1.0-dev` | `thothix/postgres:17.5-thothix1.0-prod` |
+| Vault       | `thothix/vault:1.15.0-thothix1.0-dev`  | `thothix/vault:1.15.0-thothix1.0-prod`  |
 
 ### Container Names
 
-| Servizio | Development | Production |
-|----------|-------------|------------|
-| Backend API | `thothix-api-dev` | `thothix-api-prod` |
-| PostgreSQL | `thothix-postgres-dev` | `thothix-postgres-prod` |
-| Vault | `thothix-vault-dev` | `thothix-vault-prod` |
+| Servizio    | Development            | Production              |
+| ----------- | ---------------------- | ----------------------- |
+| Backend API | `thothix-api-dev`      | `thothix-api-prod`      |
+| PostgreSQL  | `thothix-postgres-dev` | `thothix-postgres-prod` |
+| Vault       | `thothix-vault-dev`    | `thothix-vault-prod`    |
 
 ## 🐳 Dockerfile Multi-Stage
 
@@ -86,7 +86,7 @@ All Dockerfiles now implement multi-stage builds with dedicated dev/prod targets
 
 📋 **Reference Files:**
 - [`Dockerfile.backend`](./Dockerfile.backend) - API backend
-- [`Dockerfile.postgres`](./Dockerfile.postgres) - PostgreSQL database  
+- [`Dockerfile.postgres`](./Dockerfile.postgres) - PostgreSQL database
 - [`Dockerfile.vault`](./Dockerfile.vault) - HashiCorp Vault
 
 **Features:**
@@ -164,7 +164,7 @@ docker compose exec vault sh
 **Key updates needed:**
 
 - Vault connection settings
-- Environment-specific configurations  
+- Environment-specific configurations
 - Service discovery settings
 
 ## ✅ Benefits

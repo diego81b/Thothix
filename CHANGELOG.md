@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## v1.3.3 - SingleCommitTest (2025-06-15)
+
 ## v1.3.2 - TestVersionWorkingCorrectly (2025-06-15)
 
 ## v1.3.1 - Script Simplification and Version Management (2025-06-15)

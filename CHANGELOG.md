@@ -1,7 +1,6 @@
-# Changelog - Automation and Code Quality
+# Changelog
 
-
-## v0.0.1 - CompleteMessageCapture (2025-06-15)
+## v0.0.1 - Initial release (2025-06-15)
 
 ### Infrastructure
 

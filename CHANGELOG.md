@@ -1,5 +1,16 @@
 # Changelog - Automazione e Qualità del Codice
 
+## [Unreleased]
+
+### Documentation
+
+- docs: enhance Copilot instructions with mandatory CHANGELOG updates
+  - Added comprehensive CHANGELOG guidelines with examples and best practices
+  - Made CHANGELOG updates mandatory in pre-commit checklist
+  - Included detailed formatting standards for CHANGELOG entries
+  - Added release process documentation with semantic versioning
+  - **Impact**: Ensures consistent and detailed change tracking for all commits
+
 ## v1.2.0 - Automazione Completa (2025-06-13)
 
 ### ✨ Nuove Funzionalità

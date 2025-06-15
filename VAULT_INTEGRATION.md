@@ -1,6 +1,15 @@
 # 🔐 Guida Completa all'Integrazione di HashiCorp Vault
 
-Questa guida ti accompagna passo dopo passo nell'integrazione di HashiCorp Vault per la gestione sicura dei segreti in Thothix.
+Questa guida ti accompagna passo dopo passo nell'integrazione di HashiCorp Vault per la gestione s### 2. Configurazione .env Produzione
+
+📋 **Reference**: See [`.env.example`](./.env.example) for production Vault configuration.
+
+**Key differences for production:**
+
+- Set `ENVIRONMENT=production`
+- Use secure production tokens
+- Configure production database settings
+- Disable dev mode (`VAULT_DEV_MODE=false`) in Thothix.
 
 ## 📋 Indice
 
@@ -88,23 +97,15 @@ notepad .env
 
 ### 3. Configurazione Minimale nel .env
 
-```bash
-# Abilita Vault
-USE_VAULT=true
+📋 **Reference**: See [`.env.example`](./.env.example) for complete Vault configuration options.
 
-# Configurazione Vault per sviluppo
-VAULT_ADDR=http://vault:8200
-VAULT_ROOT_TOKEN=thothix-secure-root-token-2025-v1
-VAULT_APP_TOKEN=will-be-set-after-init
-VAULT_MOUNT=thothix
-VAULT_DEV_MODE=true
+**Key settings to enable:**
 
-# I tuoi segreti attuali (verranno migrati in Vault)
-POSTGRES_PASSWORD=your_secure_password
-CLERK_SECRET_KEY=sk_test_your_clerk_key
-CLERK_WEBHOOK_SECRET=whsec_your_webhook_secret
-DB_PASSWORD=your_secure_password
-```
+- `USE_VAULT=true` - Enable Vault integration
+- Vault connection settings (VAULT_ADDR, tokens)
+- Your existing secrets (will be migrated to Vault)
+
+📖 **Security**: These settings will be automatically migrated to Vault during initialization.
 
 ## 💻 Configurazione Sviluppo
 

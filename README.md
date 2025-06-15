@@ -109,44 +109,20 @@ notepad .env
 
 **Configure your `.env` file with your credentials:**
 
-The `.env.example` file contains unified configuration for all environments (development, staging, production). Key settings include:
+📋 **Reference**: See [`.env.example`](./.env.example) for all available configuration options including:
 
-```bash
-# Database Configuration
-POSTGRES_PASSWORD=change_me_in_production
-POSTGRES_DB=thothix-db
+- Database settings
+- Clerk authentication keys  
+- Application configuration
+- Vault integration settings
 
-# Clerk Authentication (get from https://dashboard.clerk.com)
-CLERK_SECRET_KEY=your_clerk_secret_key_here
-CLERK_WEBHOOK_SECRET=your_clerk_webhook_secret_here
-CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
-
-# Application Configuration
-PORT=30000
-ENVIRONMENT=development
-GIN_MODE=debug
-
-# Optional: HashiCorp Vault for secret management
-USE_VAULT=false  # Set to true for production
-```
+⚠️ **Security Note**: Never commit the `.env` file to version control. It's already included in `.gitignore`.
 
 **For Vault Integration (Optional):**
 
-The Vault service is available for both development and production but starts automatically by default. To control when vault starts:
+📖 **Full Setup Guide**: See [Vault Integration Guide](./VAULT_INTEGRATION.md) for complete configuration.
 
-```bash
-# Development without Vault (standard)
-docker-compose up -d --build
-
-# Development with Vault initialization (when USE_VAULT=true in .env)
-# Vault service will start automatically and initialize secrets
-docker-compose up -d --build
-
-# Production with Vault (always enabled)
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-```
-
-**Note**: Vault services are defined but won't be used unless `USE_VAULT=true` in your `.env` file.
+Vault service is available but controlled by `USE_VAULT=true` in your `.env` file.
 
 ⚠️ **Security Note**: Never commit the `.env` file to version control. It's already included in `.gitignore`.
 
@@ -201,266 +177,33 @@ Per setup completo, troubleshooting e configurazione produzione → **[VAULT_INT
 
 ## ⚙️ Docker Configuration
 
-### docker-compose.yml (Development)
+### 📋 Configuration Files
 
-```yaml
-services:
-  postgres:
-    build:
-      context: .
-      dockerfile: Dockerfile.postgres
-      target: dev
-    image: thothix/postgres:17.5-thothix1.0-dev
-    container_name: thothix-postgres-dev
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: '@Admin123'
-      POSTGRES_DB: thothix-db
-      POSTGRES_HOST_AUTH_METHOD: trust
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d thothix-db']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+**Docker Compose:**
 
-  thothix-api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.backend
-      target: dev
-    image: thothix/api:1.0.0-dev
-    container_name: thothix-api-dev
-    restart: unless-stopped
-    ports:
-      - '30000:30000'
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: '@Admin123'
-      DB_NAME: thothix-db
-      PORT: 30000
-      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
-      ENVIRONMENT: development
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - app-network
+- 🔧 [`docker-compose.yml`](./docker-compose.yml) - Development configuration
+- 🚀 [`docker-compose.prod.yml`](./docker-compose.prod.yml) - Production configuration
 
-  vault:
-    build:
-      context: .
-      dockerfile: Dockerfile.vault
-      target: dev
-    image: thothix/vault:1.15.0-thothix1.0-dev
-    container_name: thothix-vault-dev
-    restart: unless-stopped
-    ports:
-      - '8200:8200'
-    volumes:
-      - vault_data:/vault/data
-      - vault_logs:/vault/logs
-      - ./vault/config:/vault/config:ro
-      - ./vault/scripts:/vault/scripts:ro
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: myroot
-      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
-      VAULT_API_ADDR: http://0.0.0.0:8200
-    networks:
-      - app-network
-    command: >
-      sh -c 'vault server -dev -dev-root-token-id=myroot -dev-listen-address=0.0.0.0:8200 &
-             sleep 10 &&
-             /vault/scripts/init-secrets.sh &&
-             wait'
-    healthcheck:
-      test: ["CMD", "vault", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+**Dockerfiles:**
 
-volumes:
-  postgres_data:
-    driver: local
-  vault_data:
-    driver: local
-  vault_logs:
-    driver: local
+- 🐳 [`Dockerfile.backend`](./Dockerfile.backend) - API backend (multi-stage)
+- 🐳 [`backend/Dockerfile.backend`](./backend/Dockerfile.backend) - Alternative backend location
+- 🗄️ [`Dockerfile.postgres`](./Dockerfile.postgres) - PostgreSQL database (multi-stage)
+- 🔐 [`Dockerfile.vault`](./Dockerfile.vault) - HashiCorp Vault (multi-stage)
 
-networks:
-  app-network:
-    driver: bridge
-```
+**Environment:**
 
-### Dockerfile per PostgreSQL (Dockerfile.postgres)
+- ⚙️ [`.env.example`](./.env.example) - Environment variables template
 
-```dockerfile
-# Multi-stage build per PostgreSQL personalizzato
-ARG POSTGRES_VERSION=17.5
-FROM postgres:${POSTGRES_VERSION}-alpine AS base
+### 🎯 Key Features
 
-# Development stage
-FROM base AS dev
-LABEL org.opencontainers.image.title="Thothix PostgreSQL Database (Development)"
-LABEL org.opencontainers.image.description="Database PostgreSQL personalizzato per Thothix - Development"
-LABEL org.opencontainers.image.version="17.5-thothix1.0-dev"
-LABEL org.opencontainers.image.vendor="Thothix"
+- **Multi-Stage Builds**: Optimized for development and production
+- **Consistent Naming**: `-dev` suffix for development, `-prod` for production
+- **Health Checks**: Built-in monitoring for all services
+- **Volume Management**: Persistent data storage
+- **Network Isolation**: Secure inter-service communication
 
-# Estensioni PostgreSQL per sviluppo
-RUN apk add --no-cache postgresql-contrib
-
-# Script di init
-COPY db-init/ /docker-entrypoint-initdb.d/
-
-EXPOSE 5432
-
-# Production stage
-FROM base AS prod
-LABEL org.opencontainers.image.title="Thothix PostgreSQL Database (Production)"
-LABEL org.opencontainers.image.description="Database PostgreSQL personalizzato per Thothix - Production"
-LABEL org.opencontainers.image.version="17.5-thothix1.0-prod"
-LABEL org.opencontainers.image.vendor="Thothix"
-
-# Estensioni PostgreSQL ottimizzate per produzione
-RUN apk add --no-cache postgresql-contrib
-
-# Script di init
-COPY db-init/ /docker-entrypoint-initdb.d/
-
-EXPOSE 5432
-```
-
-### Dockerfile per API Go (backend/Dockerfile.backend)
-
-```dockerfile
-# Multi-stage build per l'API Go
-FROM golang:1.23-alpine AS builder
-
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-
-# Build dell'applicazione
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
-
-# Development stage
-FROM registry.access.redhat.com/ubi9/ubi-micro AS dev
-
-WORKDIR /app
-
-# Metadata per sviluppo
-LABEL org.opencontainers.image.title="Thothix API (Development)"
-LABEL org.opencontainers.image.description="API backend per la piattaforma Thothix - Development"
-LABEL org.opencontainers.image.version="1.0.0-dev"
-LABEL org.opencontainers.image.vendor="Thothix"
-
-COPY --from=builder /app/main .
-
-EXPOSE 30000
-ENTRYPOINT ["./main"]
-
-# Production stage
-FROM registry.access.redhat.com/ubi9/ubi-micro AS prod
-
-WORKDIR /app
-
-# Metadata per produzione
-LABEL org.opencontainers.image.title="Thothix API (Production)"
-LABEL org.opencontainers.image.description="API backend per la piattaforma Thothix - Production"
-LABEL org.opencontainers.image.version="1.0.0-prod"
-LABEL org.opencontainers.image.vendor="Thothix"
-
-COPY --from=builder /app/main .
-
-EXPOSE 30000
-ENTRYPOINT ["./main"]
-```
-
-### Dockerfile per HashiCorp Vault (Dockerfile.vault)
-
-```dockerfile
-# Multi-stage build per Vault personalizzato
-ARG VAULT_VERSION=1.15.0
-FROM hashicorp/vault:${VAULT_VERSION} AS base
-
-# Development stage
-FROM base AS dev
-LABEL org.opencontainers.image.title="Thothix Vault (Development)"
-LABEL org.opencontainers.image.description="HashiCorp Vault personalizzato per Thothix - Development"
-LABEL org.opencontainers.image.version="1.15.0-thothix1.0-dev"
-LABEL org.opencontainers.image.vendor="Thothix"
-
-# Installa strumenti di gestione
-USER root
-RUN apk add --no-cache curl jq openssl bash wget
-
-# Crea directory personalizzate
-RUN mkdir -p /vault/scripts /vault/config
-RUN chown -R vault:vault /vault
-
-USER vault
-
-# Production stage  
-FROM base AS prod
-LABEL org.opencontainers.image.title="Thothix Vault (Production)"
-LABEL org.opencontainers.image.description="HashiCorp Vault personalizzato per Thothix - Production"
-LABEL org.opencontainers.image.version="1.15.0-thothix1.0-prod"
-LABEL org.opencontainers.image.vendor="Thothix"
-
-# Installa strumenti essenziali per produzione
-USER root
-RUN apk add --no-cache curl jq wget
-
-# Crea directory personalizzate
-RUN mkdir -p /vault/scripts /vault/config
-RUN chown -R vault:vault /vault
-
-USER vault
-```
-EXPOSE 30000
-ENTRYPOINT ["./main"]
-```
-
-### Variabili d'ambiente (.env)
-
-```bash
-# Applicazione
-APP_NAME=thothix
-APP_ENV=development
-APP_URL=http://localhost:30001
-
-# Database PostgreSQL
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=thothix-db
-DB_USER=postgres
-DB_PASSWORD=@Admin123
-
-# MinIO Storage
-MINIO_ENDPOINT=thothix-minio:30002
-MINIO_ACCESS_KEY=admin
-MINIO_SECRET_KEY=@Admin123
-MINIO_BUCKET=thothix-files
-MINIO_USE_SSL=false
-
-# API Backend
-API_PORT=30000
-API_HOST=localhost/api
-
-# Sviluppo
-DEBUG=true
-LOG_LEVEL=debug
-GIN_MODE=debug
-```
+📖 **Detailed Guide**: See [Docker Modernization Guide](./DOCKER_MODERNIZATION.md) for migration details and best practices.
 
 ## 🛠️ Useful Docker Commands
 

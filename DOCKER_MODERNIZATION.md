@@ -82,35 +82,17 @@ Tutti i Dockerfile ora supportano:
 
 ## 🐳 Dockerfile Multi-Stage
 
-### Esempio: Dockerfile.backend
+All Dockerfiles now implement multi-stage builds with dedicated dev/prod targets.
 
-```dockerfile
-# Multi-stage build per l'API Go
-FROM golang:1.23-alpine AS builder
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+📋 **Reference Files:**
+- [`Dockerfile.backend`](./Dockerfile.backend) - API backend
+- [`Dockerfile.postgres`](./Dockerfile.postgres) - PostgreSQL database  
+- [`Dockerfile.vault`](./Dockerfile.vault) - HashiCorp Vault
 
-# Development stage
-FROM registry.access.redhat.com/ubi9/ubi-micro AS dev
-WORKDIR /app
-LABEL org.opencontainers.image.title="Thothix API (Development)"
-LABEL org.opencontainers.image.version="1.0.0-dev"
-COPY --from=builder /app/main .
-EXPOSE 30000
-ENTRYPOINT ["./main"]
-
-# Production stage
-FROM registry.access.redhat.com/ubi9/ubi-micro AS prod
-WORKDIR /app
-LABEL org.opencontainers.image.title="Thothix API (Production)"
-LABEL org.opencontainers.image.version="1.0.0-prod"
-COPY --from=builder /app/main .
-EXPOSE 30000
-ENTRYPOINT ["./main"]
-```
+**Features:**
+- Optimized builds for each environment
+- Consistent labeling and metadata
+- Target-specific configurations
 
 ## 📝 Comandi Aggiornati
 
@@ -177,13 +159,13 @@ docker compose exec vault sh
 
 ### Variabili d'Ambiente
 
-**Aggiorna il tuo `.env`:**
-```bash
-# Assicurati che siano presenti
-VAULT_ADDR=http://vault:8200
-VAULT_DEV_MODE=true
-USE_VAULT=true  # se vuoi usare Vault
-```
+📋 **Reference**: See [`.env.example`](./.env.example) for all configuration options.
+
+**Key updates needed:**
+
+- Vault connection settings
+- Environment-specific configurations  
+- Service discovery settings
 
 ## ✅ Benefits
 

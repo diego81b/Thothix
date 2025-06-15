@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## v1.3.1 - Release v1.3.1 (2025-06-15)
+
 ## v1.3.1 - Release v1.3.1 (2025 -15-06)
 
 ### Infrastructure

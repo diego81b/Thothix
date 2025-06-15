@@ -81,13 +81,17 @@ set "CURRENT_DATE=%datetime:~0,4%-%datetime:~4,2%-%datetime:~6,2%"
 echo 🚀 Creating release %NEW_VERSION% - %DESCRIPTION%
 echo 📅 Date: %CURRENT_DATE%
 
+:: Get complete commit message (subject + body) before making any changes
+echo 📝 Capturing latest commit details...
+git log -1 --pretty=format:"%B" > temp_commit_msg.txt
+
 :: Update CHANGELOG...
 echo 🔄 Updating CHANGELOG with new version entry...
 
 :: Create backup
 copy CHANGELOG.md CHANGELOG_BACKUP.md >nul
 
-:: Create new CHANGELOG header with new version and preserve all existing content
+:: Create new CHANGELOG header with complete commit message
 (
     echo # Changelog - Automation and Code Quality
     echo.
@@ -95,27 +99,33 @@ copy CHANGELOG.md CHANGELOG_BACKUP.md >nul
     echo.
     echo ## %NEW_VERSION% - %DESCRIPTION% ^(%CURRENT_DATE%^)
     echo.
+    type temp_commit_msg.txt
+    echo.
 ) > CHANGELOG_NEW.md
 
-:: Copia il contenuto di [Unreleased] sotto la nuova versione, saltando la sezione [Unreleased]
-powershell -Command "$content = Get-Content 'CHANGELOG.md'; $inUnreleased = $false; $foundFirstVersion = $false; foreach($line in $content) { if($line -match '^## \[Unreleased\]') { $inUnreleased = $true; continue } if($line -match '^## v[0-9]') { if($inUnreleased) { $inUnreleased = $false; $foundFirstVersion = $true } if($foundFirstVersion) { Add-Content 'CHANGELOG_NEW.md' $line } } elseif($inUnreleased -and $line.Trim() -ne '') { Add-Content 'CHANGELOG_NEW.md' $line } elseif($foundFirstVersion) { Add-Content 'CHANGELOG_NEW.md' $line } }"
+:: Copy all existing versions (skip header line)
+powershell -Command "$content = Get-Content 'CHANGELOG.md'; $skipHeader = $true; foreach($line in $content) { if($skipHeader -and $line -match '^# ') { $skipHeader = $false; continue } if(-not $skipHeader) { Add-Content 'CHANGELOG_NEW.md' $line } }"
 
-:: Sostituisce il CHANGELOG originale
+:: Replace original CHANGELOG
 move CHANGELOG_NEW.md CHANGELOG.md
 
-echo ✅ CHANGELOG aggiornato con la nuova versione
+:: Clean up temporary files
+del temp_commit_msg.txt
+if exist CHANGELOG.md del CHANGELOG_BACKUP.md
 
-:: Crea Git tag
-echo 🏷️  Creazione Git tag...
+echo ✅ CHANGELOG updated with new version
+
+:: Create Git commit and tag
+echo 🏷️  Creating Git commit and tag...
 git add CHANGELOG.md
 git commit -m "release: %NEW_VERSION% - %DESCRIPTION%"
 git tag -a "%NEW_VERSION%" -m "Release %NEW_VERSION% - %DESCRIPTION%"
 
 echo.
-echo ✅ Bump di versione completato!
-echo 📋 Nuova versione: %NEW_VERSION%
-echo 🏷️  Tag Git creato: %NEW_VERSION%
+echo ✅ Version bump completed!
+echo 📋 New version: %NEW_VERSION%
+echo 🏷️  Git tag created: %NEW_VERSION%
 echo.
-echo 📤 Per pubblicare:
+echo 📤 To publish:
 echo   git push origin main
 echo   git push origin %NEW_VERSION%

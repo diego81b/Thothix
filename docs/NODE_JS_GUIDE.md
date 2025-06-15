@@ -447,4 +447,4 @@ time ./format.sh
 
 ---
 
-📝 **Next Steps**: Check out the main [README.md](./README.md) for project overview and [CHANGELOG.md](./CHANGELOG.md) for recent updates.
+📝 **Next Steps**: Check out the main [README.md](../README.md) for project overview and [CHANGELOG.md](../CHANGELOG.md) for recent updates.

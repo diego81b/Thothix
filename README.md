@@ -33,6 +33,7 @@ cd Thothix
 - **[🔐 Vault Integration Guide](./docs/VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
 - **[🐳 Docker Guide](./docs/DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
 - **[🌍 Node.js Automation](./docs/NODE_JS_GUIDE.md)** - Cross-platform automation with Node.js/Zx
+- **[📝 Changelog](./CHANGELOG.md)** - Project history and version updates
 
 ## 🏗️ Architecture
 

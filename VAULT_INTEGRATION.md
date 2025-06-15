@@ -26,7 +26,7 @@ USE_VAULT=true
 
 ### 2. Avvia i servizi
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### 3. Accedi a Vault UI
@@ -36,10 +36,10 @@ docker-compose up -d --build
 ### 4. Verifica l'integrazione
 ```bash
 # Controlla che Vault sia attivo
-docker-compose logs vault-init
+docker compose logs vault
 
 # Verifica che l'app legga da Vault
-docker-compose logs thothix-api | findstr vault
+docker compose logs thothix-api | findstr vault
 ```
 
 **✅ Fatto!** Vault è ora integrato e gestisce automaticamente:
@@ -112,17 +112,17 @@ DB_PASSWORD=your_secure_password
 
 ```bash
 # Avvia tutti i servizi incluso Vault
-docker-compose up -d --build
+docker compose up -d --build
 
 # Verifica che tutti i container siano attivi
-docker-compose ps
+docker compose ps
 ```
 
 ### 2. Verifica Vault
 
 ```bash
 # Controlla che Vault sia healthy
-docker-compose exec vault vault status
+docker compose exec vault vault status
 
 # Dovrebbe mostrare:
 # - Sealed: false
@@ -183,27 +183,27 @@ POSTGRES_DB=thothix-prod
 
 ```bash
 # Usa la configurazione produzione
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 # Verifica che Vault sia in modalità produzione
-docker-compose exec vault vault status
+docker compose exec vault vault status
 ```
 
 ### 4. Setup Sicurezza Produzione
 
 ```bash
 # 1. Cambia il root token (dopo il primo avvio)
-docker-compose exec vault vault auth -method=token
+docker compose exec vault vault auth -method=token
 
 # 2. Crea policy dedicata per l'app
-docker-compose exec vault vault policy write thothix-app - <<EOF
+docker compose exec vault vault policy write thothix-app - <<EOF
 path "thothix/data/*" {
   capabilities = ["read"]
 }
 EOF
 
 # 3. Genera token con policy limitata
-docker-compose exec vault vault token create -policy=thothix-app
+docker compose exec vault vault token create -policy=thothix-app
 # Usa questo token come VAULT_APP_TOKEN
 ```
 
@@ -237,47 +237,47 @@ thothix/
 
 ```bash
 # Lista tutti i path dei segreti
-docker-compose exec vault vault kv list thothix/data
+docker compose exec vault vault kv list thothix/data
 
 # Leggi segreti database
-docker-compose exec vault vault kv get thothix/data/database
+docker compose exec vault vault kv get thothix/data/database
 
 # Leggi segreti Clerk
-docker-compose exec vault vault kv get thothix/data/clerk
+docker compose exec vault vault kv get thothix/data/clerk
 
 # Leggi segreti app
-docker-compose exec vault vault kv get thothix/data/app
+docker compose exec vault vault kv get thothix/data/app
 ```
 
 ### 3. Modifica Segreti
 
 ```bash
 # Aggiorna password database
-docker-compose exec vault vault kv put thothix/data/database \\
-  host=postgres \\
-  port=5432 \\
-  username=postgres \\
-  password=new_secure_password \\
+docker compose exec vault vault kv put thothix/data/database \
+  host=postgres \
+  port=5432 \
+  username=postgres \
+  password=new_secure_password \
   database=thothix-db
 
 # Aggiorna chiavi Clerk
-docker-compose exec vault vault kv put thothix/data/clerk \\
-  secret_key=sk_live_new_production_key \\
-  webhook_secret=whsec_new_webhook_secret \\
+docker compose exec vault vault kv put thothix/data/clerk \
+  secret_key=sk_live_new_production_key \
+  webhook_secret=whsec_new_webhook_secret \
   publishable_key=pk_live_new_public_key
 
 # Riavvia l'API per ricaricare i segreti
-docker-compose restart thothix-api
+docker compose restart thothix-api
 ```
 
 ### 4. Backup e Restore
 
 ```bash
 # Backup completo (JSON)
-docker-compose exec vault vault kv get -format=json thothix/data > vault_backup.json
+docker compose exec vault vault kv get -format=json thothix/data > vault_backup.json
 
 # Backup specifico
-docker-compose exec vault vault kv get -field=password thothix/data/database
+docker compose exec vault vault kv get -field=password thothix/data/database
 
 # Restore da backup (manuale)
 # Editare vault_backup.json e fare put per ogni segreto
@@ -337,10 +337,10 @@ docker-compose down
 docker volume rm thothix_vault_dev_data thothix_vault_dev_logs
 
 # 3. Riavvia
-docker-compose up -d --build
+docker compose up -d --build
 
 # 4. Verifica reinizializzazione
-docker-compose logs vault-init
+docker compose logs vault
 ```
 
 ## 📚 Best Practices
@@ -380,13 +380,13 @@ docker-compose logs vault-init
 1. `cp .env.example .env`
 2. Configura segreti base nel .env
 3. Imposta `USE_VAULT=true`
-4. `docker-compose up -d --build`
+4. `docker compose up -d --build`
 5. Accedi a Vault UI per gestire segreti
 
 ### Staging/Produzione
 1. Configura .env per l'ambiente target
 2. Genera token dedicati con policy limitate
-3. Usa `docker-compose.prod.yml` per produzione
+3. Usa `docker compose -f docker-compose.yml -f docker-compose.prod.yml` per produzione
 4. Backup regolari dei segreti
 5. Monitor dello stato di Vault
 
@@ -397,7 +397,7 @@ docker-compose logs vault-init
 Per problemi o domande sull'integrazione Vault:
 
 1. **Controlla** questa guida e la sezione troubleshooting
-2. **Verifica** i logs con `docker-compose logs`
+2. **Verifica** i logs con `docker compose logs`
 3. **Consulta** la documentazione ufficiale di [Vault](https://developer.hashicorp.com/vault/docs)
 4. **Apri** un issue nel repository del progetto
 

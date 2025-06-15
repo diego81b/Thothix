@@ -3,8 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.postgres
-    image: thothix/postgres:17.5-thothix1.0
-    container_name: thothix-postgres
+      target: dev
+    image: thothix/postgres:17.5-thothix1.0-dev
+    container_name: thothix-postgres-dev
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -27,13 +28,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.vault
-    image: thothix/vault:1.15.0-thothix1.0
+      target: dev
+    image: thothix/vault:1.15.0-thothix1.0-dev
     container_name: thothix-vault-dev
     restart: unless-stopped
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_ROOT_TOKEN:-thothix-dev-root-token}
       VAULT_DEV_MODE: ${VAULT_DEV_MODE:-true}
       VAULT_LOG_LEVEL: INFO
+    # Comando diretto per evitare problemi di capabilities su Windows/WSL
+    command: >
+      sh -c "
+      if [ \"$$VAULT_DEV_MODE\" = \"true\" ]; then
+        vault server -dev -dev-root-token-id=\"$$VAULT_DEV_ROOT_TOKEN_ID\" -dev-listen-address=\"0.0.0.0:8200\"
+      else
+        vault server -config=/vault/config/vault.hcl
+      fi
+      "
     ports:
       - '8200:8200'
     cap_add:
@@ -52,13 +63,13 @@ services:
       start_period: 40s
 
   vault-init:
-    image: hashicorp/vault:1.15.0
+    image: thothix/vault:1.15.0-thothix1.0-dev
     container_name: thothix-vault-init-dev
     depends_on:
       vault:
         condition: service_healthy
     environment:
-      VAULT_ADDR: http://localhost:8200
+      VAULT_ADDR: http://vault:8200
       VAULT_TOKEN: ${VAULT_ROOT_TOKEN:-thothix-dev-root-token}
       VAULT_MOUNT: ${VAULT_MOUNT:-thothix}
       ENVIRONMENT: ${ENVIRONMENT:-development}
@@ -72,8 +83,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.backend
-    image: thothix/api:1.0.0
-    container_name: thothix-api
+      target: dev
+    image: thothix/api:1.0.0-dev
+    container_name: thothix-api-dev
     restart: unless-stopped
     ports:
       - '30000:30000'

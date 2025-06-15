@@ -33,7 +33,8 @@ cd Thothix
 ### 📖 Additional Documentation
 
 - **[🔐 Vault Integration Guide](./VAULT_INTEGRATION.md)** - Complete setup, troubleshooting & production guide
-- **[📁 Scripts Documentation](./scripts/README.md)** - Development automation and tools
+- **[� Docker Modernization Guide](./DOCKER_MODERNIZATION.md)** - Docker architecture updates and migration guide
+- **[�📁 Scripts Documentation](./scripts/README.md)** - Development automation and tools
 - **[🤖 Automation Guide](./AUTOMATION.md)** - Pre-commit hooks and formatting
 
 ## 🏗️ Architecture
@@ -57,13 +58,15 @@ cd Thothix
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                 │
                                 ▼
-                       ┌─────────────────┐
-                       │  thothix-minio  │
-                       │ (File Storage)  │
-                       │   Port: 30002   │
-                       │ Console: 30003  │
-                       └─────────────────┘
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │  thothix-vault  │    │  thothix-minio  │
+                       │ (Secrets Mgmt)  │    │ (File Storage)  │
+                       │   Port: 8200    │    │   Port: 30002   │
+                       └─────────────────┘    │ Console: 30003  │
+                                              └─────────────────┘
 ```
+
+> 🚀 **Recent Updates**: Docker configuration has been modernized with multi-stage builds and consistent naming conventions. See [Docker Modernization Guide](./DOCKER_MODERNIZATION.md) for details.
 
 ### Main Features
 
@@ -84,7 +87,7 @@ cd Thothix
 
 ```bash
 docker --version
-docker-compose --version
+docker compose version
 ```
 
 ## 🐳 Quick Start with Docker
@@ -150,21 +153,21 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ### 3. Start the complete stack
 
 ```bash
-# Start all services
-docker-compose up -d --build
+# Start all services (development mode)
+docker compose up -d --build
 
 # Verify all containers are running
-docker-compose ps
+docker compose ps
 ```
 
 ### 4. Database initialization
 
 ```bash
 # Run database migrations
-docker-compose exec thothix-api go run cmd/migrate/main.go
+docker compose exec thothix-api go run cmd/migrate/main.go
 
 # Load sample data (optional)
-docker-compose exec thothix-api go run cmd/seed/main.go
+docker compose exec thothix-api go run cmd/seed/main.go
 ```
 
 ### 5. Access services
@@ -187,7 +190,7 @@ Vault è integrato per gestire in modo sicuro segreti e configurazioni sensibili
 ### Quick Start
 
 1. **Abilita Vault**: Imposta `USE_VAULT=true` nel tuo `.env`
-2. **Avvia servizi**: `docker-compose up -d --build`
+2. **Avvia servizi**: `docker compose up -d --build`
 3. **Accedi a Vault UI**: <http://localhost:8200> (token: da tuo `.env`)
 
 Vault gestisce automaticamente credenziali database, API keys Clerk e segreti applicazione.
@@ -198,7 +201,7 @@ Per setup completo, troubleshooting e configurazione produzione → **[VAULT_INT
 
 ## ⚙️ Docker Configuration
 
-### docker-compose.yml
+### docker-compose.yml (Development)
 
 ```yaml
 services:
@@ -206,8 +209,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.postgres
-    image: thothix/postgres:17.5-thothix1.0
-    container_name: thothix-postgres
+      target: dev
+    image: thothix/postgres:17.5-thothix1.0-dev
+    container_name: thothix-postgres-dev
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -229,9 +233,10 @@ services:
   thothix-api:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    image: thothix/api:1.0.0
-    container_name: thothix-api
+      dockerfile: Dockerfile.backend
+      target: dev
+    image: thothix/api:1.0.0-dev
+    container_name: thothix-api-dev
     restart: unless-stopped
     ports:
       - '30000:30000'
@@ -250,8 +255,44 @@ services:
     networks:
       - app-network
 
+  vault:
+    build:
+      context: .
+      dockerfile: Dockerfile.vault
+      target: dev
+    image: thothix/vault:1.15.0-thothix1.0-dev
+    container_name: thothix-vault-dev
+    restart: unless-stopped
+    ports:
+      - '8200:8200'
+    volumes:
+      - vault_data:/vault/data
+      - vault_logs:/vault/logs
+      - ./vault/config:/vault/config:ro
+      - ./vault/scripts:/vault/scripts:ro
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: myroot
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      VAULT_API_ADDR: http://0.0.0.0:8200
+    networks:
+      - app-network
+    command: >
+      sh -c 'vault server -dev -dev-root-token-id=myroot -dev-listen-address=0.0.0.0:8200 &
+             sleep 10 &&
+             /vault/scripts/init-secrets.sh &&
+             wait'
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
+    driver: local
+  vault_data:
+    driver: local
+  vault_logs:
     driver: local
 
 networks:
@@ -262,15 +303,33 @@ networks:
 ### Dockerfile per PostgreSQL (Dockerfile.postgres)
 
 ```dockerfile
-FROM postgres:17.5-alpine
+# Multi-stage build per PostgreSQL personalizzato
+ARG POSTGRES_VERSION=17.5
+FROM postgres:${POSTGRES_VERSION}-alpine AS base
 
-# Metadata immagine
-LABEL org.opencontainers.image.title="Thothix PostgreSQL Database"
-LABEL org.opencontainers.image.description="Database PostgreSQL personalizzato per Thothix"
-LABEL org.opencontainers.image.version="17.5-thothix1.0"
+# Development stage
+FROM base AS dev
+LABEL org.opencontainers.image.title="Thothix PostgreSQL Database (Development)"
+LABEL org.opencontainers.image.description="Database PostgreSQL personalizzato per Thothix - Development"
+LABEL org.opencontainers.image.version="17.5-thothix1.0-dev"
 LABEL org.opencontainers.image.vendor="Thothix"
 
-# Estensioni PostgreSQL
+# Estensioni PostgreSQL per sviluppo
+RUN apk add --no-cache postgresql-contrib
+
+# Script di init
+COPY db-init/ /docker-entrypoint-initdb.d/
+
+EXPOSE 5432
+
+# Production stage
+FROM base AS prod
+LABEL org.opencontainers.image.title="Thothix PostgreSQL Database (Production)"
+LABEL org.opencontainers.image.description="Database PostgreSQL personalizzato per Thothix - Production"
+LABEL org.opencontainers.image.version="17.5-thothix1.0-prod"
+LABEL org.opencontainers.image.vendor="Thothix"
+
+# Estensioni PostgreSQL ottimizzate per produzione
 RUN apk add --no-cache postgresql-contrib
 
 # Script di init
@@ -279,25 +338,94 @@ COPY db-init/ /docker-entrypoint-initdb.d/
 EXPOSE 5432
 ```
 
-### Dockerfile per API Go (Dockerfile)
+### Dockerfile per API Go (backend/Dockerfile.backend)
 
 ```dockerfile
+# Multi-stage build per l'API Go
 FROM golang:1.23-alpine AS builder
-WORKDIR /app/backend
+
+WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
+
+# Build dell'applicazione
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
-FROM registry.access.redhat.com/ubi9/ubi-micro
+# Development stage
+FROM registry.access.redhat.com/ubi9/ubi-micro AS dev
+
 WORKDIR /app
 
-# Metadata immagine
-LABEL org.opencontainers.image.title="Thothix API"
-LABEL org.opencontainers.image.description="API backend per la piattaforma Thothix"
-LABEL org.opencontainers.image.version="1.0.0"
+# Metadata per sviluppo
+LABEL org.opencontainers.image.title="Thothix API (Development)"
+LABEL org.opencontainers.image.description="API backend per la piattaforma Thothix - Development"
+LABEL org.opencontainers.image.version="1.0.0-dev"
+LABEL org.opencontainers.image.vendor="Thothix"
 
-COPY --from=builder /app/backend/main .
+COPY --from=builder /app/main .
+
+EXPOSE 30000
+ENTRYPOINT ["./main"]
+
+# Production stage
+FROM registry.access.redhat.com/ubi9/ubi-micro AS prod
+
+WORKDIR /app
+
+# Metadata per produzione
+LABEL org.opencontainers.image.title="Thothix API (Production)"
+LABEL org.opencontainers.image.description="API backend per la piattaforma Thothix - Production"
+LABEL org.opencontainers.image.version="1.0.0-prod"
+LABEL org.opencontainers.image.vendor="Thothix"
+
+COPY --from=builder /app/main .
+
+EXPOSE 30000
+ENTRYPOINT ["./main"]
+```
+
+### Dockerfile per HashiCorp Vault (Dockerfile.vault)
+
+```dockerfile
+# Multi-stage build per Vault personalizzato
+ARG VAULT_VERSION=1.15.0
+FROM hashicorp/vault:${VAULT_VERSION} AS base
+
+# Development stage
+FROM base AS dev
+LABEL org.opencontainers.image.title="Thothix Vault (Development)"
+LABEL org.opencontainers.image.description="HashiCorp Vault personalizzato per Thothix - Development"
+LABEL org.opencontainers.image.version="1.15.0-thothix1.0-dev"
+LABEL org.opencontainers.image.vendor="Thothix"
+
+# Installa strumenti di gestione
+USER root
+RUN apk add --no-cache curl jq openssl bash wget
+
+# Crea directory personalizzate
+RUN mkdir -p /vault/scripts /vault/config
+RUN chown -R vault:vault /vault
+
+USER vault
+
+# Production stage  
+FROM base AS prod
+LABEL org.opencontainers.image.title="Thothix Vault (Production)"
+LABEL org.opencontainers.image.description="HashiCorp Vault personalizzato per Thothix - Production"
+LABEL org.opencontainers.image.version="1.15.0-thothix1.0-prod"
+LABEL org.opencontainers.image.vendor="Thothix"
+
+# Installa strumenti essenziali per produzione
+USER root
+RUN apk add --no-cache curl jq wget
+
+# Crea directory personalizzate
+RUN mkdir -p /vault/scripts /vault/config
+RUN chown -R vault:vault /vault
+
+USER vault
+```
 EXPOSE 30000
 ENTRYPOINT ["./main"]
 ```
@@ -339,25 +467,35 @@ GIN_MODE=debug
 ### Development Commands
 
 ```bash
-# Avvia tutti i servizi in background
-docker-compose up -d
+# Avvia tutti i servizi in background (development mode)
+docker compose up -d
+
+# Avvia tutti i servizi in produzione
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Ferma e rimuove container, network e volumi definiti
-docker-compose down
+docker compose down
 
-# Build entrambe le immagini
-docker-compose build
+# Build di tutte le immagini per development
+docker compose build
+
+# Build di tutte le immagini per production
+docker compose -f docker-compose.yml -f docker-compose.prod.yml build
 
 # Lista immagini Thothix
 docker images | findstr thothix
 
 # Push al registry (quando configurato)
-docker push thothix/api:1.0.0
-docker push thothix/postgres:17.5-thothix1.0
+docker push thothix/api:1.0.0-dev
+docker push thothix/api:1.0.0-prod
+docker push thothix/postgres:17.5-thothix1.0-dev
+docker push thothix/postgres:17.5-thothix1.0-prod
+docker push thothix/vault:1.15.0-thothix1.0-dev
+docker push thothix/vault:1.15.0-thothix1.0-prod
 
-# Inspect metadata
-docker inspect thothix/api:1.0.0 --format="{{json .Config.Labels}}"
-docker inspect thothix/postgres:17.5-thothix1.0 --format="{{json .Config.Labels}}"
+# Inspect metadata delle immagini
+docker inspect thothix/api:1.0.0-dev --format="{{json .Config.Labels}}"
+docker inspect thothix/postgres:17.5-thothix1.0-prod --format="{{json .Config.Labels}}"
 ```
 
 ### Build e deployment immagini
@@ -383,25 +521,33 @@ docker push thothix/postgres:17.5-thothix1.0
 ### Aggiornamento Swagger
 
 ```bash
+```bash
 # Genera (o rigenera) la doc. OpenAPI dai commenti @swagger
 cd backend
 swag init -g main.go
 
 # Riavvia solo il servizio API (con doc aggiornata)
-docker-compose restart thothix-api
+docker compose restart thothix-api
 ```
 
 ### Logging e debug
 
 ```bash
 # Segui i log del servizio API
-docker-compose logs -f thothix-api
+docker compose logs -f thothix-api
 
 # Segui i log del servizio Postgres
-docker-compose logs -f thothix-postgres
+docker compose logs -f postgres
+
+# Segui i log del servizio Vault
+docker compose logs -f vault
 
 # Esegui una shell interattiva nel container API
-docker-compose exec thothix-api sh
+docker compose exec thothix-api sh
+
+# Esegui comandi Vault
+docker compose exec vault vault status
+```
 ```
 
 ### Gestione servizi

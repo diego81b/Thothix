@@ -5,29 +5,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.vault
-    image: thothix/vault:1.15.0-thothix1.0
+      target: prod
+    image: thothix/vault:1.15.0-thothix1.0-prod
     container_name: thothix-vault-prod
     restart: unless-stopped
-    environment:
-      VAULT_LOCAL_CONFIG: |
-        {
-          "storage": {
-            "file": {
-              "path": "/vault/data"
-            }
-          },
-          "listener": {
-            "tcp": {
-              "address": "0.0.0.0:8200",
-              "tls_disable": true
-            }
-          },
-          "ui": true,
-          "log_level": "INFO",
-          "default_lease_ttl": "168h",
-          "max_lease_ttl": "720h",
-          "disable_mlock": true
-        }
+    command:
+      - sh
+      - -c
+      - |
+        vault server -config=/vault/config/vault.hcl
     ports:
       - '8200:8200'
     cap_add:
@@ -35,24 +21,24 @@ services:
     volumes:
       - vault_prod_data:/vault/data
       - vault_prod_logs:/vault/logs
-      - ./vault/config:/vault/config:ro
+      - ./vault/config:/vault/config
     networks:
       - app-network
     healthcheck:
-      test: ['CMD', 'vault', 'status']
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:8200/v1/sys/health?standbyok=true&sealedcode=200&uninitcode=200']
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
   vault-init:
-    image: hashicorp/vault:1.15.0
-    container_name: thothix-vault-init
+    image: thothix/vault:1.15.0-thothix1.0-prod
+    container_name: thothix-vault-init-prod
     depends_on:
       vault:
         condition: service_healthy
     environment:
-      VAULT_ADDR: http://localhost:8200
+      VAULT_ADDR: http://vault:8200
       VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
       VAULT_MOUNT: thothix
       ENVIRONMENT: production
@@ -64,6 +50,12 @@ services:
     restart: 'no'
 
   postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+      target: prod
+    image: thothix/postgres:17.5-thothix1.0-prod
+    container_name: thothix-postgres-prod
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: thothix-prod
@@ -71,9 +63,15 @@ services:
       - postgres_prod_data:/var/lib/postgresql/data
 
   thothix-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+      target: prod
+    image: thothix/api:1.0.0-prod
+    container_name: thothix-api-prod
     environment:
       # Vault configuration
-      VAULT_ADDR: http://localhost:8200
+      VAULT_ADDR: http://vault:8200
       VAULT_TOKEN: ${VAULT_APP_TOKEN}
       VAULT_MOUNT: thothix
       USE_VAULT: 'true'
@@ -104,3 +102,7 @@ volumes:
     driver: local
   vault_prod_logs:
     driver: local
+
+networks:
+  app-network:
+    driver: bridge

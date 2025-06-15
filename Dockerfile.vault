@@ -1,13 +1,4 @@
-FROM hashicorp/vault:1.15.0
-
-# Metadata dell'immagine
-LABEL org.opencontainers.image.title="Thothix Vault"
-LABEL org.opencontainers.image.description="HashiCorp Vault configurato per la piattaforma Thothix"
-LABEL org.opencontainers.image.version="1.15.0-thothix1.0"
-LABEL org.opencontainers.image.vendor="Thothix"
-LABEL org.opencontainers.image.authors="Thothix Team"
-LABEL org.opencontainers.image.source="https://github.com/thothix/thothix"
-LABEL org.opencontainers.image.documentation="https://docs.thothix.com"
+FROM hashicorp/vault:1.15.0 AS base
 
 # Installa strumenti aggiuntivi per lo scripting di inizializzazione
 USER root
@@ -15,7 +6,8 @@ RUN apk add --no-cache \
   curl \
   jq \
   openssl \
-  bash
+  bash \
+  wget
 
 # Crea directory per configurazione personalizzata
 RUN mkdir -p /vault/config /vault/policies /vault/scripts /vault/logs
@@ -33,11 +25,26 @@ USER vault
 # Espone la porta standard di Vault
 EXPOSE 8200
 
-# Entry point personalizzato che supporta sia dev che production mode
-COPY vault/docker-entrypoint.sh /usr/local/bin/docker-entrypoint-thothix.sh
-USER root
-RUN chmod +x /usr/local/bin/docker-entrypoint-thothix.sh
-USER vault
+# Target per sviluppo
+FROM base AS dev
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint-thothix.sh"]
-CMD ["vault", "server"]
+# Metadata dell'immagine per sviluppo
+LABEL org.opencontainers.image.title="Thothix Vault (Development)"
+LABEL org.opencontainers.image.description="HashiCorp Vault configurato per la piattaforma Thothix - Development Environment"
+LABEL org.opencontainers.image.version="1.15.0-thothix1.0-dev"
+LABEL org.opencontainers.image.vendor="Thothix"
+LABEL org.opencontainers.image.authors="Thothix Team"
+LABEL org.opencontainers.image.source="https://github.com/thothix/thothix"
+LABEL org.opencontainers.image.documentation="https://docs.thothix.com"
+
+# Target per produzione
+FROM base AS prod
+
+# Metadata dell'immagine per produzione
+LABEL org.opencontainers.image.title="Thothix Vault (Production)"
+LABEL org.opencontainers.image.description="HashiCorp Vault configurato per la piattaforma Thothix - Production Environment"
+LABEL org.opencontainers.image.version="1.15.0-thothix1.0-prod"
+LABEL org.opencontainers.image.vendor="Thothix"
+LABEL org.opencontainers.image.authors="Thothix Team"
+LABEL org.opencontainers.image.source="https://github.com/thothix/thothix"
+LABEL org.opencontainers.image.documentation="https://docs.thothix.com"

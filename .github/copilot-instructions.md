@@ -238,6 +238,16 @@ VAULT_ROOT_TOKEN=thothix-secure-root-token-2025-v1
 
 ## 🛠️ Development Workflow
 
+### Script Development Guidelines
+
+- **Single Version Policy**: Create only ONE version of each script per functionality
+- **Windows Priority**: Prefer `.bat` files for Windows environments (primary development OS)
+- **Cross-Platform**: Only create multiple versions if truly necessary for cross-platform support
+- **Naming Convention**: Use descriptive names (e.g., `version-bump.bat`, `dev.bat`, `setup-hooks.ps1`)
+- **Documentation**: Each script must be documented in `scripts/README.md`
+- **Functionality**: Each script should have a single, clear purpose
+- **Error Handling**: Include proper error handling and user feedback
+
 ### Git Practices
 
 - Use conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`

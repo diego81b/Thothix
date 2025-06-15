@@ -4,6 +4,14 @@
 
 ### Infrastructure
 
+- feat: simplify script architecture with single-version policy
+  - Removed duplicate version-bump scripts (.ps1, .sh)
+  - Standardized on .bat files for Windows primary development
+  - Updated Copilot instructions with script development guidelines
+  - Cleaned scripts README.md documentation
+  - Updated VS Code tasks to use simplified scripts
+  - **Impact**: Reduced maintenance overhead, eliminated confusion, improved developer experience
+
 - feat: implement automatic semantic versioning system
   - Added cross-platform version bump scripts (Windows, PowerShell, Unix)
   - Automated CHANGELOG.md updates with version releases

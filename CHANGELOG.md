@@ -2,11 +2,16 @@
 
 ## [Unreleased]
 
-## v1.3.1 - Release v1.3.1 (2025-06-15)
-
-## v1.3.1 - Release v1.3.1 (2025 -15-06)
-
 ### Infrastructure
+
+- feat: create simplified version-bump.bat script
+  - Implemented pure Windows batch script for version bumping
+  - Supports semantic versioning (major/minor/patch)
+  - Automatic version parsing from CHANGELOG.md
+  - No external dependencies (PowerShell, Unix tools)
+  - Simplified single-file approach following project guidelines
+  - **Impact**: Functional version management tool ready for testing and refinement
+
 - feat: simplify script architecture with single-version policy
   - Removed duplicate version-bump scripts (.ps1, .sh)
   - Standardized on .bat files for Windows primary development
@@ -14,25 +19,16 @@
   - Cleaned scripts README.md documentation
   - Updated VS Code tasks to use simplified scripts
   - **Impact**: Reduced maintenance overhead, eliminated confusion, improved developer experience
-- feat: implement automatic semantic versioning system
-  - Added cross-platform version bump scripts (Windows, PowerShell, Unix)
-  - Automated CHANGELOG.md updates with version releases
-  - Git tag creation with semantic versioning (major.minor.patch)
-  - VS Code tasks integration for version management
-  - **Impact**: Streamlined release management with automated version control, CHANGELOG updates, and Git tagging
+
 ### Documentation
+
 - docs: enhance Copilot instructions with mandatory CHANGELOG updates
   - Added comprehensive CHANGELOG guidelines with examples and best practices
   - Made CHANGELOG updates mandatory in pre-commit checklist
   - Included detailed formatting standards for CHANGELOG entries
   - Added release process documentation with semantic versioning
   - **Impact**: Ensures consistent and detailed change tracking for all commits
-- docs: update CHANGELOG format to v1.2.3 - Description (YYYY-MM-DD)
-  - Standardized version format across all documentation
-  - Updated Copilot instructions with semantic versioning guidelines
-  - Added version bump decision guide for different commit types
-  - Enhanced release process documentation
-  - **Impact**: Consistent versioning format and automated release management workflow
+
 ## v1.3.0 - Consolidamento Documentazione (2025-06-14)
 
 ### Documentation Updates
@@ -45,55 +41,55 @@
 
 - docs: simplify README structure and remove redundancies
   - Integrated backend documentation into main README
-  - Removed obsolete script references
-  - Specialized technical documentation in dedicated files
-  - **Impact**: Cleaner project structure with focused documentation
+  - Removed duplicate setup instructions
+  - Updated project structure documentation
+  - **Impact**: Cleaner, more maintainable documentation
 
 ## v1.2.0 - Automazione Completa (2025-06-13)
 
-### Added Features
+### ✨ Nuove Funzionalità
 
-- feat: complete pre-commit automation system
-  - Automatic Git hooks for formatting and linting
-  - Cross-platform scripts (Windows/Unix) for development
-  - VS Code tasks integration for development workflow
-  - **Impact**: Guaranteed code quality on every commit
+- **Sistema di automazione pre-commit completo**
+- **Git hooks automatici** per formattazione e linting
+- **Script cross-platform** (Windows/Unix) per sviluppo
+- **VS Code tasks** integrate per workflow di sviluppo
 
-### Build & Infrastructure
+### 🔧 Strumenti di Formattazione
 
-- build: comprehensive formatting tools configuration
-  - gofmt for basic Go formatting
-  - goimports for automatic import management
-  - gofumpt for strict formatting in CI/CD
-  - golangci-lint with relaxed rules for developer productivity
-  - **Impact**: Consistent code formatting with zero developer configuration
+- **gofmt**: Formattazione base Go
+- **goimports**: Gestione automatica import
+- **gofumpt**: Formattazione rigorosa per CI/CD
+- **golangci-lint**: Linting configurato con regole rilassate
 
-- build: optimized configuration files
-  - Enhanced .golangci.yml for developer productivity
-  - Makefile with all common operations
-  - VS Code settings for auto-formatting
-  - PowerShell/Batch scripts for automatic setup
-  - **Impact**: Streamlined development environment setup
+### 🛠️ Configurazione Migliorata
 
-### Bug Fixes
+- **`.golangci.yml`** ottimizzato per produttività sviluppatori
+- **Makefile** con target per tutte le operazioni comuni
+- **VS Code settings** per auto-formattazione
+- **Scripts PowerShell/Batch** per setup automatico
 
-- fix: resolve gofumpt formatting errors automatically
-  - Correct Go import spacing according to conventions
-  - Automatic addition of formatted files to commit
-  - Robust pre-commit hook with error handling
-  - **Impact**: Eliminates formatting conflicts and ensures consistent code style
+### 🐛 Problemi Risolti
 
-- fix: VS Code configuration breaking Go import formatting
-  - Optimized VS Code configuration to avoid extra spaces
-  - Added VS Code task for single file formatting
-  - Batch script for massive formatting correction
-  - **Impact**: Seamless development experience in VS Code
+- ✅ Errori di formattazione `gofumpt` risolti automaticamente
+- ✅ Spaziatura import Go corretta secondo convenzioni
+- ✅ Aggiunta automatica file formattati al commit
+- ✅ Hook pre-commit robusto con gestione errori
+- ✅ **NUOVO**: Problema VS Code che rompeva formattazione import Go
+- ✅ **NUOVO**: Configurazione VS Code ottimizzata per evitare spazi extra
+- ✅ **NUOVO**: Task VS Code per formattazione file singolo
+- ✅ **NUOVO**: Script batch per correzione formattazione massive
+- ✅ **RISOLTO**: Conflitto tra goimports e gofumpt che causava errori di formattazione persistenti
 
-### Documentation Enhancements
+### 🧹 Pulizia e Ottimizzazione Script
 
-- docs: comprehensive automation guide (AUTOMATION.md)
-  - Complete automation setup guide
-  - Updated README with development setup
-  - Backend development tools documentation
-  - Troubleshooting sections for common issues
-  - **Impact**: Clear guidance for developers on automation tools and workflows
+- ✅ **NUOVO**: Script unificato `dev.bat/sh` con azioni multiple (format|lint|pre-commit|all)
+- ✅ **RIMOSSI**: Script duplicati `format.bat/sh`, `fix-formatting.bat`
+- ✅ **CONSOLIDATO**: Tutte le funzionalità di sviluppo in script unici
+- ✅ **SEMPLIFICATO**: Workflow sviluppo con comandi chiari e intuitivi
+
+### 📚 Documentazione
+
+- **AUTOMATION.md**: Guida completa all'automazione
+- **README.md**: Aggiornato con setup sviluppo
+- **backend/README.md**: Documentazione strumenti sviluppo
+- **Troubleshooting**: Sezioni per risoluzione problemi comuni

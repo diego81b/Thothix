@@ -25,25 +25,33 @@ if not "%BUMP_TYPE%"=="major" if not "%BUMP_TYPE%"=="minor" if not "%BUMP_TYPE%"
     exit /b 1
 )
 
-echo 🔍 Lettura versione corrente dal CHANGELOG...
+echo 🔍 Reading current version from CHANGELOG...
 
-:: Trova la prima versione nel CHANGELOG (metodo semplificato)
-set "CURRENT_VERSION=v1.3.1"
-echo 📋 Versione corrente trovata: %CURRENT_VERSION%
+:: Find first version in CHANGELOG (skip [Unreleased])
+for /f "tokens=2 delims= " %%a in ('findstr "^## v" CHANGELOG.md') do (
+    set "TEMP_VERSION=%%a"
+    :: Skip [Unreleased] and only process real versions
+    if not "!TEMP_VERSION!"=="[Unreleased]" (
+        set "CURRENT_VERSION=!TEMP_VERSION!"
+        goto :version_found
+    )
+)
+:version_found
+echo 📋 Current version found: %CURRENT_VERSION%
 
-:: Estrae i numeri di versione (rimuove la 'v')
+:: Extract version numbers (remove 'v')
 set "VERSION_CLEAN=%CURRENT_VERSION:v=%"
 
-:: Parse della versione usando delimitatori
+:: Parse version using delimiters
 for /f "tokens=1,2,3 delims=." %%a in ("%VERSION_CLEAN%") do (
     set "MAJOR=%%a"
     set "MINOR=%%b"
     set "PATCH=%%c"
 )
 
-echo 🔢 Versione parsata: MAJOR=%MAJOR%, MINOR=%MINOR%, PATCH=%PATCH%
+echo 🔢 Parsed version: MAJOR=%MAJOR%, MINOR=%MINOR%, PATCH=%PATCH%
 
-:: Calcola la nuova versione
+:: Calculate new version
 if "%BUMP_TYPE%"=="major" (
     set /a "MAJOR=%MAJOR%+1"
     set "MINOR=0"
@@ -57,26 +65,31 @@ if "%BUMP_TYPE%"=="major" (
 
 set "NEW_VERSION=v%MAJOR%.%MINOR%.%PATCH%"
 
-echo 📈 Bump da %CURRENT_VERSION% a %NEW_VERSION% (%BUMP_TYPE%)
+echo 📈 Bump from %CURRENT_VERSION% to %NEW_VERSION% (%BUMP_TYPE%)
 
-:: Se non è stata fornita una descrizione, ne crea una di default
+:: If no description provided, create a default one
 if "%DESCRIPTION%"=="" (
     set "DESCRIPTION=Release %NEW_VERSION%"
 )
 
-echo 📝 Descrizione: %DESCRIPTION%
+echo 📝 Description: %DESCRIPTION%
 
-:: Data corrente in formato ISO (semplificato per Windows)
-set "CURRENT_DATE=2025-06-15"
+:: Current date in ISO format
+for /f "tokens=2 delims==" %%i in ('wmic os get localdatetime /value') do set datetime=%%i
+set "CURRENT_DATE=%datetime:~0,4%-%datetime:~4,2%-%datetime:~6,2%"
 
-echo 🚀 Creazione release %NEW_VERSION% - %DESCRIPTION%
-echo 📅 Data: %CURRENT_DATE%
+echo 🚀 Creating release %NEW_VERSION% - %DESCRIPTION%
+echo 📅 Date: %CURRENT_DATE%
 
-:: Aggiornamento CHANGELOG...
+:: Update CHANGELOG...
+echo 🔄 Updating CHANGELOG with new version entry...
 
-:: Crea il nuovo contenuto del CHANGELOG
+:: Create backup
+copy CHANGELOG.md CHANGELOG_BACKUP.md >nul
+
+:: Create new CHANGELOG header with new version and preserve all existing content
 (
-    echo # Changelog - Automazione e Qualità del Codice
+    echo # Changelog - Automation and Code Quality
     echo.
     echo ## [Unreleased]
     echo.

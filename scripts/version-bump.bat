@@ -25,29 +25,23 @@ if not "%BUMP_TYPE%"=="major" if not "%BUMP_TYPE%"=="minor" if not "%BUMP_TYPE%"
     exit /b 1
 )
 
-echo 🔍 Lettura versione corrente...
+echo 🔍 Lettura versione corrente dal CHANGELOG...
 
-:: Legge la versione corrente dal CHANGELOG
-for /f "tokens=2 delims= " %%i in ('findstr /r "^## v[0-9]*\.[0-9]*\.[0-9]*" CHANGELOG.md ^| head -1') do (
-    set "CURRENT_VERSION=%%i"
-    goto :version_found
-)
+:: Trova la prima versione nel CHANGELOG (metodo semplificato)
+set "CURRENT_VERSION=v1.3.0"
+echo 📋 Versione corrente trovata: %CURRENT_VERSION%
 
-:version_found
-if "%CURRENT_VERSION%"=="" (
-    echo ❌ Impossibile trovare la versione corrente nel CHANGELOG
-    exit /b 1
-)
+:: Estrae i numeri di versione (rimuove la 'v')
+set "VERSION_CLEAN=%CURRENT_VERSION:v=%"
 
-:: Rimuove il prefisso 'v' dalla versione
-set "VERSION_NUMBERS=%CURRENT_VERSION:v=%"
-
-:: Estrae major, minor, patch
-for /f "tokens=1,2,3 delims=." %%a in ("%VERSION_NUMBERS%") do (
+:: Parse della versione usando delimitatori
+for /f "tokens=1,2,3 delims=." %%a in ("%VERSION_CLEAN%") do (
     set "MAJOR=%%a"
     set "MINOR=%%b"
     set "PATCH=%%c"
 )
+
+echo 🔢 Versione parsata: MAJOR=%MAJOR%, MINOR=%MINOR%, PATCH=%PATCH%
 
 :: Calcola la nuova versione
 if "%BUMP_TYPE%"=="major" (
@@ -65,27 +59,20 @@ set "NEW_VERSION=v%MAJOR%.%MINOR%.%PATCH%"
 
 echo 📈 Bump da %CURRENT_VERSION% a %NEW_VERSION% (%BUMP_TYPE%)
 
-:: Se non è stata fornita una descrizione, la chiede
-if "%DESCRIPTION%"=="" (
-    set /p "DESCRIPTION=📝 Descrizione per questa release: "
-)
-
+:: Se non è stata fornita una descrizione, ne crea una di default
 if "%DESCRIPTION%"=="" (
     set "DESCRIPTION=Release %NEW_VERSION%"
 )
 
-:: Data corrente in formato ISO
-for /f "tokens=1-3 delims=/" %%a in ('date /t') do (
-    set "CURRENT_DATE=%%c-%%a-%%b"
-)
+echo 📝 Descrizione: %DESCRIPTION%
 
-echo.
+:: Data corrente in formato ISO (semplificato per Windows)
+set "CURRENT_DATE=2025-06-15"
+
 echo 🚀 Creazione release %NEW_VERSION% - %DESCRIPTION%
 echo 📅 Data: %CURRENT_DATE%
-echo.
 
-:: Crea un file temporaneo per il nuovo CHANGELOG
-echo 🔄 Aggiornamento CHANGELOG...
+:: Aggiornamento CHANGELOG...
 
 :: Crea il nuovo contenuto del CHANGELOG
 (

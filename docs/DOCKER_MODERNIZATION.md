@@ -16,11 +16,13 @@ Questa guida documenta le modifiche apportate alla configurazione Docker di Thot
 ### 1. Uniformazione Dockerfile
 
 **Prima:**
+
 - `Dockerfile` (generico per backend)
 - `Dockerfile.postgres`
 - Vault gestito via immagine base
 
 **Dopo:**
+
 - `Dockerfile.backend` (backend specifico)
 - `Dockerfile.postgres` (aggiornato multi-stage)
 - `Dockerfile.vault` (nuovo, personalizzato)
@@ -28,16 +30,19 @@ Questa guida documenta le modifiche apportate alla configurazione Docker di Thot
 ### 2. Convenzioni di Naming
 
 **Development Mode:**
+
 - Immagini: `thothix/service:version-dev`
 - Container: `thothix-service-dev`
 
 **Production Mode:**
+
 - Immagini: `thothix/service:version-prod`
 - Container: `thothix-service-prod`
 
 ### 3. Multi-Stage Build
 
 Tutti i Dockerfile ora supportano:
+
 - **Target `dev`**: Ottimizzato per sviluppo
 - **Target `prod`**: Ottimizzato per produzione
 
@@ -85,11 +90,13 @@ Tutti i Dockerfile ora supportano:
 All Dockerfiles now implement multi-stage builds with dedicated dev/prod targets.
 
 📋 **Reference Files:**
+
 - [`Dockerfile.backend`](./Dockerfile.backend) - API backend
 - [`Dockerfile.postgres`](./Dockerfile.postgres) - PostgreSQL database
 - [`Dockerfile.vault`](./Dockerfile.vault) - HashiCorp Vault
 
 **Features:**
+
 - Optimized builds for each environment
 - Consistent labeling and metadata
 - Target-specific configurations
@@ -140,18 +147,21 @@ docker compose exec vault sh
 ### Per Sviluppatori Esistenti
 
 1. **Ferma i servizi precedenti:**
+
    ```bash
    docker compose down
    docker system prune -f
    ```
 
 2. **Rebuilda con nuova configurazione:**
+
    ```bash
    docker compose build
    docker compose up -d
    ```
 
 3. **Verifica i nuovi nomi:**
+
    ```bash
    docker compose ps
    # Dovresti vedere: thothix-api-dev, thothix-postgres-dev, thothix-vault-dev
@@ -170,21 +180,25 @@ docker compose exec vault sh
 ## ✅ Benefits
 
 ### 1. **Consistency**
+
 - Naming uniforme tra dev/prod
 - Struttura standardizzata
 - Dockerfile coerenti
 
 ### 2. **Maintainability**
+
 - Multi-stage builds
 - Target specifici per ambiente
 - Labels OCI standard
 
 ### 3. **Security**
+
 - Immagini ottimizzate per produzione
 - Strumenti di debug solo in dev
 - Permissions corrette
 
 ### 4. **DevOps Ready**
+
 - CI/CD friendly
 - Registry ready
 - Environment separation

@@ -509,6 +509,7 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 Thothix uses **Clerk** for authentication and implements a simplified **Role-Based Access Control (RBAC)** system.
 
 **For complete authentication and RBAC documentation:**
+
 - 📖 **[Backend RBAC Guide →](./backend/RBAC_SIMPLIFIED.md)**
 - 📖 **[Clerk Integration Guide →](./docs/CLERK_INTEGRATION.md)**
 

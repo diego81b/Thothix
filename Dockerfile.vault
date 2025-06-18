@@ -7,17 +7,15 @@ RUN apk add --no-cache \
   jq \
   openssl \
   bash \
-  wget
+  wget \
+  nodejs \
+  npm
 
 # Crea directory per configurazione personalizzata
-RUN mkdir -p /vault/config /vault/policies /vault/scripts /vault/logs
+RUN mkdir -p /vault/config /vault/policies /vault/logs
 
-# Copia configurazioni personalizzate
-COPY vault/config/ /vault/config/
-COPY vault/scripts/ /vault/scripts/
-
-# Rende eseguibili gli script
-RUN chmod +x /vault/scripts/*.sh
+# Copia configurazioni personalizzate dalla root
+COPY vault.hcl /vault/config/
 
 # Torna all'utente vault
 USER vault

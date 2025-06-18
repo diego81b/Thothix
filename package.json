@@ -20,7 +20,10 @@
     "db:status": "zx scripts/db-verify.mjs status",
     "db:connect": "zx scripts/db-verify.mjs connect",
     "db:tables": "zx scripts/db-verify.mjs list-tables",
-    "db:check": "zx scripts/db-verify.mjs check-basemodel"
+    "db:check": "zx scripts/db-verify.mjs check-basemodel",
+    "vault:sync": "zx scripts/vault.mjs --sync",
+    "vault:init": "zx scripts/vault.mjs --init",
+    "vault:cleanup": "zx scripts/vault.mjs --cleanup"
   },
   "devDependencies": {
     "zx": "^8.1.4"

@@ -8,9 +8,9 @@ services:
     container_name: thothix-postgres-dev
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - '5432:5432'
     volumes:
@@ -18,7 +18,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,7 +52,6 @@ services:
     volumes:
       - vault_dev_data:/vault/data
       - vault_dev_logs:/vault/logs
-      - ./vault/scripts:/scripts:ro
     networks:
       - app-network
     healthcheck:
@@ -73,9 +72,20 @@ services:
       VAULT_TOKEN: ${VAULT_ROOT_TOKEN:-thothix-dev-root-token}
       VAULT_MOUNT: ${VAULT_MOUNT:-thothix}
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      # Environment variables for modern sync system
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-thothix_dev_password}
+      DB_NAME: ${DB_NAME:-thothix_dev}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-sk_test_development_key}
+      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET:-whsec_development_secret}
+      CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:-pk_test_development_key}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_12345}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-dev_encryption_key_67890}
+      DEBUG_MODE: ${DEBUG_MODE:-true}
     volumes:
-      - ./vault/scripts:/scripts:ro
-    command: ['/bin/sh', '/scripts/init-secrets.sh']
+      - .:/workspace:ro # Mount workspace for modern sync system
+    working_dir: /workspace
+    command: ['node', '/workspace/scripts/vault.mjs', '--init']
     networks:
       - app-network
     restart: 'no'

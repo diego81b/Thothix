@@ -33,6 +33,10 @@ vault/data/
 vault/logs/
 *.vault_token
 
+# Temporary files from vault script
+tmp-*-secrets.json
+tmp-*-policy.hcl
+
 # Database
 *.db
 *.sqlite

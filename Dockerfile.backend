@@ -1,28 +1,70 @@
-FROM golang:1.23-alpine AS builder
-WORKDIR /app/backend
+# Base stage per condividere la build
+FROM golang:1.23-alpine AS base
+
+WORKDIR /app
+
+# Installa tutte le dipendenze necessarie per dev
+RUN apk add --no-cache \
+  ca-certificates \
+  git \
+  curl \
+  bash \
+  htop \
+  vim \
+  strace
+
+# Copia file di dipendenze
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
+
+# Copia codice sorgente
 COPY backend/ .
+
+# Build con simboli di debug
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
-# Stage finale con UBI Micro (più piccola)
-FROM registry.access.redhat.com/ubi9/ubi-micro
+# Target per sviluppo
+FROM base AS dev
 
-# Metadata dell'immagine
-LABEL org.opencontainers.image.title="Thothix API"
-LABEL org.opencontainers.image.description="API Backend per la piattaforma di messaggistica aziendale Thothix"
-LABEL org.opencontainers.image.version="1.0.0"
+# Metadata per sviluppo
+LABEL org.opencontainers.image.title="Thothix Backend API (Development)"
+LABEL org.opencontainers.image.description="Backend API Go per la piattaforma Thothix - Development Environment"
+LABEL org.opencontainers.image.version="1.0.0-dev"
 LABEL org.opencontainers.image.vendor="Thothix"
 LABEL org.opencontainers.image.authors="Thothix Team"
 LABEL org.opencontainers.image.source="https://github.com/thothix/thothix"
 LABEL org.opencontainers.image.documentation="https://docs.thothix.com"
+LABEL org.opencontainers.image.base.name="golang:1.23-alpine"
+
+# Health check per sviluppo
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:30000/health || exit 1
+
+EXPOSE 30000
+CMD ["./main"]
+
+# Target per produzione - UBI Micro enterprise
+FROM registry.access.redhat.com/ubi9/ubi-micro AS prod
+
+# Metadata per produzione
+LABEL org.opencontainers.image.title="Thothix Backend API (Production)"
+LABEL org.opencontainers.image.description="Backend API Go per la piattaforma Thothix - Production Environment"
+LABEL org.opencontainers.image.version="1.0.0-prod"
+LABEL org.opencontainers.image.vendor="Thothix"
+LABEL org.opencontainers.image.authors="Thothix Team"
+LABEL org.opencontainers.image.source="https://github.com/thothix/thothix"
+LABEL org.opencontainers.image.documentation="https://docs.thothix.com"
+LABEL org.opencontainers.image.base.name="registry.access.redhat.com/ubi9/ubi-micro"
 
 WORKDIR /app
 
-# Copia il binario dal builder stage
-COPY --from=builder /app/backend/main .
+# Copia solo il binario ottimizzato dal base stage
+COPY --from=base /app/main .
 
-# Espone la porta
+# Health check per produzione (senza curl, usa solo processo)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD pgrep main || exit 1
+
 EXPOSE 30000
 USER 1001
 CMD ["./main"]

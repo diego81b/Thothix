@@ -91,7 +91,7 @@ services:
     restart: 'no'
   thothix-api:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile.backend
       target: dev
     image: thothix/api:1.0.0-dev

@@ -82,7 +82,7 @@ services:
 
   thothix-api:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile.backend
       target: prod
     image: thothix/api:1.0.0-prod

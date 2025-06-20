@@ -10,7 +10,7 @@
     "test": "zx scripts/dev.mjs test",
     "pre-commit": "zx scripts/dev.mjs pre-commit",
     "all": "zx scripts/dev.mjs all",
-    "dev": "zx scripts/deploy.mjs dev up",
+    "dev": "zx scripts/deploy.mjs dev up && npm run vault:sync && npm run ngrok",
     "dev:down": "zx scripts/deploy.mjs dev down",
     "dev:logs": "zx scripts/deploy.mjs dev logs",
     "staging": "zx scripts/deploy.mjs staging up",
@@ -23,7 +23,8 @@
     "db:check": "zx scripts/db-verify.mjs check-basemodel",
     "vault:sync": "zx scripts/vault.mjs --sync",
     "vault:init": "zx scripts/vault.mjs --init",
-    "vault:cleanup": "zx scripts/vault.mjs --cleanup"
+    "vault:cleanup": "zx scripts/vault.mjs --cleanup",
+    "ngrok": "node scripts/ngrok.mjs"
   },
   "devDependencies": {
     "zx": "^8.1.4"

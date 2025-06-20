@@ -43,12 +43,15 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 
 	// Public routes (non protette)
 	auth := v1.Group("/auth")
-	// Webhook di Clerk (non richiede autenticazione)
-	auth.POST("/webhooks/clerk", authHandler.WebhookHandler)
+	// Webhook di Clerk (con verifica firma + handler)
+	auth.POST("/webhooks/clerk",
+		middleware.ClerkWebhookHandler(cfg.ClerkWebhookSecret),
+		authHandler.WebhookHandler,
+	)
 
-	// Protected routes con Clerk Auth
+	// Protected routes con Clerk SDK Auth
 	protected := v1.Group("/")
-	protected.Use(middleware.ClerkAuth(cfg.ClerkSecretKey))
+	protected.Use(middleware.ClerkAuthSDK(cfg.ClerkSecretKey))
 	protected.Use(middleware.SetUserContext()) // Add user context for GORM hooks
 
 	// Auth routes (sync with Clerk)

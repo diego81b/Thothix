@@ -154,19 +154,27 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /api/v1/auth/webhooks/clerk [post]
 func (h *AuthHandler) WebhookHandler(c *gin.Context) {
-	var payload map[string]interface{}
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid webhook payload"})
+	// Get verified webhook event from middleware
+	eventData, exists := c.Get("webhook_event")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Webhook event not found in context"})
 		return
 	}
 
-	eventType, ok := payload["type"].(string)
+	// Type assert to webhook event (from Clerk SDK)
+	event, ok := eventData.(map[string]interface{})
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid webhook event format"})
+		return
+	}
+
+	eventType, ok := event["type"].(string)
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing event type"})
 		return
 	}
 
-	data, ok := payload["data"].(map[string]interface{})
+	data, ok := event["data"].(map[string]interface{})
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing event data"})
 		return

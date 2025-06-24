@@ -1,6 +1,24 @@
 # Changelog
 
-## [Unreleased]
+### v0.0.3 complete migration to official Clerk Go SDK v2 (2025-06-19)
+
+fix(vault): add missing zx import in vault management script
+
+- Add missing `$` import from 'zx' in scripts/vault.mjs
+- Resolves ReferenceError when running vault sync/init operations
+- Improves vault script reliability after environment reset
+- Maintains cross-platform compatibility (Windows/Linux)
+
+This fix ensures vault operations work correctly after the full
+environment reset (docker compose down -v) and vault re-initialization.
+
+**Tested**:
+
+- npm run vault:sync - ✅ successfully syncs all secrets
+- npm run vault:init - ✅ initializes vault and applies policies
+- Backend vault integration - ✅ reads secrets correctly
+
+Related: Docker multi-stage builds, GORM migrations, vault policies
 
 ### v0.0.3 complete migration to official Clerk Go SDK v2 (2025-06-19)
 

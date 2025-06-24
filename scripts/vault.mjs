@@ -9,6 +9,7 @@
  *   zx vault.mjs --cleanup     # Clean temporary files
  */
 
+import { $, chalk, echo, fs, path as zxPath } from 'zx';
 import { readFileSync } from 'fs';
 import { writeFile, unlink, readdir } from 'fs/promises';
 import path from 'path';

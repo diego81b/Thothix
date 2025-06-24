@@ -1,10 +1,16 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"log"
+
+	"gorm.io/gorm"
+)
 
 // AutoMigrate all tables and foreign keys
 func AutoMigrate(db *gorm.DB) error {
-	return db.AutoMigrate(
+	log.Println("🔄 Starting database migration...")
+
+	err := db.AutoMigrate(
 		&User{},
 		&Project{},
 		&ProjectMember{},
@@ -14,4 +20,11 @@ func AutoMigrate(db *gorm.DB) error {
 		&File{},
 		&UserRole{},
 	)
+	if err != nil {
+		log.Printf("❌ Migration failed: %v", err)
+		return err
+	}
+
+	log.Println("✅ Database migration completed successfully")
+	return nil
 }

@@ -134,8 +134,8 @@ func ClerkWebhookHandler(webhookSecret string) gin.HandlerFunc {
 }
 
 // GetClerkUserFromContext helper to extract Clerk user data from Gin context
-func GetClerkUserFromContext(c *gin.Context) (map[string]interface{}, bool) {
-	userData := make(map[string]interface{})
+func GetClerkUserFromContext(c *gin.Context) (map[string]any, bool) {
+	userData := make(map[string]any)
 
 	if userID, exists := c.Get("clerk_user_id"); exists {
 		userData["user_id"] = userID

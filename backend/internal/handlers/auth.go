@@ -155,6 +155,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 // @Router /api/v1/auth/webhooks/clerk [post]
 func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 	// Get verified webhook event from middleware
+	h.db.Config.Logger.Info(c.Request.Context(), "Processing Clerk webhook event")
 	eventData, exists := c.Get("webhook_event")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Webhook event not found in context"})
@@ -162,7 +163,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 	}
 
 	// Type assert to webhook event (from Clerk SDK)
-	event, ok := eventData.(map[string]interface{})
+	event, ok := eventData.(map[string]any)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid webhook event format"})
 		return
@@ -174,7 +175,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 		return
 	}
 
-	data, ok := event["data"].(map[string]interface{})
+	data, ok := event["data"].(map[string]any)
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing event data"})
 		return

@@ -8,6 +8,7 @@
     "format": "zx scripts/dev.mjs format",
     "lint": "zx scripts/dev.mjs lint",
     "test": "zx scripts/dev.mjs test",
+    "test:debug": "zx scripts/dev.mjs test --debug",
     "pre-commit": "zx scripts/dev.mjs pre-commit",
     "all": "zx scripts/dev.mjs all",
     "dev": "zx scripts/deploy.mjs dev up && npm run vault:sync && npm run ngrok",

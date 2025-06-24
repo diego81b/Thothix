@@ -1,8 +1,79 @@
 # Changelog
 
-### v0.0.5 Introduce service layer architecture and improve webhook handling (2025-06-24)
+## v0.0.6 Implement Clean Architecture with DTOs and Enhanced Developer Experience (2025-06-24)
 
-**feat: implement service layer architecture**
+### feat: implement comprehensive clean architecture with DTOs and explicit mapping
+
+- Introduce Data Transfer Objects (DTOs) for all user operations:
+  - `CreateUserRequest` - User creation with validation
+  - `UpdateUserRequest` - Partial user updates
+  - `UserResponse` - Consistent API responses
+  - `UserListResponse` - Paginated list responses
+  - `SyncUserResponse` - Clerk synchronization responses
+- Implement explicit mapping layer in `internal/mappers/user_mapper.go`:
+  - `ModelToResponse()` - Database model to API response conversion
+  - `CreateRequestToModel()` - Request validation and model creation
+  - `UpdateRequestToMap()` - Partial update field mapping
+  - `ClerkSyncRequestToModel()` - Clerk webhook data transformation
+- Refactor all handlers to use service interfaces and DTOs exclusively
+- Remove direct database/model access from HTTP handlers
+- Implement proper dependency injection in router setup
+- Add comprehensive error handling for `gorm.ErrRecordNotFound`
+- **Impact**: Improved code maintainability, type safety, and separation of concerns
+
+### **feat: enhance test infrastructure with PostgreSQL integration**
+
+- Migrate test suite from SQLite to PostgreSQL via testcontainers
+- Implement realistic test environment matching production database
+- Add comprehensive service layer tests with proper isolation
+- Configure GORM with silent logging for clean test output
+- Ensure ClerkID is always set from Clerk authentication, never auto-generated
+- Fix persistent "record not found" errors in service tests
+- Add edge case testing for user mapper functions
+- **Impact**: More reliable tests, better production parity, improved debugging
+
+### **feat: implement advanced developer experience improvements**
+
+- Create unified development script system in `scripts/dev.mjs`:
+  - Cross-platform compatibility (Windows/macOS/Linux)
+  - Intelligent command detection and execution
+  - Enhanced error reporting with context
+- Integrate `gotestsum` for colorized test output:
+  - Smart format selection: `pkgname-and-test-fails` for normal mode
+  - Detailed `testdox` format for debug mode
+  - Cross-platform color support with environment variable optimization
+  - Progress indicators with animated spinners during test execution
+- Implement dual-mode test execution:
+  - `npm run test` - Fast execution with colored package status
+  - `npm run test:debug` - Verbose output with coverage and detailed logging
+- Add visual progress feedback:
+  - Animated Braille spinner (`⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏`) during test execution
+  - Clear success/failure indicators with color coding
+  - Real-time package execution status with timing information
+- **Impact**: Significantly improved developer productivity and test debugging experience
+
+### **refactor: modernize project structure and documentation**
+
+- Update `backend/README.md` with clean architecture principles
+- Document new DTO-based API patterns and service layer design
+- Add comprehensive examples for mapper usage and testing strategies
+- Clean up legacy handler patterns and remove unused imports
+- Implement consistent error handling patterns across all services
+- **Impact**: Better onboarding experience, clearer code patterns, reduced technical debt
+
+### **fix: resolve test stability and mapping edge cases**
+
+- Fix `UpdateRequestToMap` logic for proper name field concatenation
+- Handle edge cases in user data mapping (empty fields, nil pointers)
+- Resolve test flakiness caused by manual ID assignment conflicts
+- Improve error messages for better debugging experience
+- Ensure consistent behavior between development and test environments
+- **Impact**: More reliable test suite, better error diagnostics, consistent behavior
+
+## v0.0.5 Introduce service layer architecture and improve webhook handling (2025-06-24)
+
+### **feat: implement service layer architecture**
+
 - Introduce `UserService` as business logic layer between handlers and database
 - Refactor `AuthHandler` and `UserHandler` to use service-based architecture
 - Add proper separation of concerns: Handler (HTTP) → Service (Business Logic) → Database
@@ -14,7 +85,7 @@
   - `GetUserByID()` and `GetUserByClerkID()` lookup methods
 - **Impact**: Improved code maintainability, reusability, and testability
 
-**feat: enhance webhook handling with full type safety**
+### **feat: enhance webhook handling with full type safety**
 
 - Add comprehensive type definitions for Clerk webhook events:
   - `WebhookEvent` - Base webhook event structure
@@ -26,7 +97,7 @@
 - Add typed helper functions: `GetWebhookEventFromContext()`, `GetWebhookUserDataFromContext()`
 - **Impact**: Enhanced security, better error handling, and type-safe webhook processing
 
-**feat: improve user management with pagination and better error handling**
+### **feat: improve user management with pagination and better error handling**
 
 - Add pagination support to `GetUsers` endpoint (page, limit parameters)
 - Enhance error handling with proper GORM error detection
@@ -35,7 +106,7 @@
 - Add comprehensive logging for webhook processing with unique IDs
 - **Impact**: Better UX with pagination, improved debugging capabilities
 
-**refactor: clean up architecture and remove redundant code**
+### **refactor: clean up architecture and remove redundant code**
 
 - Remove `WebhookHandlerUnified` in favor of middleware + handler pattern
 - Eliminate direct database access from handlers (now via services)
@@ -43,7 +114,7 @@
 - Streamline import statements and remove unused dependencies
 - **Impact**: Cleaner codebase, reduced duplication, better separation of concerns
 
-**fix: resolve TypeScript compilation issues and improve type consistency**
+### **fix: resolve TypeScript compilation issues and improve type consistency**
 
 - Fix `time.Time` vs `*time.Time` type inconsistencies in user models
 - Correct Clerk ID lookup using `clerk_id` field instead of `id`
@@ -51,7 +122,7 @@
 - Ensure consistent error handling across all service methods
 - **Impact**: More reliable code execution, fewer runtime errors
 
-### v0.0.4 Fix vault config (2025-06-24)
+## v0.0.4 Fix vault config (2025-06-24)
 
 fix(vault): add missing zx import in vault management script
 
@@ -71,7 +142,7 @@ environment reset (docker compose down -v) and vault re-initialization.
 
 Related: Docker multi-stage builds, GORM migrations, vault policies
 
-### v0.0.3 complete migration to official Clerk Go SDK v2 (2025-06-19)
+## v0.0.3 complete migration to official Clerk Go SDK v2 (2025-06-19)
 
 - feat: migrate Clerk authentication to official Go SDK v2
   - Replaced custom Clerk implementation with official `github.com/clerk/clerk-sdk-go/v2` SDK

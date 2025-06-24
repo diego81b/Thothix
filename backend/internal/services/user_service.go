@@ -6,16 +6,22 @@ import (
 
 	"gorm.io/gorm"
 
+	"thothix-backend/internal/dto"
+	"thothix-backend/internal/mappers"
 	"thothix-backend/internal/middleware"
 	"thothix-backend/internal/models"
 )
 
 type UserService struct {
-	db *gorm.DB
+	db     *gorm.DB
+	mapper *mappers.UserMapper
 }
 
 func NewUserService(db *gorm.DB) *UserService {
-	return &UserService{db: db}
+	return &UserService{
+		db:     db,
+		mapper: mappers.NewUserMapper(),
+	}
 }
 
 // ClerkUserData rappresenta i dati utente estratti dal context di Clerk
@@ -28,160 +34,99 @@ type ClerkUserData struct {
 }
 
 // SyncUserFromClerk sincronizza un utente da Clerk al database locale
-func (s *UserService) SyncUserFromClerk(clerkData ClerkUserData) (*models.User, bool, error) {
+func (s *UserService) SyncUserFromClerk(req *dto.ClerkUserSyncRequest) (*dto.ClerkUserSyncResponse, error) {
 	var user models.User
-	result := s.db.Where("id = ?", clerkData.ClerkID).First(&user)
+	err := s.db.Where("clerk_id = ?", req.ClerkID).First(&user).Error
 
-	if result.Error == gorm.ErrRecordNotFound {
+	if err == gorm.ErrRecordNotFound {
 		// Crea nuovo utente
-		user = models.User{
-			BaseModel: models.BaseModel{
-				ID: clerkData.ClerkID,
-			},
-			ClerkID:    clerkData.ClerkID,
-			Email:      clerkData.Email,
-			Name:       clerkData.Name,
-			Username:   clerkData.Username,
-			AvatarURL:  clerkData.AvatarURL,
-			SystemRole: models.RoleUser,
-			LastSync:   time.Now(),
-		}
+		user = *s.mapper.ClerkSyncRequestToModel(req)
+		// Non impostare manualmente l'ID - lascia che sia generato automaticamente
+		user.LastSync = time.Now()
 
 		if err := s.db.Create(&user).Error; err != nil {
-			return nil, false, err
+			return nil, err
 		}
 
-		return &user, true, nil
+		return s.mapper.CreateSyncResponse(&user, true, "User created successfully"), nil
 	}
 
-	if result.Error != nil {
-		return nil, false, result.Error
+	if err != nil {
+		return nil, err
 	}
 
 	// Aggiorna l'utente esistente se necessario
 	updated := false
 
-	if user.Email != clerkData.Email {
-		user.Email = clerkData.Email
+	if user.Email != req.Email {
+		user.Email = req.Email
 		updated = true
 	}
 
-	if user.Name != clerkData.Name {
-		user.Name = clerkData.Name
+	if user.Name != req.Name {
+		user.Name = req.Name
 		updated = true
 	}
 
-	if user.Username != clerkData.Username {
-		user.Username = clerkData.Username
+	if user.Username != req.Username {
+		user.Username = req.Username
 		updated = true
 	}
 
-	if user.AvatarURL != clerkData.AvatarURL {
-		user.AvatarURL = clerkData.AvatarURL
+	if user.AvatarURL != req.AvatarURL {
+		user.AvatarURL = req.AvatarURL
 		updated = true
 	}
 
 	if updated {
 		user.LastSync = time.Now()
 		if err := s.db.Save(&user).Error; err != nil {
-			return nil, false, err
+			return nil, err
 		}
+		return s.mapper.CreateSyncResponse(&user, false, "User updated successfully"), nil
 	}
 
-	return &user, false, nil // false = updated or no changes
+	return s.mapper.CreateSyncResponse(&user, false, "User already up to date"), nil
 }
 
 // CreateUserFromWebhook crea un utente dal webhook di Clerk
-func (s *UserService) CreateUserFromWebhook(userData *middleware.UserWebhookData) error {
-	// Estrai email primaria
-	email := s.extractPrimaryEmail(userData)
-
-	// Costruisci il nome completo
-	name := s.buildFullName(userData)
-
-	// Estrai avatar URL
-	var avatarURL string
-	if userData.ImageURL != nil {
-		avatarURL = *userData.ImageURL
+func (s *UserService) CreateUserFromWebhook(userData *middleware.UserWebhookData) (*dto.UserResponse, error) {
+	// Converti webhook data in ClerkUserSyncRequest
+	syncReq := &dto.ClerkUserSyncRequest{
+		ClerkID:   userData.ID,
+		Email:     s.extractPrimaryEmail(userData),
+		Name:      s.buildFullName(userData),
+		AvatarURL: s.extractAvatarURL(userData),
+		Username:  s.extractUsername(userData),
 	}
 
-	// Estrai username
-	var username string
-	if userData.Username != nil {
-		username = *userData.Username
+	// Usa il metodo sync per creare l'utente
+	syncResponse, err := s.SyncUserFromClerk(syncReq)
+	if err != nil {
+		return nil, err
 	}
 
-	// Crea utente nel database
-	user := models.User{
-		BaseModel: models.BaseModel{
-			ID: userData.ID,
-		},
-		ClerkID:    userData.ID,
-		Email:      email,
-		Name:       name,
-		Username:   username,
-		AvatarURL:  avatarURL,
-		SystemRole: models.RoleUser,
-		LastSync:   time.Now(),
-	}
-
-	return s.db.Create(&user).Error
+	return &syncResponse.User, nil
 }
 
 // UpdateUserFromWebhook aggiorna un utente dal webhook di Clerk
-func (s *UserService) UpdateUserFromWebhook(userData *middleware.UserWebhookData) error {
-	var user models.User
-	if err := s.db.Where("clerk_id = ?", userData.ID).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// Se l'utente non esiste, crealo
-			return s.CreateUserFromWebhook(userData)
-		}
-		return err
+func (s *UserService) UpdateUserFromWebhook(userData *middleware.UserWebhookData) (*dto.UserResponse, error) {
+	// Converti webhook data in ClerkUserSyncRequest
+	syncReq := &dto.ClerkUserSyncRequest{
+		ClerkID:   userData.ID,
+		Email:     s.extractPrimaryEmail(userData),
+		Name:      s.buildFullName(userData),
+		AvatarURL: s.extractAvatarURL(userData),
+		Username:  s.extractUsername(userData),
 	}
 
-	// Aggiorna i campi
-	updated := false
-
-	// Estrai email primaria
-	email := s.extractPrimaryEmail(userData)
-	if user.Email != email {
-		user.Email = email
-		updated = true
+	// Usa il metodo sync per aggiornare l'utente
+	syncResponse, err := s.SyncUserFromClerk(syncReq)
+	if err != nil {
+		return nil, err
 	}
 
-	// Costruisci il nome completo
-	name := s.buildFullName(userData)
-	if user.Name != name {
-		user.Name = name
-		updated = true
-	}
-
-	// Estrai username
-	var username string
-	if userData.Username != nil {
-		username = *userData.Username
-	}
-	if user.Username != username {
-		user.Username = username
-		updated = true
-	}
-
-	// Estrai avatar URL
-	var avatarURL string
-	if userData.ImageURL != nil {
-		avatarURL = *userData.ImageURL
-	}
-	if user.AvatarURL != avatarURL {
-		user.AvatarURL = avatarURL
-		updated = true
-	}
-
-	if updated {
-		user.LastSync = time.Now()
-		return s.db.Save(&user).Error
-	}
-
-	return nil
+	return &syncResponse.User, nil
 }
 
 // DeleteUserFromWebhook gestisce la cancellazione di un utente dal webhook di Clerk
@@ -197,42 +142,75 @@ func (s *UserService) DeleteUserFromWebhook(userData *middleware.UserWebhookData
 }
 
 // GetUserByID ottiene un utente per ID
-func (s *UserService) GetUserByID(userID string) (*models.User, error) {
+func (s *UserService) GetUserByID(userID string) (*dto.UserResponse, error) {
 	var user models.User
 	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.New("user not found")
+		}
 		return nil, err
 	}
-	return &user, nil
+	return s.mapper.ModelToResponse(&user), nil
 }
 
 // GetUserByClerkID ottiene un utente per Clerk ID
-func (s *UserService) GetUserByClerkID(clerkID string) (*models.User, error) {
+func (s *UserService) GetUserByClerkID(clerkID string) (*dto.UserResponse, error) {
 	var user models.User
 	if err := s.db.Where("clerk_id = ?", clerkID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.New("user not found")
+		}
 		return nil, err
 	}
-	return &user, nil
+	return s.mapper.ModelToResponse(&user), nil
 }
 
 // GetUsers ottiene tutti gli utenti con paginazione
-func (s *UserService) GetUsers(offset, limit int) ([]models.User, error) {
+func (s *UserService) GetUsers(req *dto.GetUsersRequest) (*dto.UserListResponse, error) {
 	var users []models.User
-	if err := s.db.Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+	var total int64
+
+	// Count total users
+	if err := s.db.Model(&models.User{}).Count(&total).Error; err != nil {
 		return nil, err
 	}
-	return users, nil
+
+	// Calculate offset
+	offset := (req.Page - 1) * req.PerPage
+
+	// Get users with pagination
+	if err := s.db.Offset(offset).Limit(req.PerPage).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	return s.mapper.ModelsToListResponse(users, total, req.Page, req.PerPage), nil
 }
 
 // UpdateUser aggiorna un utente esistente
-func (s *UserService) UpdateUser(userID string, updates map[string]interface{}) error {
+func (s *UserService) UpdateUser(userID string, req *dto.UpdateUserRequest) (*dto.UserResponse, error) {
+	updates := s.mapper.UpdateRequestToMap(req)
+	if len(updates) == 0 {
+		return nil, errors.New("no fields to update")
+	}
+
 	result := s.db.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
 	if result.Error != nil {
-		return result.Error
+		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errors.New("user not found")
+		return nil, errors.New("user not found")
 	}
-	return nil
+
+	// Retrieve updated user
+	var user models.User
+	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	return s.mapper.ModelToResponse(&user), nil
 }
 
 // Helper methods
@@ -265,4 +243,18 @@ func (s *UserService) buildFullName(userData *middleware.UserWebhookData) string
 		name = *userData.Username
 	}
 	return name
+}
+
+func (s *UserService) extractUsername(userData *middleware.UserWebhookData) string {
+	if userData.Username != nil {
+		return *userData.Username
+	}
+	return ""
+}
+
+func (s *UserService) extractAvatarURL(userData *middleware.UserWebhookData) string {
+	if userData.ImageURL != nil {
+		return *userData.ImageURL
+	}
+	return ""
 }

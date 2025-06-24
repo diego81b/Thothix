@@ -5,6 +5,7 @@ import (
 	"thothix-backend/internal/handlers"
 	"thothix-backend/internal/middleware"
 	"thothix-backend/internal/models"
+	"thothix-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -31,9 +32,12 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	// Health check
 	r.GET("/health", handlers.HealthCheck)
 
+	// Initialize services
+	userService := services.NewUserService(db)
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db)
-	userHandler := handlers.NewUserHandler(db)
+	userHandler := handlers.NewUserHandler(userService)
 	projectHandler := handlers.NewProjectHandler(db)
 	channelHandler := handlers.NewChannelHandler(db)
 	messageHandler := handlers.NewMessageHandler(db)

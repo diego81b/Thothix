@@ -1,6 +1,57 @@
 # Changelog
 
-### v0.0.3 complete migration to official Clerk Go SDK v2 (2025-06-19)
+### v0.0.5 Introduce service layer architecture and improve webhook handling (2025-06-24)
+
+**feat: implement service layer architecture**
+- Introduce `UserService` as business logic layer between handlers and database
+- Refactor `AuthHandler` and `UserHandler` to use service-based architecture
+- Add proper separation of concerns: Handler (HTTP) → Service (Business Logic) → Database
+- Implement comprehensive user management methods in `UserService`:
+  - `SyncUserFromClerk()` - Bidirectional sync with Clerk
+  - `CreateUserFromWebhook()` - Webhook-based user creation
+  - `UpdateUserFromWebhook()` - Webhook-based user updates
+  - `GetUsers()` with pagination support
+  - `GetUserByID()` and `GetUserByClerkID()` lookup methods
+- **Impact**: Improved code maintainability, reusability, and testability
+
+**feat: enhance webhook handling with full type safety**
+
+- Add comprehensive type definitions for Clerk webhook events:
+  - `WebhookEvent` - Base webhook event structure
+  - `UserWebhookData` - Typed user data from webhooks
+  - `Email`, `Phone`, `WebURL` - Nested data structures
+- Implement Svix signature verification algorithm with HMAC SHA-256
+- Add webhook timestamp validation (prevents replay attacks)
+- Optimize context usage - store only essential data (`webhook_event`, `webhook_id`)
+- Add typed helper functions: `GetWebhookEventFromContext()`, `GetWebhookUserDataFromContext()`
+- **Impact**: Enhanced security, better error handling, and type-safe webhook processing
+
+**feat: improve user management with pagination and better error handling**
+
+- Add pagination support to `GetUsers` endpoint (page, limit parameters)
+- Enhance error handling with proper GORM error detection
+- Add `LastSync` tracking for Clerk synchronization
+- Implement fallback strategies for email and name extraction from webhook data
+- Add comprehensive logging for webhook processing with unique IDs
+- **Impact**: Better UX with pagination, improved debugging capabilities
+
+**refactor: clean up architecture and remove redundant code**
+
+- Remove `WebhookHandlerUnified` in favor of middleware + handler pattern
+- Eliminate direct database access from handlers (now via services)
+- Remove duplicate business logic between handlers and webhook processors
+- Streamline import statements and remove unused dependencies
+- **Impact**: Cleaner codebase, reduced duplication, better separation of concerns
+
+**fix: resolve TypeScript compilation issues and improve type consistency**
+
+- Fix `time.Time` vs `*time.Time` type inconsistencies in user models
+- Correct Clerk ID lookup using `clerk_id` field instead of `id`
+- Add proper null checking for optional Clerk webhook fields
+- Ensure consistent error handling across all service methods
+- **Impact**: More reliable code execution, fewer runtime errors
+
+### v0.0.4 Fix vault config (2025-06-24)
 
 fix(vault): add missing zx import in vault management script
 

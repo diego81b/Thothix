@@ -1,22 +1,26 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"thothix-backend/internal/models"
+	"thothix-backend/internal/middleware"
+	"thothix-backend/internal/services"
 )
 
 type AuthHandler struct {
-	db *gorm.DB
+	db          *gorm.DB
+	userService *services.UserService
 }
 
 func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	return &AuthHandler{db: db}
+	return &AuthHandler{
+		db:          db,
+		userService: services.NewUserService(db),
+	}
 }
 
 // SyncUser sincronizza l'utente da Clerk con il database locale
@@ -41,6 +45,7 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 	clerkEmail, _ := c.Get("clerk_email")
 	clerkFirstName, _ := c.Get("clerk_first_name")
 	clerkLastName, _ := c.Get("clerk_last_name")
+	clerkUsername, _ := c.Get("clerk_username")
 	clerkImageURL, _ := c.Get("clerk_image_url")
 
 	// Costruisci il nome completo
@@ -52,68 +57,39 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 		}
 	}
 	if fullName == "" {
-		if username, exists := c.Get("clerk_username"); exists {
-			if usernameStr, ok := username.(*string); ok && usernameStr != nil {
-				fullName = *usernameStr
-			}
+		if username, ok := clerkUsername.(*string); ok && username != nil {
+			fullName = *username
 		}
 	}
 
-	// Cerca l'utente esistente
-	var user models.User
-	result := h.db.Where("id = ?", clerkUserID).First(&user)
-	if result.Error == gorm.ErrRecordNotFound {
-		// Crea nuovo utente
-		user = models.User{
-			BaseModel: models.BaseModel{
-				ID: clerkUserID.(string),
-			},
-			Email:      clerkEmail.(string),
-			Name:       fullName,
-			AvatarURL:  clerkImageURL.(string),
-			SystemRole: models.RoleUser, // Ruolo di default
-		}
+	// Estrai username
+	var username string
+	if usernameStr, ok := clerkUsername.(*string); ok && usernameStr != nil {
+		username = *usernameStr
+	}
 
-		if err := h.db.Create(&user).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-			return
-		}
+	// Prepara i dati per il servizio
+	clerkData := services.ClerkUserData{
+		ClerkID:   clerkUserID.(string),
+		Email:     clerkEmail.(string),
+		Name:      fullName,
+		Username:  username,
+		AvatarURL: clerkImageURL.(string),
+	}
 
+	// Utilizza il servizio per sincronizzare l'utente
+	user, created, err := h.userService.SyncUserFromClerk(clerkData)
+	if err != nil {
+		log.Printf("Error syncing user: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sync user"})
+		return
+	}
+
+	if created {
 		c.JSON(http.StatusCreated, user.ToResponse())
-		return
+	} else {
+		c.JSON(http.StatusOK, user.ToResponse())
 	}
-
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
-		return
-	}
-
-	// Aggiorna l'utente esistente se necessario
-	updated := false
-
-	if user.Email != clerkEmail.(string) {
-		user.Email = clerkEmail.(string)
-		updated = true
-	}
-
-	if user.Name != fullName {
-		user.Name = fullName
-		updated = true
-	}
-
-	if user.AvatarURL != clerkImageURL.(string) {
-		user.AvatarURL = clerkImageURL.(string)
-		updated = true
-	}
-
-	if updated {
-		if err := h.db.Save(&user).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
-			return
-		}
-	}
-
-	c.JSON(http.StatusOK, user.ToResponse())
 }
 
 // GetCurrentUser ottiene l'utente corrente autenticato
@@ -133,9 +109,14 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := h.db.Where("id = ?", clerkUserID).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	user, err := h.userService.GetUserByID(clerkUserID.(string))
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		} else {
+			log.Printf("Error getting user: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		}
 		return
 	}
 
@@ -154,184 +135,67 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /api/v1/auth/webhooks/clerk [post]
 func (h *AuthHandler) WebhookHandler(c *gin.Context) {
-	// Get verified webhook event from middleware
-	h.db.Config.Logger.Info(c.Request.Context(), "Processing Clerk webhook event")
-	eventData, exists := c.Get("webhook_event")
+	// Get typed webhook event from middleware
+	webhookID, _ := middleware.GetWebhookIDFromContext(c)
+	log.Printf("Processing Clerk webhook %s", webhookID)
+
+	event, exists := middleware.GetWebhookEventFromContext(c)
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Webhook event not found in context"})
 		return
 	}
 
-	// Type assert to webhook event (from Clerk SDK)
-	event, ok := eventData.(map[string]any)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid webhook event format"})
-		return
-	}
+	log.Printf("Processing webhook event type: %s", event.Type)
 
-	eventType, ok := event["type"].(string)
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing event type"})
-		return
-	}
-
-	data, ok := event["data"].(map[string]any)
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing event data"})
-		return
-	}
-
-	switch eventType {
+	switch event.Type {
 	case "user.created":
-		if err := h.handleUserCreated(data); err != nil {
-			log.Printf("Error handling user.created webhook: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
+			if err := h.userService.CreateUserFromWebhook(userData); err != nil {
+				log.Printf("Error handling user.created webhook %s: %v", webhookID, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+				return
+			}
+		} else {
+			log.Printf("Missing user data for user.created webhook %s", webhookID)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing user data"})
 			return
 		}
+
 	case "user.updated":
-		if err := h.handleUserUpdated(data); err != nil {
-			log.Printf("Error handling user.updated webhook: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
+			if err := h.userService.UpdateUserFromWebhook(userData); err != nil {
+				log.Printf("Error handling user.updated webhook %s: %v", webhookID, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+				return
+			}
+		} else {
+			log.Printf("Missing user data for user.updated webhook %s", webhookID)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing user data"})
 			return
 		}
+
 	case "user.deleted":
-		if err := h.handleUserDeleted(data); err != nil {
-			log.Printf("Error handling user.deleted webhook: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
+			if err := h.userService.DeleteUserFromWebhook(userData); err != nil {
+				log.Printf("Error handling user.deleted webhook %s: %v", webhookID, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+				return
+			}
+		} else {
+			log.Printf("Missing user data for user.deleted webhook %s", webhookID)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing user data"})
 			return
 		}
+
 	default:
-		// Ignora eventi non gestiti
+		log.Printf("Ignoring unhandled webhook event type: %s (ID: %s)", event.Type, webhookID)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Webhook processed"})
-}
-
-func (h *AuthHandler) handleUserCreated(data map[string]interface{}) error {
-	userID, ok := data["id"].(string)
-	if !ok {
-		return fmt.Errorf("missing user ID")
-	}
-
-	// Estrai email primaria
-	var email string
-	if emailAddresses, ok := data["email_addresses"].([]interface{}); ok {
-		for _, addr := range emailAddresses {
-			if addrMap, ok := addr.(map[string]interface{}); ok {
-				if emailAddr, ok := addrMap["email_address"].(string); ok {
-					email = emailAddr
-					break
-				}
-			}
-		}
-	}
-
-	// Estrai nome
-	var name string
-	if firstName, ok := data["first_name"].(string); ok {
-		name = firstName
-		if lastName, ok := data["last_name"].(string); ok {
-			name += " " + lastName
-		}
-	}
-	if name == "" {
-		if username, ok := data["username"].(string); ok {
-			name = username
-		}
-	}
-
-	// Estrai avatar
-	avatarURL, _ := data["image_url"].(string)
-
-	// Crea utente nel database
-	user := models.User{
-		BaseModel: models.BaseModel{
-			ID: userID,
-		},
-		Email:      email,
-		Name:       name,
-		AvatarURL:  avatarURL,
-		SystemRole: models.RoleUser,
-	}
-
-	return h.db.Create(&user).Error
-}
-
-func (h *AuthHandler) handleUserUpdated(data map[string]interface{}) error {
-	userID, ok := data["id"].(string)
-	if !ok {
-		return fmt.Errorf("missing user ID")
-	}
-
-	var user models.User
-	if err := h.db.Where("id = ?", userID).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// Se l'utente non esiste, crealo
-			return h.handleUserCreated(data)
-		}
-		return err
-	}
-
-	// Aggiorna i campi
-	updated := false
-
-	// Estrai email primaria
-	if emailAddresses, ok := data["email_addresses"].([]interface{}); ok {
-		for _, addr := range emailAddresses {
-			if addrMap, ok := addr.(map[string]interface{}); ok {
-				if emailAddr, ok := addrMap["email_address"].(string); ok {
-					if user.Email != emailAddr {
-						user.Email = emailAddr
-						updated = true
-					}
-					break
-				}
-			}
-		}
-	}
-
-	// Estrai nome
-	var name string
-	if firstName, ok := data["first_name"].(string); ok {
-		name = firstName
-		if lastName, ok := data["last_name"].(string); ok {
-			name += " " + lastName
-		}
-	}
-	if name == "" {
-		if username, ok := data["username"].(string); ok {
-			name = username
-		}
-	}
-	if user.Name != name {
-		user.Name = name
-		updated = true
-	}
-
-	// Estrai avatar
-	if avatarURL, ok := data["image_url"].(string); ok {
-		if user.AvatarURL != avatarURL {
-			user.AvatarURL = avatarURL
-			updated = true
-		}
-	}
-
-	if updated {
-		return h.db.Save(&user).Error
-	}
-
-	return nil
-}
-
-func (h *AuthHandler) handleUserDeleted(data map[string]interface{}) error {
-	userID, ok := data["id"].(string)
-	if !ok {
-		return fmt.Errorf("missing user ID")
-	}
-
-	// Invece di eliminare l'utente, potremmo marcarlo come inattivo
-	// o gestire la cancellazione in modo diverso secondo le business rules
-	return h.db.Where("id = ?", userID).Delete(&models.User{}).Error
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Webhook processed successfully",
+		"event_type": event.Type,
+		"webhook_id": webhookID,
+	})
 }
 
 // ImportUsers importa tutti gli utenti da Clerk al database locale

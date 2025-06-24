@@ -2,34 +2,53 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"thothix-backend/internal/models"
+	"thothix-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type UserHandler struct {
-	db *gorm.DB
+	db          *gorm.DB
+	userService *services.UserService
 }
 
 func NewUserHandler(db *gorm.DB) *UserHandler {
-	return &UserHandler{db: db}
+	return &UserHandler{
+		db:          db,
+		userService: services.NewUserService(db),
+	}
 }
 
 // GetUsers godoc
 // @Summary Get all users
-// @Description Get a list of all users
+// @Description Get a list of all users with pagination
 // @Tags users
 // @Accept json
 // @Produce json
 // @Security BearerAuth
+// @Param page query int false "Page number (default: 1)"
+// @Param limit query int false "Items per page (default: 20)"
 // @Success 200 {array} []models.UserResponse
 // @Failure 500 {object} map[string]interface{}
 // @Router /api/v1/users [get]
 func (h *UserHandler) GetUsers(c *gin.Context) {
-	var users []models.User
-	if err := h.db.Find(&users).Error; err != nil {
+	// Parse pagination parameters
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+
+	// Calculate offset
+	offset := (page - 1) * limit
+	if offset < 0 {
+		offset = 0
+	}
+
+	// Use service to get users
+	users, err := h.userService.GetUsers(offset, limit)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
 		return
 	}
@@ -39,7 +58,14 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 		userResponses = append(userResponses, users[i].ToResponse())
 	}
 
-	c.JSON(http.StatusOK, userResponses)
+	c.JSON(http.StatusOK, gin.H{
+		"users": userResponses,
+		"pagination": gin.H{
+			"page":  page,
+			"limit": limit,
+			"count": len(userResponses),
+		},
+	})
 }
 
 // GetUser godoc

@@ -43,7 +43,8 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 
 	// Public routes (non protette)
 	auth := v1.Group("/auth")
-	// Webhook di Clerk (con verifica firma + handler)
+
+	// Webhook di Clerk (middleware + handler pattern)
 	auth.POST("/webhooks/clerk",
 		middleware.ClerkWebhookHandler(cfg.ClerkWebhookSecret),
 		authHandler.WebhookHandler,

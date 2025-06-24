@@ -1,7 +1,15 @@
 package middleware
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
@@ -91,9 +99,60 @@ func ClerkAuthSDK(clerkSecretKey string) gin.HandlerFunc {
 	}
 }
 
-// ClerkWebhookHandler for webhook signature verification
-// Note: Clerk SDK v2 doesn't expose webhook verification directly
-// We implement basic validation here, with TODO for proper Svix verification
+// WebhookEvent represents a Clerk webhook event
+type WebhookEvent struct {
+	Type      string          `json:"type"`
+	Object    string          `json:"object"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+
+// UserWebhookData represents user-related webhook data
+type UserWebhookData struct {
+	ID                    string   `json:"id"`
+	Object                string   `json:"object"`
+	ExternalID            *string  `json:"external_id"`
+	PrimaryEmailAddressID *string  `json:"primary_email_address_id"`
+	PrimaryPhoneNumberID  *string  `json:"primary_phone_number_id"`
+	Username              *string  `json:"username"`
+	FirstName             *string  `json:"first_name"`
+	LastName              *string  `json:"last_name"`
+	ImageURL              *string  `json:"image_url"`
+	CreatedAt             int64    `json:"created_at"`
+	UpdatedAt             int64    `json:"updated_at"`
+	EmailAddresses        []Email  `json:"email_addresses"`
+	PhoneNumbers          []Phone  `json:"phone_numbers"`
+	WebURLs               []WebURL `json:"web3_wallets"`
+}
+
+// Email represents an email address in webhook data
+type Email struct {
+	ID           string `json:"id"`
+	Object       string `json:"object"`
+	EmailAddress string `json:"email_address"`
+	Verification struct {
+		Status   string `json:"status"`
+		Strategy string `json:"strategy"`
+	} `json:"verification"`
+}
+
+// Phone represents a phone number in webhook data
+type Phone struct {
+	ID          string `json:"id"`
+	Object      string `json:"object"`
+	PhoneNumber string `json:"phone_number"`
+}
+
+// WebURL represents a web3 wallet in webhook data
+type WebURL struct {
+	ID      string `json:"id"`
+	Object  string `json:"object"`
+	WebURL  string `json:"web3_wallet"`
+	Network string `json:"network"`
+}
+
+// ClerkWebhookHandler for webhook signature verification with proper typing
+// Implements Svix signature verification for production security
 func ClerkWebhookHandler(webhookSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get Svix headers required for webhook verification
@@ -118,19 +177,99 @@ func ClerkWebhookHandler(webhookSecret string) gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Implement proper Svix webhook verification
-		// For now, we'll accept the webhook and let the handler process it
-		// In production, you should implement proper signature verification
-		// using the svix-go library or implement HMAC SHA-256 verification
+		// Verify webhook signature using Svix algorithm
+		if !verifyWebhookSignature(body, signature, timestamp, webhookSecret) {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Invalid webhook signature",
+			})
+			return
+		}
 
-		// Store webhook data for the handler
-		c.Set("webhook_body", body)
-		c.Set("webhook_timestamp", timestamp)
-		c.Set("webhook_signature", signature)
-		c.Set("webhook_id", id)
+		// Parse webhook event
+		var event WebhookEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Invalid webhook payload",
+				"details": err.Error(),
+			})
+			return
+		}
+
+		// Validate event timestamp (not older than 5 minutes)
+		now := time.Now().Unix()
+		if now-event.Timestamp > 300 {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Webhook event too old",
+			})
+			return
+		}
+
+		// Store essential webhook data for handlers
+		c.Set("webhook_event", event)
+		c.Set("webhook_id", id) // Useful for logging and tracing
+
+		// Parse user data for user-related events
+		if isUserEvent(event.Type) {
+			var userData UserWebhookData
+			if err := json.Unmarshal(event.Data, &userData); err == nil {
+				c.Set("webhook_user_data", userData)
+			}
+		}
 
 		c.Next()
 	}
+}
+
+// verifyWebhookSignature implements Svix signature verification algorithm
+func verifyWebhookSignature(payload []byte, signature, timestamp, secret string) bool {
+	// Parse timestamp
+	ts, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		return false
+	}
+
+	// Create signed payload: timestamp.payload
+	signedPayload := fmt.Sprintf("%d.%s", ts, string(payload))
+
+	// Decode the base64-encoded secret
+	secretBytes, err := base64.StdEncoding.DecodeString(secret)
+	if err != nil {
+		return false
+	}
+
+	// Compute HMAC SHA-256
+	mac := hmac.New(sha256.New, secretBytes)
+	mac.Write([]byte(signedPayload))
+	expectedSignature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+
+	// Parse signatures from header (format: "v1,signature1 v1,signature2")
+	signatures := strings.Split(signature, " ")
+	for _, sig := range signatures {
+		if strings.HasPrefix(sig, "v1,") {
+			providedSignature := strings.TrimPrefix(sig, "v1,")
+			if hmac.Equal([]byte(expectedSignature), []byte(providedSignature)) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// isUserEvent checks if the webhook event is user-related
+func isUserEvent(eventType string) bool {
+	userEvents := []string{
+		"user.created",
+		"user.updated",
+		"user.deleted",
+	}
+
+	for _, userEvent := range userEvents {
+		if eventType == userEvent {
+			return true
+		}
+	}
+	return false
 }
 
 // GetClerkUserFromContext helper to extract Clerk user data from Gin context
@@ -164,4 +303,34 @@ func GetClerkUserFromContext(c *gin.Context) (map[string]any, bool) {
 	}
 
 	return userData, true
+}
+
+// GetWebhookEventFromContext extracts typed webhook event from context
+func GetWebhookEventFromContext(c *gin.Context) (*WebhookEvent, bool) {
+	if event, exists := c.Get("webhook_event"); exists {
+		if webhookEvent, ok := event.(WebhookEvent); ok {
+			return &webhookEvent, true
+		}
+	}
+	return nil, false
+}
+
+// GetWebhookUserDataFromContext extracts typed user data from webhook context
+func GetWebhookUserDataFromContext(c *gin.Context) (*UserWebhookData, bool) {
+	if userData, exists := c.Get("webhook_user_data"); exists {
+		if webhookUserData, ok := userData.(UserWebhookData); ok {
+			return &webhookUserData, true
+		}
+	}
+	return nil, false
+}
+
+// GetWebhookIDFromContext extracts webhook ID for logging and tracing
+func GetWebhookIDFromContext(c *gin.Context) (string, bool) {
+	if id, exists := c.Get("webhook_id"); exists {
+		if webhookID, ok := id.(string); ok {
+			return webhookID, true
+		}
+	}
+	return "", false
 }

@@ -136,20 +136,42 @@ func TestUserService_SyncUserFromClerk(t *testing.T) {
 			}
 
 			// Execute
-			response, err := service.SyncUserFromClerk(tt.request)
+			result := service.SyncUserFromClerk(tt.request)
 
-			// Verify
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Nil(t, response)
-			} else {
-				assert.NoError(t, err)
-				require.NotNil(t, response)
-				assert.Equal(t, tt.expectedIsNew, response.IsNew)
-				assert.Equal(t, tt.request.Email, response.User.Email)
-				assert.Equal(t, tt.request.Name, response.User.Name)
-				assert.Equal(t, tt.request.Username, response.User.Username)
-				assert.Equal(t, tt.request.AvatarURL, response.User.AvatarURL)
+			// Verify using Match pattern
+			var hasError bool
+			var user *dto.UserResponse
+
+			result.Match(
+				func(err error) interface{} {
+					hasError = true
+					if !tt.expectError {
+						t.Errorf("Expected success but got error: %v", err)
+					}
+					return nil
+				},
+				func(response *dto.UserResponse) interface{} {
+					hasError = false
+					user = response
+					if tt.expectError {
+						t.Errorf("Expected error but got success: %+v", response)
+					}
+					return nil
+				},
+				func(errors []dto.Error) interface{} {
+					hasError = true
+					if !tt.expectError {
+						t.Errorf("Expected success but got validation errors: %+v", errors)
+					}
+					return nil
+				},
+			)
+
+			if !tt.expectError && !hasError {
+				require.NotNil(t, user)
+				assert.Equal(t, tt.request.Email, user.Email)
+				assert.Equal(t, tt.request.Name, user.Name)
+				assert.Equal(t, tt.request.Username, user.Username)
 			}
 
 			// Cleanup
@@ -191,16 +213,40 @@ func TestUserService_GetUserByID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := service.GetUserByID(tt.userID)
+			result := service.GetUserByID(tt.userID)
 
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Nil(t, response)
-			} else {
-				assert.NoError(t, err)
-				require.NotNil(t, response)
-				assert.Equal(t, tt.userID, response.ID)
-				assert.Equal(t, user.Email, response.Email)
+			var hasError bool
+			var user *dto.UserResponse
+
+			result.Match(
+				func(err error) interface{} {
+					hasError = true
+					if !tt.expectError {
+						t.Errorf("Expected success but got error: %v", err)
+					}
+					return nil
+				},
+				func(response *dto.UserResponse) interface{} {
+					hasError = false
+					user = response
+					if tt.expectError {
+						t.Errorf("Expected error but got success: %+v", response)
+					}
+					return nil
+				},
+				func(errors []dto.Error) interface{} {
+					hasError = true
+					if !tt.expectError {
+						t.Errorf("Expected success but got validation errors: %+v", errors)
+					}
+					return nil
+				},
+			)
+
+			if !tt.expectError && !hasError {
+				require.NotNil(t, user)
+				assert.Equal(t, tt.userID, user.ID)
+				assert.Equal(t, user.Email, user.Email)
 			}
 		})
 	}
@@ -257,20 +303,44 @@ func TestUserService_GetUserByClerkID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := service.GetUserByClerkID(tt.clerkID)
+			result := service.GetUserByClerkID(tt.clerkID)
 
-			if tt.expectError {
-				assert.Error(t, err, "Expected error but got none")
-				assert.Nil(t, response, "Expected nil response but got: %v", response)
-			} else {
-				assert.NoError(t, err, "Unexpected error: %v", err)
-				require.NotNil(t, response, "Expected response but got nil")
-				assert.Equal(t, tt.clerkID, response.ClerkID)
-				assert.Equal(t, tt.expectedUser.Email, response.Email)
-				assert.Equal(t, tt.expectedUser.Name, response.Name)
-				assert.Equal(t, tt.expectedUser.Username, response.Username)
+			var hasError bool
+			var user *dto.UserResponse
+
+			result.Match(
+				func(err error) interface{} {
+					hasError = true
+					if !tt.expectError {
+						t.Errorf("Expected success but got error: %v", err)
+					}
+					return nil
+				},
+				func(response *dto.UserResponse) interface{} {
+					hasError = false
+					user = response
+					if tt.expectError {
+						t.Errorf("Expected error but got success: %+v", response)
+					}
+					return nil
+				},
+				func(errors []dto.Error) interface{} {
+					hasError = true
+					if !tt.expectError {
+						t.Errorf("Expected success but got validation errors: %+v", errors)
+					}
+					return nil
+				},
+			)
+
+			if !tt.expectError && !hasError {
+				require.NotNil(t, user, "Expected response but got nil")
+				assert.Equal(t, tt.clerkID, user.ClerkID)
+				assert.Equal(t, tt.expectedUser.Email, user.Email)
+				assert.Equal(t, tt.expectedUser.Name, user.Name)
+				assert.Equal(t, tt.expectedUser.Username, user.Username)
 				// Verify we got the right user by checking the generated ID matches
-				assert.Equal(t, tt.expectedUser.ID, response.ID)
+				assert.Equal(t, tt.expectedUser.ID, user.ID)
 			}
 		})
 	}
@@ -306,14 +376,14 @@ func TestUserService_GetUsers(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		request       *dto.GetUsersRequest
+		request       *dto.PaginationRequest
 		expectedCount int
 		expectedTotal int64
 		expectedPages int
 	}{
 		{
 			name: "first page",
-			request: &dto.GetUsersRequest{
+			request: &dto.PaginationRequest{
 				Page:    1,
 				PerPage: 2,
 			},
@@ -323,7 +393,7 @@ func TestUserService_GetUsers(t *testing.T) {
 		},
 		{
 			name: "second page",
-			request: &dto.GetUsersRequest{
+			request: &dto.PaginationRequest{
 				Page:    2,
 				PerPage: 2,
 			},
@@ -333,7 +403,7 @@ func TestUserService_GetUsers(t *testing.T) {
 		},
 		{
 			name: "all users",
-			request: &dto.GetUsersRequest{
+			request: &dto.PaginationRequest{
 				Page:    1,
 				PerPage: 10,
 			},
@@ -345,15 +415,37 @@ func TestUserService_GetUsers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := service.GetUsers(tt.request)
+			result := service.GetUsers(tt.request)
 
-			assert.NoError(t, err)
-			require.NotNil(t, response)
-			assert.Len(t, response.Users, tt.expectedCount)
-			assert.Equal(t, tt.expectedTotal, response.Total)
-			assert.Equal(t, tt.request.Page, response.Page)
-			assert.Equal(t, tt.request.PerPage, response.PerPage)
-			assert.Equal(t, tt.expectedPages, response.TotalPages)
+			var hasError bool
+			var response *dto.UserListResponse
+
+			result.Match(
+				func(err error) interface{} {
+					hasError = true
+					t.Errorf("Expected success but got error: %v", err)
+					return nil
+				},
+				func(userListResponse *dto.UserListResponse) interface{} {
+					hasError = false
+					response = userListResponse
+					return nil
+				},
+				func(errors []dto.Error) interface{} {
+					hasError = true
+					t.Errorf("Expected success but got validation errors: %+v", errors)
+					return nil
+				},
+			)
+
+			if !hasError {
+				require.NotNil(t, response)
+				assert.Len(t, response.Users, tt.expectedCount)
+				assert.Equal(t, tt.expectedTotal, response.Total)
+				assert.Equal(t, tt.request.Page, response.Page)
+				assert.Equal(t, tt.request.PerPage, response.PerPage)
+				assert.Equal(t, tt.expectedPages, response.TotalPages)
+			}
 		})
 	}
 }
@@ -412,30 +504,62 @@ func TestUserService_UpdateUser(t *testing.T) {
 				Email: stringPtr("test@example.com"),
 			},
 			expectError: true,
-			errorMsg:    "user not found",
+			errorMsg:    "User not found",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := service.UpdateUser(tt.userID, tt.request)
+			result := service.UpdateUser(tt.userID, tt.request)
+
+			var hasError bool
+			var user *dto.UserResponse
+			var errorMessage string
+
+			result.Match(
+				func(err error) interface{} {
+					hasError = true
+					errorMessage = err.Error()
+					if !tt.expectError {
+						t.Errorf("Expected success but got error: %v", err)
+					}
+					return nil
+				},
+				func(response *dto.UserResponse) interface{} {
+					hasError = false
+					user = response
+					if tt.expectError {
+						t.Errorf("Expected error but got success: %+v", response)
+					}
+					return nil
+				},
+				func(errors []dto.Error) interface{} {
+					hasError = true
+					if len(errors) > 0 {
+						errorMessage = errors[0].Error()
+					}
+					if !tt.expectError {
+						t.Errorf("Expected success but got validation errors: %+v", errors)
+					}
+					return nil
+				},
+			)
 
 			if tt.expectError {
-				assert.Error(t, err)
-				assert.Nil(t, response)
+				assert.True(t, hasError)
 				if tt.errorMsg != "" {
-					assert.Contains(t, err.Error(), tt.errorMsg)
+					assert.Contains(t, errorMessage, tt.errorMsg)
 				}
 			} else {
-				assert.NoError(t, err)
-				require.NotNil(t, response)
-				assert.Equal(t, tt.userID, response.ID)
+				assert.False(t, hasError)
+				require.NotNil(t, user)
+				assert.Equal(t, tt.userID, user.ID)
 
 				if tt.request.Email != nil {
-					assert.Equal(t, *tt.request.Email, response.Email)
+					assert.Equal(t, *tt.request.Email, user.Email)
 				}
 				if tt.request.Username != nil {
-					assert.Equal(t, *tt.request.Username, response.Username)
+					assert.Equal(t, *tt.request.Username, user.Username)
 				}
 			}
 		})

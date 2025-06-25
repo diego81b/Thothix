@@ -22,15 +22,11 @@ func (m *UserMapper) ModelToResponse(user *models.User) *dto.UserResponse {
 	}
 
 	return &dto.UserResponse{
-		ID:        user.ID,
-		ClerkID:   user.ClerkID,
-		Email:     user.Email,
-		Name:      user.Name,
-		Username:  user.Username,
-		AvatarURL: user.AvatarURL,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		LastSync:  user.LastSync,
+		ID:       user.ID,
+		ClerkID:  user.ClerkID,
+		Email:    user.Email,
+		Name:     user.Name,
+		Username: user.Username,
 	}
 }
 
@@ -132,11 +128,13 @@ func (m *UserMapper) ModelsToListResponse(users []models.User, total int64, page
 	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
 
 	return &dto.UserListResponse{
-		Users:      userResponses,
-		Total:      total,
-		Page:       page,
-		PerPage:    perPage,
-		TotalPages: totalPages,
+		Users: userResponses,
+		PaginationMeta: dto.PaginationMeta{
+			Total:      total,
+			Page:       page,
+			PerPage:    perPage,
+			TotalPages: totalPages,
+		},
 	}
 }
 

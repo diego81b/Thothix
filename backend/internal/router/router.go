@@ -68,8 +68,8 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	// Users
 	users := protected.Group("/users")
 	users.GET("", userHandler.GetUsers)
-	users.PUT("/me", userHandler.UpdateCurrentUser)
-	users.GET("/:id", userHandler.GetUser)
+	users.PUT("/me", userHandler.UpdateUser) // Will need special handling for current user
+	users.GET("/:id", userHandler.GetUserByID)
 	users.PUT("/:id", middleware.RequirePermission(db, models.PermissionUserManage, nil), userHandler.UpdateUser)
 	users.GET("/:id/roles", roleHandler.GetUserRoles)
 

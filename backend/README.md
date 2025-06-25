@@ -1,87 +1,83 @@
 # 🚀 Thothix Backend - Go API
 
-[![Go](https://img.shields.io/badge/Go-1.23-blue?style=flat&logo=go)](https://golang.org)
-[![Gin](https://img.shields.io/badge/Gin-Web_Framework-green?style=flat)](https://github.com/gin-gonic/gin)
-[![GORM](https://img.shields.io/badge/GORM-ORM-yellow?style=flat)](https://gorm.io)
+[![Go](https://img.shields.io/badge/Go-1.23-blue?style=flat&logo=go)](https://golang.org) [![Gin](https://img.shields.io/badge/Gin-Web_Framework-green?style=flat)](https://github.com/gin-gonic/gin) [![GORM](https://img.shields.io/badge/GORM-ORM-yellow?style=flat)](https://gorm.io)
 
-Thothix backend is a modern Go REST API built with Gin framework, GORM ORM, and PostgreSQL, featuring Clerk authentication and HashiCorp Vault integration.
-
-## 📋 Table of Contents
-
-- [Architecture](#architecture)
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Data Models](#data-models)
-- [API Reference](#api-reference)
-- [Authentication & RBAC](#authentication--rbac)
-- [Development](#development)
-- [Testing](#testing)
-- [Deployment](#deployment)
+Modern Go REST API with Gin framework, GORM ORM, PostgreSQL, Clerk authentication, and HashiCorp Vault integration.
 
 ## 🏗️ Architecture
 
-### Technology Stack
+**Tech Stack**: Gin • GORM v2 • PostgreSQL 15 • Clerk Auth • HashiCorp Vault • Swagger/OpenAPI • Docker
 
-- **Framework**: Gin Web Framework
-- **ORM**: GORM v2
-- **Database**: PostgreSQL 15
-- **Authentication**: Clerk Integration
-- **Secrets**: HashiCorp Vault
-- **Documentation**: Swagger/OpenAPI
-- **Containerization**: Docker multi-stage builds
+**Clean Architecture**: Presentation Layer (handlers/middleware/router) → Business Layer (services/dto/mappers) → Data Layer (models/database)
 
-### Clean Architecture Implementation
+### 🎯 Result Pattern Implementation
 
-Thothix backend follows clean architecture principles with clear separation of concerns:
+Thothix implements a **C#-inspired Result Pattern** with functional programming for type-safe error handling:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    PRESENTATION LAYER                       │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │  Handlers   │────│ Middleware  │────│   Router    │     │
-│  │(Controllers)│    │  (Auth,     │    │  (Routes)   │     │
-│  │             │    │   RBAC)     │    │             │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
-└─────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     BUSINESS LAYER                          │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐      │
-│  │   DTOs      │────│  Services   │────│   Mappers   │      │
-│  │(Data        │    │ (Business   │    │ (DTO ↔      │      │
-│  │Transfer     │    │  Logic)     │    │  Model)     │      │
-│  │Objects)     │    │             │    │             │      │
-│  └─────────────┘    └─────────────┘    └─────────────┘      │
-└─────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      DATA LAYER                             │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐      │
-│  │   Models    │────│  Database   │────│ Migrations  │      │
-│  │ (GORM       │    │ (PostgreSQL │    │             │      │
-│  │  Entities)  │    │  + GORM)    │    │             │      │
-│  └─────────────┘    └─────────────┘    └─────────────┘      │
-└─────────────────────────────────────────────────────────────┘
+#### Core Components
+
+```go
+// Generic Response with lazy evaluation and pattern matching
+Response[T] struct {
+    producer func() Validation[T]
+    result   *Exceptional[Validation[T]]
+}
+
+// Pattern matching replaces traditional if-err checks
+result.Match(onException, onSuccess, onFailure)
 ```
 
-### Service Dependencies
+#### Key Benefits
 
+- **Type safety**: No null references, compile-time guarantees
+- **Functional composition**: Pattern matching over if-err chains
+- **Lazy evaluation**: Execution only when needed
+- **Clear error types**: System exceptions vs validation errors
+
+#### Usage Example
+
+```go
+// Service returns typed Response
+func (s *UserService) GetUserByID(userID string) *dto.GetUserResponse {
+    return dto.NewGetUserResponse(func() dto.Validation[*dto.UserResponse] {
+        if userID == "" {
+            return dto.Failure[*dto.UserResponse](
+                dto.NewError("VALIDATION_ERROR", "User ID required", nil))
+        }
+
+        var user models.User
+        if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+            if err == gorm.ErrRecordNotFound {
+                return dto.Invalid[*dto.UserResponse](
+                    dto.NewError("USER_NOT_FOUND", "User not found", nil))
+            }
+            panic(err) // Auto-converted to Exception
+        }
+
+        return dto.Success(s.mapper.ModelToResponse(&user))
+    })
+}
+
+// Handler with pattern matching
+func (h *UserHandler) GetUser(c *gin.Context) {
+    result := h.service.GetUserByID(userID)
+    result.Match(
+        func(err error) interface{} {
+            c.JSON(500, dto.ManagedErrorResult(err)); return nil
+        },
+        func(user *dto.UserResponse) interface{} {
+            c.JSON(200, user); return nil
+        },
+        func(errors []dto.Error) interface{} {
+            c.JSON(400, dto.ErrorsToManagedResult(errors)); return nil
+        },
+    )
+}
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Thothix Web    │    │  Thothix API    │    │   PostgreSQL    │
-│   (Frontend)    │───▶│   (Backend)     │───▶│   (Database)    │
-│                 │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                       ┌─────────────────┐
-                       │  HashiCorp      │
-                       │  Vault          │
-                       │  (Secrets)      │
-                       └─────────────────┘
-```
+
+**Architecture**: `common_dto.go` (generic patterns) + `user_dto.go` (domain DTOs)
+
+---
 
 ## 🚀 Quick Start
 

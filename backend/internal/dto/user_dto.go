@@ -1,55 +1,49 @@
 package dto
 
-import (
-	"time"
-)
+// === USER-SPECIFIC DTOs ===
 
 // CreateUserRequest represents the request payload for creating a new user
 type CreateUserRequest struct {
 	Email     string `json:"email" validate:"required,email"`
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name" validate:"required"`
-	Username  string `json:"username" validate:"required"`
+	Name      string `json:"name" validate:"required"`
+	Username  string `json:"username,omitempty"`
+	ClerkID   string `json:"clerk_id,omitempty"`
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
 }
 
 // UpdateUserRequest represents the request payload for updating user information
 type UpdateUserRequest struct {
 	Email     *string `json:"email,omitempty" validate:"omitempty,email"`
+	Name      *string `json:"name,omitempty"`
+	Username  *string `json:"username,omitempty"`
 	FirstName *string `json:"first_name,omitempty"`
 	LastName  *string `json:"last_name,omitempty"`
-	Username  *string `json:"username,omitempty"`
 	AvatarURL *string `json:"avatar_url,omitempty"`
 }
 
 // UserResponse represents the user data returned in API responses
 type UserResponse struct {
-	ID        string    `json:"id"`
-	ClerkID   string    `json:"clerk_id"`
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	Username  string    `json:"username"`
-	AvatarURL string    `json:"avatar_url"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	LastSync  time.Time `json:"last_sync"`
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	ClerkID  string `json:"clerk_id,omitempty"`
+	Username string `json:"username,omitempty"`
 }
 
 // UserListResponse represents paginated user list response
 type UserListResponse struct {
-	Users      []UserResponse `json:"users"`
-	Total      int64          `json:"total"`
-	Page       int            `json:"page"`
-	PerPage    int            `json:"per_page"`
-	TotalPages int            `json:"total_pages"`
+	Users []UserResponse `json:"users"`
+	PaginationMeta
 }
 
 // ClerkUserSyncRequest represents the request for syncing user data from Clerk
 type ClerkUserSyncRequest struct {
 	ClerkID   string `json:"clerk_id" validate:"required"`
 	Email     string `json:"email" validate:"required,email"`
-	Name      string `json:"name"`
-	Username  string `json:"username"`
-	AvatarURL string `json:"avatar_url"`
+	Name      string `json:"name" validate:"required"`
+	Username  string `json:"username,omitempty"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 // ClerkUserSyncResponse represents the response after syncing with Clerk
@@ -59,30 +53,64 @@ type ClerkUserSyncResponse struct {
 	Message string       `json:"message"`
 }
 
-// UserSearchRequest represents search criteria for users
-type UserSearchRequest struct {
-	Query    string `json:"query" form:"query"`
-	Email    string `json:"email" form:"email"`
-	Username string `json:"username" form:"username"`
-	Page     int    `json:"page" form:"page" validate:"min=1"`
-	PerPage  int    `json:"per_page" form:"per_page" validate:"min=1,max=100"`
+// === USER-SPECIFIC RESPONSE TYPES ===
+
+type GetUserResponse struct {
+	*Response[*UserResponse]
 }
 
-// GetUsersRequest represents request parameters for getting users with pagination
-type GetUsersRequest struct {
-	Page    int `json:"page" form:"page" validate:"min=1"`
-	PerPage int `json:"per_page" form:"per_page" validate:"min=1,max=100"`
+func NewGetUserResponse(producer func() Validation[*UserResponse]) *GetUserResponse {
+	return &GetUserResponse{
+		Response: NewResponse(producer),
+	}
 }
 
-// ErrorResponse represents API error response
-type ErrorResponse struct {
-	Error   string            `json:"error"`
-	Message string            `json:"message,omitempty"`
-	Details map[string]string `json:"details,omitempty"`
+type GetUsersResponse struct {
+	*Response[*UserListResponse]
 }
 
-// SuccessResponse represents generic success response
-type SuccessResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
+func NewGetUsersResponse(producer func() Validation[*UserListResponse]) *GetUsersResponse {
+	return &GetUsersResponse{
+		Response: NewResponse(producer),
+	}
+}
+
+type CreateUserResponse struct {
+	*Response[*UserResponse]
+}
+
+func NewCreateUserResponse(producer func() Validation[*UserResponse]) *CreateUserResponse {
+	return &CreateUserResponse{
+		Response: NewResponse(producer),
+	}
+}
+
+type UpdateUserResponse struct {
+	*Response[*UserResponse]
+}
+
+func NewUpdateUserResponse(producer func() Validation[*UserResponse]) *UpdateUserResponse {
+	return &UpdateUserResponse{
+		Response: NewResponse(producer),
+	}
+}
+
+type DeleteUserResponse struct {
+	*Response[string]
+}
+
+func NewDeleteUserResponse(producer func() Validation[string]) *DeleteUserResponse {
+	return &DeleteUserResponse{
+		Response: NewResponse(producer),
+	}
+}
+
+type ClerkSyncUserResponse struct {
+	*Response[*ClerkUserSyncResponse]
+}
+
+func NewClerkSyncUserResponse(producer func() Validation[*ClerkUserSyncResponse]) *ClerkSyncUserResponse {
+	return &ClerkSyncUserResponse{
+		Response: NewResponse(producer),
+	}
 }

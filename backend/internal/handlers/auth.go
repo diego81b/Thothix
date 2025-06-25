@@ -13,14 +13,19 @@ import (
 )
 
 type AuthHandler struct {
-	db          *gorm.DB
-	userService services.UserServiceInterface
+	db               *gorm.DB
+	userService      services.UserServiceInterface
+	clerkUserService services.ClerkUserServiceInterface
+	userServiceImpl  *services.UserService // For legacy webhook methods
 }
 
 func NewAuthHandler(db *gorm.DB) *AuthHandler {
+	userServiceImpl := services.NewUserService(db)
 	return &AuthHandler{
-		db:          db,
-		userService: services.NewUserService(db),
+		db:               db,
+		userService:      userServiceImpl,
+		clerkUserService: userServiceImpl,
+		userServiceImpl:  userServiceImpl,
 	}
 }
 
@@ -77,23 +82,31 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 		Username:  username,
 		AvatarURL: clerkImageURL.(string),
 	}
-
 	// Utilizza il servizio per sincronizzare l'utente
-	syncResponse, err := h.userService.SyncUserFromClerk(clerkSyncReq)
-	if err != nil {
-		log.Printf("Error syncing user: %v", err)
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error:   "sync_failed",
-			Message: "Failed to sync user",
-		})
-		return
-	}
+	output := h.clerkUserService.SyncUserFromClerk(clerkSyncReq)
 
-	if syncResponse.IsNew {
-		c.JSON(http.StatusCreated, syncResponse.User)
-	} else {
-		c.JSON(http.StatusOK, syncResponse.User)
-	}
+	output.Match(
+		// Exception
+		func(exception error) interface{} {
+			log.Printf("System error syncing user: %v", exception)
+			c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(exception))
+			return nil
+		},
+		// Success
+		func(success *dto.UserResponse) interface{} {
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    success,
+			})
+			return nil
+		},
+		// Failure
+		func(errors []dto.Error) interface{} {
+			log.Printf("Validation errors syncing user: %v", errors)
+			c.JSON(http.StatusBadRequest, dto.ErrorsToManagedResult(errors))
+			return nil
+		},
+	)
 }
 
 // GetCurrentUser ottiene l'utente corrente autenticato
@@ -112,25 +125,36 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Clerk user ID not found"})
 		return
 	}
+	output := h.userService.GetUserByID(clerkUserID.(string))
 
-	user, err := h.userService.GetUserByID(clerkUserID.(string))
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, dto.ErrorResponse{
-				Error:   "user_not_found",
-				Message: "User not found",
+	output.Match(
+		// Exception
+		func(exception error) interface{} {
+			log.Printf("System error getting user: %v", exception)
+			c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(exception))
+			return nil
+		},
+		// Success
+		func(success *dto.UserResponse) interface{} {
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    success,
 			})
-		} else {
-			log.Printf("Error getting user: %v", err)
-			c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-				Error:   "database_error",
-				Message: "Database error",
-			})
-		}
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
+			return nil
+		},
+		// Failure
+		func(errors []dto.Error) interface{} {
+			statusCode := http.StatusBadRequest
+			for _, err := range errors {
+				if err.Message == "User not found" {
+					statusCode = http.StatusNotFound
+					break
+				}
+			}
+			c.JSON(statusCode, dto.ErrorsToManagedResult(errors))
+			return nil
+		},
+	)
 }
 
 // WebhookHandler gestisce i webhook di Clerk per sincronizzazione automatica
@@ -160,16 +184,23 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 	switch event.Type {
 	case "user.created":
 		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
-			user, err := h.userService.CreateUserFromWebhook(userData)
-			if err != nil {
-				log.Printf("Error handling user.created webhook %s: %v", webhookID, err)
-				c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-					Error:   "webhook_processing_failed",
-					Message: "Failed to process webhook",
-				})
-				return
-			}
-			log.Printf("Created user %s from webhook %s", user.ID, webhookID)
+			response := h.clerkUserService.ProcessClerkWebhook(userData)
+			response.Match(
+				func(err error) interface{} {
+					log.Printf("Error handling user.created webhook %s: %v", webhookID, err)
+					c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(err))
+					return nil
+				},
+				func(syncResponse *dto.ClerkUserSyncResponse) interface{} {
+					log.Printf("Created user %s from webhook %s", syncResponse.User.ID, webhookID)
+					return nil
+				},
+				func(errors []dto.Error) interface{} {
+					log.Printf("Validation error handling user.created webhook %s: %v", webhookID, errors)
+					c.JSON(http.StatusBadRequest, dto.ErrorsToManagedResult(errors))
+					return nil
+				},
+			)
 		} else {
 			log.Printf("Missing user data for user.created webhook %s", webhookID)
 			c.JSON(http.StatusBadRequest, dto.ErrorResponse{
@@ -181,16 +212,23 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 
 	case "user.updated":
 		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
-			user, err := h.userService.UpdateUserFromWebhook(userData)
-			if err != nil {
-				log.Printf("Error handling user.updated webhook %s: %v", webhookID, err)
-				c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-					Error:   "webhook_processing_failed",
-					Message: "Failed to process webhook",
-				})
-				return
-			}
-			log.Printf("Updated user %s from webhook %s", user.ID, webhookID)
+			response := h.clerkUserService.ProcessClerkWebhook(userData)
+			response.Match(
+				func(err error) interface{} {
+					log.Printf("Error handling user.updated webhook %s: %v", webhookID, err)
+					c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(err))
+					return nil
+				},
+				func(syncResponse *dto.ClerkUserSyncResponse) interface{} {
+					log.Printf("Updated user %s from webhook %s", syncResponse.User.ID, webhookID)
+					return nil
+				},
+				func(errors []dto.Error) interface{} {
+					log.Printf("Validation error handling user.updated webhook %s: %v", webhookID, errors)
+					c.JSON(http.StatusBadRequest, dto.ErrorsToManagedResult(errors))
+					return nil
+				},
+			)
 		} else {
 			log.Printf("Missing user data for user.updated webhook %s", webhookID)
 			c.JSON(http.StatusBadRequest, dto.ErrorResponse{
@@ -202,15 +240,46 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 
 	case "user.deleted":
 		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
-			if err := h.userService.DeleteUserFromWebhook(userData); err != nil {
-				log.Printf("Error handling user.deleted webhook %s: %v", webhookID, err)
-				c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-					Error:   "webhook_processing_failed",
-					Message: "Failed to process webhook",
-				})
-				return
+			// First find the user by Clerk ID to get internal ID
+			getUserResponse := h.userService.GetUserByClerkID(userData.ID)
+			var userID string
+
+			getUserResponse.Match(
+				func(err error) interface{} {
+					log.Printf("Error finding user for deletion webhook %s: %v", webhookID, err)
+					c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(err))
+					return nil
+				},
+				func(user *dto.UserResponse) interface{} {
+					userID = user.ID
+					return nil
+				},
+				func(errors []dto.Error) interface{} {
+					log.Printf("User not found for deletion webhook %s: %v", webhookID, errors)
+					// User already doesn't exist, consider it successful
+					return nil
+				},
+			)
+
+			if userID != "" {
+				deleteResponse := h.userService.DeleteUser(userID)
+				deleteResponse.Match(
+					func(err error) interface{} {
+						log.Printf("Error deleting user from webhook %s: %v", webhookID, err)
+						c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(err))
+						return nil
+					},
+					func(message string) interface{} {
+						log.Printf("Deleted user from webhook %s", webhookID)
+						return nil
+					},
+					func(errors []dto.Error) interface{} {
+						log.Printf("Validation error deleting user from webhook %s: %v", webhookID, errors)
+						c.JSON(http.StatusBadRequest, dto.ErrorsToManagedResult(errors))
+						return nil
+					},
+				)
 			}
-			log.Printf("Deleted user from webhook %s", webhookID)
 		} else {
 			log.Printf("Missing user data for user.deleted webhook %s", webhookID)
 			c.JSON(http.StatusBadRequest, dto.ErrorResponse{
@@ -224,9 +293,9 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 		log.Printf("Ignoring unhandled webhook event type: %s (ID: %s)", event.Type, webhookID)
 	}
 
-	c.JSON(http.StatusOK, dto.SuccessResponse{
-		Success: true,
-		Message: "Webhook processed successfully",
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": "Webhook processed successfully",
 	})
 }
 
@@ -246,8 +315,8 @@ func (h *AuthHandler) ImportUsers(c *gin.Context) {
 
 	// This would call Clerk API to get all users and sync them
 	// For now, return a placeholder response
-	c.JSON(http.StatusOK, dto.SuccessResponse{
-		Success: true,
-		Message: "User import functionality - to be implemented. This will call Clerk Users API and sync all users to local DB",
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": "User import functionality - to be implemented. This will call Clerk Users API and sync all users to local DB",
 	})
 }

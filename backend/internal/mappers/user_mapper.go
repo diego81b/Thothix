@@ -1,8 +1,6 @@
 package mappers
 
 import (
-	"math"
-
 	"thothix-backend/internal/dto"
 	"thothix-backend/internal/models"
 )
@@ -125,17 +123,7 @@ func (m *UserMapper) UpdateRequestToMap(req *dto.UpdateUserRequest) map[string]i
 // ModelsToListResponse converts models and pagination info to UserListResponse
 func (m *UserMapper) ModelsToListResponse(users []models.User, total int64, page, perPage int) *dto.UserListResponse {
 	userResponses := m.ModelsToResponses(users)
-	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
-
-	return &dto.UserListResponse{
-		Users: userResponses,
-		PaginationMeta: dto.PaginationMeta{
-			Total:      total,
-			Page:       page,
-			PerPage:    perPage,
-			TotalPages: totalPages,
-		},
-	}
+	return dto.NewUserListResponse(userResponses, total, page, perPage)
 }
 
 // CreateSyncResponse creates a ClerkUserSyncResponse

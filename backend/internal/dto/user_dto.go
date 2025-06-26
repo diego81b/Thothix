@@ -32,9 +32,12 @@ type UserResponse struct {
 }
 
 // UserListResponse represents paginated user list response
-type UserListResponse struct {
-	Users []UserResponse `json:"users"`
-	PaginationMeta
+// Now uses the generic PaginatedListResponse for consistency
+type UserListResponse = PaginatedListResponse[UserResponse]
+
+// NewUserListResponse creates a UserListResponse with proper pagination metadata
+func NewUserListResponse(users []UserResponse, total int64, page int, perPage int) *UserListResponse {
+	return NewPaginatedListResponse(users, total, page, perPage)
 }
 
 // ClerkUserSyncRequest represents the request for syncing user data from Clerk
@@ -65,14 +68,18 @@ func NewGetUserResponse(producer func() Validation[*UserResponse]) *GetUserRespo
 	}
 }
 
-type GetUsersResponse struct {
-	*Response[*UserListResponse]
-}
+type GetUsersResponse = ListResponse[UserResponse]
 
 func NewGetUsersResponse(producer func() Validation[*UserListResponse]) *GetUsersResponse {
-	return &GetUsersResponse{
-		Response: NewResponse(producer),
+	// Cast necessario per compatibilità con il tipo alias
+	typedProducer := func() Validation[*PaginatedListResponse[UserResponse]] {
+		result := producer()
+		if result.IsValid() {
+			return Valid[*PaginatedListResponse[UserResponse]](result.GetValue())
+		}
+		return Invalid[*PaginatedListResponse[UserResponse]](result.GetErrors()...)
 	}
+	return NewListResponse(typedProducer)
 }
 
 type CreateUserResponse struct {

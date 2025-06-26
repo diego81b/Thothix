@@ -38,13 +38,15 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 // @Security BearerAuth
 // @Success 200 {object} models.UserResponse
 // @Success 201 {object} models.UserResponse
-// @Failure 400 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
+// @Failure 400 {object} dto.ErrorViewModel
+// @Failure 500 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/sync [post]
 func (h *AuthHandler) SyncUser(c *gin.Context) {
+	ctx := WrapContext(c)
+
 	clerkUserID, exists := c.Get("clerk_user_id")
 	if !exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Clerk user ID not found"})
+		ctx.BadRequestErrorResponse("Clerk user ID not found")
 		return
 	}
 
@@ -88,22 +90,17 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 	output.Match(
 		// Exception
 		func(exception error) interface{} {
-			log.Printf("System error syncing user: %v", exception)
-			c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(exception))
+			ctx.SystemErrorResponse(exception, "System error syncing user")
 			return nil
 		},
 		// Success
 		func(success *dto.UserResponse) interface{} {
-			c.JSON(http.StatusOK, gin.H{
-				"success": true,
-				"data":    success,
-			})
+			ctx.SuccessResponse(success)
 			return nil
 		},
 		// Failure
 		func(errors []dto.Error) interface{} {
-			log.Printf("Validation errors syncing user: %v", errors)
-			c.JSON(http.StatusBadRequest, dto.ErrorsToManagedResult(errors))
+			ctx.ValidationErrorResponse(errors, "Validation errors syncing user")
 			return nil
 		},
 	)
@@ -117,41 +114,40 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} models.UserResponse
-// @Failure 404 {object} map[string]interface{}
+// @Failure 404 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/me [get]
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
+	ctx := WrapContext(c)
+
 	clerkUserID, exists := c.Get("clerk_user_id")
 	if !exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Clerk user ID not found"})
+		ctx.BadRequestErrorResponse("Clerk user ID not found")
 		return
 	}
+
 	output := h.userService.GetUserByID(clerkUserID.(string))
 
 	output.Match(
 		// Exception
 		func(exception error) interface{} {
-			log.Printf("System error getting user: %v", exception)
-			c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(exception))
+			ctx.SystemErrorResponse(exception, "System error getting user")
 			return nil
 		},
 		// Success
 		func(success *dto.UserResponse) interface{} {
-			c.JSON(http.StatusOK, gin.H{
-				"success": true,
-				"data":    success,
-			})
+			ctx.SuccessResponse(success)
 			return nil
 		},
 		// Failure
 		func(errors []dto.Error) interface{} {
-			statusCode := http.StatusBadRequest
+			// Check if it's a "not found" error
 			for _, err := range errors {
 				if err.Message == "User not found" {
-					statusCode = http.StatusNotFound
-					break
+					ctx.NotFoundErrorResponse("User", clerkUserID.(string))
+					return nil
 				}
 			}
-			c.JSON(statusCode, dto.ErrorsToManagedResult(errors))
+			ctx.ValidationErrorResponse(errors, "Validation errors getting user")
 			return nil
 		},
 	)
@@ -187,8 +183,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 			response := h.clerkUserService.ProcessClerkWebhook(userData)
 			response.Match(
 				func(err error) interface{} {
-					log.Printf("Error handling user.created webhook %s: %v", webhookID, err)
-					c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(err))
+					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error handling user.created webhook %s", webhookID))
 					return nil
 				},
 				func(syncResponse *dto.ClerkUserSyncResponse) interface{} {
@@ -196,8 +191,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 					return nil
 				},
 				func(errors []dto.Error) interface{} {
-					log.Printf("Validation error handling user.created webhook %s: %v", webhookID, errors)
-					c.JSON(http.StatusBadRequest, dto.ErrorsToManagedResult(errors))
+					c.JSON(http.StatusBadRequest, dto.LoggedValidationErrorResponse(errors, "Validation error handling user.created webhook %s", webhookID))
 					return nil
 				},
 			)
@@ -215,8 +209,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 			response := h.clerkUserService.ProcessClerkWebhook(userData)
 			response.Match(
 				func(err error) interface{} {
-					log.Printf("Error handling user.updated webhook %s: %v", webhookID, err)
-					c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(err))
+					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error handling user.updated webhook %s", webhookID))
 					return nil
 				},
 				func(syncResponse *dto.ClerkUserSyncResponse) interface{} {
@@ -224,8 +217,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 					return nil
 				},
 				func(errors []dto.Error) interface{} {
-					log.Printf("Validation error handling user.updated webhook %s: %v", webhookID, errors)
-					c.JSON(http.StatusBadRequest, dto.ErrorsToManagedResult(errors))
+					c.JSON(http.StatusBadRequest, dto.LoggedValidationErrorResponse(errors, "Validation error handling user.updated webhook %s", webhookID))
 					return nil
 				},
 			)
@@ -246,8 +238,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 
 			getUserResponse.Match(
 				func(err error) interface{} {
-					log.Printf("Error finding user for deletion webhook %s: %v", webhookID, err)
-					c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(err))
+					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error finding user for deletion webhook %s", webhookID))
 					return nil
 				},
 				func(user *dto.UserResponse) interface{} {
@@ -265,8 +256,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 				deleteResponse := h.userService.DeleteUser(userID)
 				deleteResponse.Match(
 					func(err error) interface{} {
-						log.Printf("Error deleting user from webhook %s: %v", webhookID, err)
-						c.JSON(http.StatusInternalServerError, dto.ManagedErrorResult(err))
+						c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error deleting user from webhook %s", webhookID))
 						return nil
 					},
 					func(message string) interface{} {
@@ -274,8 +264,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 						return nil
 					},
 					func(errors []dto.Error) interface{} {
-						log.Printf("Validation error deleting user from webhook %s: %v", webhookID, errors)
-						c.JSON(http.StatusBadRequest, dto.ErrorsToManagedResult(errors))
+						c.JSON(http.StatusBadRequest, dto.LoggedValidationErrorResponse(errors, "Validation error deleting user from webhook %s", webhookID))
 						return nil
 					},
 				)

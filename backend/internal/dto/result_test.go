@@ -258,25 +258,88 @@ func TestPaginationRequest(t *testing.T) {
 
 // TestHelperFunctions tests the helper functions
 func TestHelperFunctions(t *testing.T) {
-	t.Run("ToManagedErrorResult creates correct structure", func(t *testing.T) {
+	t.Run("ValidationErrorResponse creates correct structure", func(t *testing.T) {
 		errors := []Error{
 			NewError("ERROR1", "First error", nil),
 			NewError("ERROR2", "Second error", nil),
 		}
 
-		result := ToManagedErrorResult(errors)
+		result := ValidationErrorResponse(errors)
 
-		if result["success"] != false {
-			t.Errorf("Expected success to be false, got %v", result["success"])
+		if result.Success != false {
+			t.Errorf("Expected success to be false, got %v", result.Success)
 		}
 
-		resultErrors, ok := result["errors"].([]Error)
-		if !ok {
-			t.Error("Expected errors to be []Error")
+		if result.Error != "validation_error" {
+			t.Errorf("Expected error to be 'validation_error', got %s", result.Error)
 		}
 
-		if len(resultErrors) != 2 {
-			t.Errorf("Expected 2 errors, got %d", len(resultErrors))
+		if len(result.Errors) != 2 {
+			t.Errorf("Expected 2 errors, got %d", len(result.Errors))
+		}
+	})
+
+	t.Run("SystemErrorResponse creates correct structure", func(t *testing.T) {
+		testErr := NewError("TEST_ERROR", "Test error message", nil)
+
+		result := SystemErrorResponse(testErr)
+
+		if result.Success != false {
+			t.Errorf("Expected success to be false, got %v", result.Success)
+		}
+
+		if result.Error != "internal_server_error" {
+			t.Errorf("Expected error to be 'internal_server_error', got %s", result.Error)
+		}
+
+		if result.Message != testErr.Error() {
+			t.Errorf("Expected message to be '%s', got %s", testErr.Error(), result.Message)
+		}
+	})
+}
+
+// TestPaginatedListResponse tests the generic PaginatedListResponse type
+func TestPaginatedListResponse(t *testing.T) {
+	t.Run("PaginatedListResponse with items", func(t *testing.T) {
+		items := []string{"item1", "item2", "item3"}
+		response := NewPaginatedListResponse(items, 10, 1, 3)
+
+		if len(response.Items) != 3 {
+			t.Errorf("Expected 3 items, got %d", len(response.Items))
+		}
+
+		if response.Total != 10 {
+			t.Errorf("Expected Total 10, got %d", response.Total)
+		}
+
+		if response.Page != 1 {
+			t.Errorf("Expected Page 1, got %d", response.Page)
+		}
+
+		if response.PerPage != 3 {
+			t.Errorf("Expected PerPage 3, got %d", response.PerPage)
+		}
+
+		if response.TotalPages != 4 {
+			t.Errorf("Expected TotalPages 4, got %d", response.TotalPages)
+		}
+	})
+
+	t.Run("PaginatedListResponse last page", func(t *testing.T) {
+		items := []string{"item1"}
+		response := NewPaginatedListResponse(items, 10, 4, 3)
+
+		if response.TotalPages != 4 {
+			t.Errorf("Expected TotalPages 4, got %d", response.TotalPages)
+		}
+	})
+
+	t.Run("PaginatedListResponse empty items", func(t *testing.T) {
+		items := []string{}
+		response := NewPaginatedListResponse(items, 0, 1, 10)
+
+		if response.TotalPages != 1 {
+			t.Errorf("Expected TotalPages 1 for empty list, got %d", response.TotalPages)
 		}
 	})
 }

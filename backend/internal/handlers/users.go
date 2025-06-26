@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	"thothix-backend/internal/dto"
@@ -33,9 +31,11 @@ func NewUserHandler(userService services.UserServiceInterface) *UserHandler {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users [get]
 func (h *UserHandler) GetUsers(c *gin.Context) {
+	wrapper := WrapContext(c)
+
 	var request dto.PaginationRequest
 	if err := c.ShouldBindQuery(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid query parameters"})
+		wrapper.BadRequestErrorResponse("Invalid query parameters")
 		return
 	}
 
@@ -50,21 +50,21 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 	// Get response from service using the Response pattern
 	response := h.userService.GetUsers(&request)
 
-	// Use Match pattern to handle all three cases
+	// Use Match pattern to handle all three cases with wrapper methods
 	response.Match(
 		// Exception case
 		func(err error) interface{} {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			wrapper.SystemErrorResponse(err, "Failed to retrieve users list")
 			return nil
 		},
 		// Success case
 		func(result *dto.UserListResponse) interface{} {
-			c.JSON(http.StatusOK, result)
+			wrapper.SuccessResponse(result)
 			return nil
 		},
 		// Validation failure case
 		func(errors []dto.Error) interface{} {
-			c.JSON(http.StatusBadRequest, dto.ToManagedErrorResult(errors))
+			wrapper.ValidationErrorResponse(errors, "Users list validation failed")
 			return nil
 		},
 	)
@@ -84,30 +84,31 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(c *gin.Context) {
+	wrapper := WrapContext(c)
 	userID := c.Param("id")
 
 	// Get response from service
 	response := h.userService.GetUserByID(userID)
 
-	// Use Match pattern to handle all three cases
+	// Use Match pattern to handle all three cases with wrapper methods
 	response.Match(
 		// Exception case
 		func(err error) interface{} {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			wrapper.SystemErrorResponse(err, "Failed to retrieve user with ID: %s", userID)
 			return nil
 		},
 		// Success case
 		func(result *dto.UserResponse) interface{} {
-			c.JSON(http.StatusOK, result)
+			wrapper.SuccessResponse(result)
 			return nil
 		},
 		// Validation failure case
 		func(errors []dto.Error) interface{} {
 			// Check if it's a not found error
 			if len(errors) > 0 && errors[0].Code == "USER_NOT_FOUND" {
-				c.JSON(http.StatusNotFound, dto.ToManagedErrorResult(errors))
+				wrapper.NotFoundErrorResponse("User", userID)
 			} else {
-				c.JSON(http.StatusBadRequest, dto.ToManagedErrorResult(errors))
+				wrapper.ValidationErrorResponse(errors, "User retrieval validation failed for ID: %s", userID)
 			}
 			return nil
 		},
@@ -128,34 +129,36 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
+	wrapper := WrapContext(c)
+
 	var request dto.CreateUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		wrapper.BadRequestErrorResponse("Invalid request payload")
 		return
 	}
 
 	// Get response from service
 	response := h.userService.CreateUser(&request)
 
-	// Use Match pattern to handle all three cases
+	// Use Match pattern to handle all three cases with wrapper methods
 	response.Match(
 		// Exception case
 		func(err error) interface{} {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			wrapper.SystemErrorResponse(err, "Failed to create user")
 			return nil
 		},
 		// Success case
 		func(result *dto.UserResponse) interface{} {
-			c.JSON(http.StatusCreated, result)
+			wrapper.CreatedResponse(result)
 			return nil
 		},
 		// Validation failure case
 		func(errors []dto.Error) interface{} {
 			// Check if it's a conflict error
 			if len(errors) > 0 && errors[0].Code == "CONFLICT" {
-				c.JSON(http.StatusConflict, dto.ToManagedErrorResult(errors))
+				wrapper.ConflictErrorResponse("User already exists with this email")
 			} else {
-				c.JSON(http.StatusBadRequest, dto.ToManagedErrorResult(errors))
+				wrapper.ValidationErrorResponse(errors, "User creation validation failed")
 			}
 			return nil
 		},
@@ -177,36 +180,37 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
+	wrapper := WrapContext(c)
 	userID := c.Param("id")
 
 	var request dto.UpdateUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		wrapper.BadRequestErrorResponse("Invalid request payload")
 		return
 	}
 
 	// Get response from service
 	response := h.userService.UpdateUser(userID, &request)
 
-	// Use Match pattern to handle all three cases
+	// Use Match pattern to handle all three cases with wrapper methods
 	response.Match(
 		// Exception case
 		func(err error) interface{} {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			wrapper.SystemErrorResponse(err, "Failed to update user with ID: %s", userID)
 			return nil
 		},
 		// Success case
 		func(result *dto.UserResponse) interface{} {
-			c.JSON(http.StatusOK, result)
+			wrapper.SuccessResponse(result)
 			return nil
 		},
 		// Validation failure case
 		func(errors []dto.Error) interface{} {
 			// Check if it's a not found error
 			if len(errors) > 0 && errors[0].Code == "USER_NOT_FOUND" {
-				c.JSON(http.StatusNotFound, dto.ToManagedErrorResult(errors))
+				wrapper.NotFoundErrorResponse("User", userID)
 			} else {
-				c.JSON(http.StatusBadRequest, dto.ToManagedErrorResult(errors))
+				wrapper.ValidationErrorResponse(errors, "User update validation failed for ID: %s", userID)
 			}
 			return nil
 		},
@@ -227,30 +231,31 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
+	wrapper := WrapContext(c)
 	userID := c.Param("id")
 
 	// Get response from service
 	response := h.userService.DeleteUser(userID)
 
-	// Use Match pattern to handle all three cases
+	// Use Match pattern to handle all three cases with wrapper methods
 	response.Match(
 		// Exception case
 		func(err error) interface{} {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			wrapper.SystemErrorResponse(err, "Failed to delete user with ID: %s", userID)
 			return nil
 		},
 		// Success case
 		func(result string) interface{} {
-			c.JSON(http.StatusOK, gin.H{"message": result})
+			wrapper.DeletedResponse(result)
 			return nil
 		},
 		// Validation failure case
 		func(errors []dto.Error) interface{} {
 			// Check if it's a not found error
 			if len(errors) > 0 && errors[0].Code == "USER_NOT_FOUND" {
-				c.JSON(http.StatusNotFound, dto.ToManagedErrorResult(errors))
+				wrapper.NotFoundErrorResponse("User", userID)
 			} else {
-				c.JSON(http.StatusBadRequest, dto.ToManagedErrorResult(errors))
+				wrapper.ValidationErrorResponse(errors, "User deletion validation failed for ID: %s", userID)
 			}
 			return nil
 		},

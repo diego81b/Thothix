@@ -152,7 +152,7 @@ func TestUserListResponse(t *testing.T) {
 		}
 
 		response := UserListResponse{
-			Users: users,
+			Items: users,
 			PaginationMeta: PaginationMeta{
 				Total:      2,
 				Page:       1,
@@ -161,12 +161,12 @@ func TestUserListResponse(t *testing.T) {
 			},
 		}
 
-		if len(response.Users) != 2 {
-			t.Errorf("Expected 2 users, got %d", len(response.Users))
+		if len(response.Items) != 2 {
+			t.Errorf("Expected 2 users, got %d", len(response.Items))
 		}
 
-		if response.Users[0].Email != "user1@example.com" {
-			t.Errorf("Expected first user email 'user1@example.com', got '%s'", response.Users[0].Email)
+		if response.Items[0].Email != "user1@example.com" {
+			t.Errorf("Expected first user email 'user1@example.com', got '%s'", response.Items[0].Email)
 		}
 
 		if response.Total != 2 {
@@ -267,7 +267,7 @@ func TestResponseTypes(t *testing.T) {
 
 	t.Run("NewGetUsersResponse creates valid response", func(t *testing.T) {
 		userList := &UserListResponse{
-			Users: []UserResponse{
+			Items: []UserResponse{
 				{ID: "user_1", Email: "user1@example.com", Name: "User One"},
 			},
 		}

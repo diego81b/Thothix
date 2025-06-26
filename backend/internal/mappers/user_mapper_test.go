@@ -298,7 +298,7 @@ func TestUserMapper_ModelsToListResponse(t *testing.T) {
 
 	// Verify
 	require.NotNil(t, listResponse)
-	assert.Len(t, listResponse.Users, 1)
+	assert.Len(t, listResponse.Items, 1)
 	assert.Equal(t, int64(25), listResponse.PaginationMeta.Total)
 	assert.Equal(t, 2, listResponse.PaginationMeta.Page)
 	assert.Equal(t, 10, listResponse.PaginationMeta.PerPage)

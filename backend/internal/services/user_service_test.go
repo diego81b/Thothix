@@ -440,7 +440,7 @@ func TestUserService_GetUsers(t *testing.T) {
 
 			if !hasError {
 				require.NotNil(t, response)
-				assert.Len(t, response.Users, tt.expectedCount)
+				assert.Len(t, response.Items, tt.expectedCount)
 				assert.Equal(t, tt.expectedTotal, response.Total)
 				assert.Equal(t, tt.request.Page, response.Page)
 				assert.Equal(t, tt.request.PerPage, response.PerPage)

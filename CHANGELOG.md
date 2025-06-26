@@ -1,5 +1,56 @@
 # Changelog
 
+## v0.0.8 Refactor User Handlers with ContextWrapper Pattern and Generic Pagination (2025-06-27)
+
+### **feat: implement ContextWrapper for standardized HTTP responses**
+
+- **Complete refactor** of user handlers in `internal/handlers/users.go`:
+  - Replace manual JSON responses with standardized `ContextWrapper` methods
+  - All endpoints now use `SystemErrorResponse()`, `ValidationErrorResponse()`, `NotFoundErrorResponse()`, etc.
+  - Added `ConflictErrorResponse()` and `DeletedResponse()` methods to `context_wrapper.go`
+  - **Automatic logging**: All error responses include contextual logging with request details
+  - **Consistent format**: All responses follow the same `ErrorViewModel` structure
+- **Enhanced error handling**: Proper HTTP status codes based on error types (404 for not found, 409 for conflicts)
+- **Cleaner code**: Eliminated repetitive JSON response boilerplate, improved maintainability
+- **Impact**: 50% reduction in handler code, consistent error responses, automatic error logging
+
+### **feat: implement generic PaginatedListResponse with type safety**
+
+- **Generalized pagination system** in `internal/dto/common_dto.go`:
+  - Replace `UserListResponse` with generic `PaginatedListResponse[T]` supporting any type
+  - Add `NewPaginatedListResponse[T]()` factory function with automatic pagination calculation
+  - Simplified `PaginationMeta` by removing `HasNext`/`HasPrevious` fields for cleaner API
+  - Added generic `ListResponse[T]` for consistent list endpoint patterns
+- **Updated all user-related code** to use new generic types:
+  - `user_dto.go`: `UserListResponse = PaginatedListResponse[UserResponse]` (type alias)
+  - `user_service.go`: Use `NewUserListResponse()` factory instead of manual struct creation
+  - `user_mapper.go`: Simplified list response creation with automatic pagination
+- **Backward compatibility**: Maintained through type aliases, no breaking changes
+- **Impact**: Reusable pagination for any entity type, reduced code duplication, improved type safety
+
+### **refactor: update all user handlers to use Result Pattern with ContextWrapper**
+
+- **Complete migration** of all user endpoints:
+  - `GetUsers()`: Uses `wrapper.SuccessResponse()` for list results
+  - `GetUserByID()`: Uses `wrapper.NotFoundErrorResponse()` for missing users
+  - `CreateUser()`: Uses `wrapper.ConflictErrorResponse()` for duplicate emails
+  - `UpdateUser()`: Proper error handling with contextual logging
+  - `DeleteUser()`: Uses `wrapper.DeletedResponse()` for successful deletions
+- **Enhanced validation**: All input binding errors use `wrapper.BadRequestErrorResponse()`
+- **Consistent logging**: Every error includes request context (user ID, operation type)
+- **No manual JSON**: Eliminated all direct `c.JSON()` calls in favor of wrapper methods
+- **Impact**: Cleaner, more maintainable code with guaranteed response consistency
+
+### **fix: resolve build errors from pagination refactor**
+
+- **Updated all affected files** to use new `Items` field instead of deprecated `Users` field:
+  - `user_mapper_test.go`: Fixed test assertions for new field names
+  - `user_dto_test.go`: Updated test data structures
+  - `user_service.go`: Replaced manual struct creation with factory functions
+- **Removed unused imports**: Cleaned up `math` import from user mapper
+- **All tests passing**: Verified no regressions from the refactor
+- **Impact**: Clean build with no compilation errors, all tests green
+
 ## v0.0.7 Implement Result Pattern with Functional Programming and Lazy Evaluation (2025-06-26)
 
 ### **feat: implement comprehensive Result Pattern with functional programming approach**

@@ -129,15 +129,7 @@ func (s *UserService) GetUsers(req *dto.PaginationRequest) *dto.GetUsersResponse
 			totalPages++
 		}
 
-		response := &dto.UserListResponse{
-			Users: userResponses,
-			PaginationMeta: dto.PaginationMeta{
-				Total:      total,
-				Page:       req.Page,
-				PerPage:    req.PerPage,
-				TotalPages: totalPages,
-			},
-		}
+		response := dto.NewUserListResponse(userResponses, total, req.Page, req.PerPage)
 
 		return dto.Success(response)
 	})

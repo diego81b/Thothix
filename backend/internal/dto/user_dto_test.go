@@ -2,6 +2,8 @@ package dto
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 // TestCreateUserRequest tests the CreateUserRequest structure
@@ -244,12 +246,8 @@ func TestResponseTypes(t *testing.T) {
 			return Valid(user)
 		})
 
-		if response == nil {
-			t.Error("Expected response to be created")
-		}
-		if response.Response == nil {
-			t.Error("Expected response.Response to be created")
-		}
+		require.NotNil(t, response, "Expected response to be created")
+		require.NotNil(t, response.Response, "Expected response.Response to be created")
 	})
 
 	t.Run("NewCreateUserResponse creates valid response", func(t *testing.T) {
@@ -263,12 +261,8 @@ func TestResponseTypes(t *testing.T) {
 			return Valid(user)
 		})
 
-		if response == nil {
-			t.Error("Expected response to be created")
-		}
-		if response.Response == nil {
-			t.Error("Expected response.Response to be created")
-		}
+		require.NotNil(t, response, "Expected response to be created")
+		require.NotNil(t, response.Response, "Expected response.Response to be created")
 	})
 
 	t.Run("NewGetUsersResponse creates valid response", func(t *testing.T) {
@@ -282,11 +276,7 @@ func TestResponseTypes(t *testing.T) {
 			return Valid(userList)
 		})
 
-		if response == nil {
-			t.Error("Expected response to be created")
-		}
-		if response.Response == nil {
-			t.Error("Expected response.Response to be created")
-		}
+		require.NotNil(t, response, "Expected response to be created")
+		require.NotNil(t, response.Response, "Expected response.Response to be created")
 	})
 }

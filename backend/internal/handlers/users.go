@@ -50,7 +50,7 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 	// Get response from service using the Response pattern
 	response := h.userService.GetUsers(&request)
 
-	// Use Match pattern (C# style) to handle all three cases
+	// Use Match pattern to handle all three cases
 	response.Match(
 		// Exception case
 		func(err error) interface{} {

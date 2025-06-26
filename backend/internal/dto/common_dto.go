@@ -2,7 +2,7 @@ package dto
 
 import "fmt"
 
-// Error represents a validation/business error (equivalent to C# Error)
+// Error represents a validation/business error
 type Error struct {
 	Code    string            `json:"code"`
 	Message string            `json:"message"`
@@ -20,7 +20,7 @@ func (e Error) Error() string {
 	return e.Code
 }
 
-// Exceptional holds either a value T or an Exception (equivalent to C# Exceptional<T>)
+// Exceptional holds either a value T or an Exception
 type Exceptional[T any] struct {
 	value T
 	err   error
@@ -35,7 +35,7 @@ func NewExceptionalError[T any](err error) Exceptional[T] {
 	return Exceptional[T]{err: err, isErr: true}
 }
 
-// Match for Exceptional - returns interface{} like C#
+// Match for Exceptional - returns interface{}
 func (e Exceptional[T]) Match(
 	onException func(error) interface{},
 	onSuccess func(T) interface{},
@@ -46,7 +46,7 @@ func (e Exceptional[T]) Match(
 	return onSuccess(e.value)
 }
 
-// Validation holds either a value T or validation errors (equivalent to C# Validation<T>)
+// Validation holds either a value T or validation errors
 type Validation[T any] struct {
 	value   T
 	errors  []Error
@@ -61,7 +61,7 @@ func Invalid[T any](errors ...Error) Validation[T] {
 	return Validation[T]{errors: errors, isValid: false}
 }
 
-// Match for Validation - returns interface{} like C#
+// Match for Validation - returns interface{}
 func (v Validation[T]) Match(
 	onInvalid func([]Error) interface{},
 	onValid func(T) interface{},
@@ -72,29 +72,44 @@ func (v Validation[T]) Match(
 	return onValid(v.value)
 }
 
-// Response represents the main response wrapper with lazy evaluation (equivalent to C# Response<TSuccess>)
+// Response represents the main response wrapper with lazy evaluation
 type Response[T any] struct {
 	producer func() Validation[T]
 	result   *Exceptional[Validation[T]]
 }
 
-// NewResponse creates a new Response with lazy producer (equivalent to C# constructor)
+// NewResponse creates a new Response with lazy producer
 func NewResponse[T any](producer func() Validation[T]) *Response[T] {
 	return &Response[T]{producer: producer}
 }
 
-// Try executes a function and catches panics as errors (equivalent to C# F.Try)
+// Try executes a function and catches panics as errors
 func Try[T any](fn func() T) Exceptional[T] {
-	defer func() {
-		if r := recover(); r != nil {
-			// Handle panic recovery properly in a separate exceptional response
-		}
+	var result T
+	var err error
+
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if e, ok := r.(error); ok {
+					err = e
+				} else {
+					err = fmt.Errorf("panic: %v", r)
+				}
+			}
+		}()
+
+		result = fn()
 	}()
 
-	return NewExceptional(fn())
+	if err != nil {
+		return NewExceptionalError[T](err)
+	}
+
+	return NewExceptional(result)
 }
 
-// Match provides pattern matching like C# - returns interface{} instead of TResult
+// Match provides pattern matching - returns interface{} instead of TResult
 func (r *Response[T]) Match(
 	onException func(error) interface{},
 	onSuccess func(T) interface{},
@@ -114,7 +129,7 @@ func (r *Response[T]) Match(
 	)
 }
 
-// Factory methods (equivalent to C# static methods)
+// Factory methods
 func Success[T any](value T) Validation[T] {
 	return Valid(value)
 }
@@ -152,7 +167,7 @@ func ManagedErrorResult(err error) map[string]interface{} {
 	}
 }
 
-// Helper functions for HTTP responses (equivalent to C# ManagedErrorResult)
+// Helper functions for HTTP responses
 func ToManagedErrorResult(errors []Error) map[string]interface{} {
 	return map[string]interface{}{
 		"success": false,

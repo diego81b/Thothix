@@ -12,7 +12,7 @@ Modern Go REST API with Gin framework, GORM ORM, PostgreSQL, Clerk authenticatio
 
 ### 🎯 Result Pattern Implementation
 
-Thothix implements a **C#-inspired Result Pattern** with functional programming for type-safe error handling:
+Thothix implements a **Result Pattern** with functional programming for type-safe error handling:
 
 #### Core Components
 

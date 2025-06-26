@@ -7,9 +7,9 @@
 - **Major architectural refactor**: Replace traditional error handling with functional Result Pattern and pattern matching
 - Implement generic Result Pattern types in `internal/dto/common_dto.go`:
   - `Error` - Structured error representation with code, message, and details
-  - `Exceptional[T]` - Holds either a value T or an exception (equivalent to C# `Exceptional<T>`)
-  - `Validation[T]` - Holds either a value T or validation errors (equivalent to C# `Validation<T>`)
-  - `Response[T]` - Main response wrapper with lazy evaluation (equivalent to C# `Response<TSuccess>`)
+  - `Exceptional[T]` - Holds either a value T or an exceptio
+  - `Validation[T]` - Holds either a value T or validation errors
+  - `Response[T]` - Main response wrapper with lazy evaluation
 - **Pattern matching**: Implement `Match()` methods for all types with proper functional composition
 - **Lazy evaluation**: Producer functions execute only when `Match()` is called, not during construction
 - **Type safety**: Full generic type system ensuring compile-time correctness

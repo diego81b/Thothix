@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.0.11 Refactor User DTO Architecture for Better Code Organization (2025-07-08)
+
+### **refactor: separate user DTOs into domain-specific files for improved maintainability**
+
+- **DTO file separation** in `backend/internal/users/dto/`:
+  - `user_request.go` - Request DTOs (`CreateUserRequest`, `UpdateUserRequest`, `ClerkUserSyncRequest`)
+  - `user_domain.go` - Domain DTOs (`UserDto`, `UserListDto`, `ClerkUserSyncDto`)
+  - `user_response.go` - Response wrapper DTOs (`GetUserResponse`, `CreateUserResponse`, etc.)
+  - `user_dto_test.go` - Unified test file for all DTO types (maintained as single file)
+- **Removed redundant entry point**: Eliminated `user_dto.go` as Go package system handles type visibility automatically
+- **Clear responsibility separation**:
+  - Request DTOs handle incoming HTTP request data validation
+  - Domain DTOs represent business logic data structures
+  - Response DTOs provide typed HTTP response wrappers
+- **Maintained backward compatibility**: All existing imports continue to work due to Go's same-package type sharing
+- **Test consolidation**: All DTO tests remain in single file for easier maintenance and execution
+
+### **feat: enhanced code maintainability and developer experience**
+
+- **Improved navigation**: Developers can quickly locate specific DTO types by file name
+- **Reduced merge conflicts**: Separate files reduce chance of conflicts when multiple developers work on different DTO types
+- **Clear architectural boundaries**: File organization reflects the three-layer DTO pattern (request → domain → response)
+- **Simplified debugging**: Easier to trace issues to specific DTO categories
+- **Future extensibility**: Pattern can be easily replicated for other domains (projects, chats, messages)
+
+### **fix: ensure compilation and test integrity after refactor**
+
+- **Compilation verification**: All DTO files compile without errors after separation
+- **Test execution**: All 81 unit tests continue to pass with unified test file
+- **Import validation**: Verified all existing code continues to work with new file structure
+- **No breaking changes**: Refactor is purely organizational, no functional changes to DTO behavior
+
 ## v0.0.10 Complete Testing Infrastructure and Development Workflow (2025-07-08)
 
 ### **feat: comprehensive test automation with unit/integration/e2e separation**

@@ -143,7 +143,7 @@ func (suite *UserServiceIntegrationTestSuite) TestUserDataConsistency() {
 		usersList := sharedTesting.AssertSuccessPaginatedWithValue(suite.T(), listResponse.Response)
 
 		// Find our user in the list
-		var foundUser *usersDto.UserResponse
+		var foundUser *usersDto.UserDto
 		for _, u := range usersList.Items {
 			if u.ID == user.ID {
 				foundUser = &u

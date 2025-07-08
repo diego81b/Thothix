@@ -24,7 +24,7 @@ func NewUserService(db *gorm.DB) *UserService {
 
 // GetUserByID retrieves a user by ID using Response pattern with lazy evaluation
 func (s *UserService) GetUserByID(userID string) *usersDto.GetUserResponse {
-	return usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserResponse] {
+	return usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserDto] {
 		var validationErrors []dto.Error
 
 		// Validation logic
@@ -33,26 +33,26 @@ func (s *UserService) GetUserByID(userID string) *usersDto.GetUserResponse {
 		}
 
 		if len(validationErrors) > 0 {
-			return dto.Failure[*usersDto.UserResponse](validationErrors...)
+			return dto.Failure[*usersDto.UserDto](validationErrors...)
 		}
 
 		// Business logic - this can panic and will be caught by Try()
 		var user domain.User
 		if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return dto.Invalid[*usersDto.UserResponse](dto.NewError("USER_NOT_FOUND", "User not found", nil))
+				return dto.Invalid[*usersDto.UserDto](dto.NewError("USER_NOT_FOUND", "User not found", nil))
 			}
 			panic(err) // Gets converted to Exception by Try()
 		}
 
-		response := s.mapper.ModelToResponse(&user)
-		return dto.Success(response)
+		userDto := s.mapper.ModelToDto(&user)
+		return dto.Success(userDto)
 	})
 }
 
 // GetUserByClerkID retrieves a user by Clerk ID using Response pattern
 func (s *UserService) GetUserByClerkID(clerkID string) *usersDto.GetUserResponse {
-	return usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserResponse] {
+	return usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserDto] {
 		var validationErrors []dto.Error
 
 		// Validation logic
@@ -61,26 +61,26 @@ func (s *UserService) GetUserByClerkID(clerkID string) *usersDto.GetUserResponse
 		}
 
 		if len(validationErrors) > 0 {
-			return dto.Failure[*usersDto.UserResponse](validationErrors...)
+			return dto.Failure[*usersDto.UserDto](validationErrors...)
 		}
 
 		// Business logic
 		var user domain.User
 		if err := s.db.Where("clerk_id = ?", clerkID).First(&user).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return dto.Invalid[*usersDto.UserResponse](dto.NewError("USER_NOT_FOUND", "User not found", nil))
+				return dto.Invalid[*usersDto.UserDto](dto.NewError("USER_NOT_FOUND", "User not found", nil))
 			}
 			panic(err)
 		}
 
-		response := s.mapper.ModelToResponse(&user)
-		return dto.Success(response)
+		userDto := s.mapper.ModelToDto(&user)
+		return dto.Success(userDto)
 	})
 }
 
 // GetUsers retrieves paginated list of users using Response pattern
 func (s *UserService) GetUsers(req *dto.PaginationRequest) *usersDto.GetUsersResponse {
-	return usersDto.NewGetUsersResponse(func() dto.Validation[*usersDto.UserListResponse] {
+	return usersDto.NewGetUsersResponse(func() dto.Validation[*usersDto.UserListDto] {
 		var validationErrors []dto.Error
 
 		// Validation
@@ -97,7 +97,7 @@ func (s *UserService) GetUsers(req *dto.PaginationRequest) *usersDto.GetUsersRes
 		}
 
 		if len(validationErrors) > 0 {
-			return dto.Failure[*usersDto.UserListResponse](validationErrors...)
+			return dto.Failure[*usersDto.UserListDto](validationErrors...)
 		}
 
 		// Business logic
@@ -117,21 +117,17 @@ func (s *UserService) GetUsers(req *dto.PaginationRequest) *usersDto.GetUsersRes
 			panic(err)
 		}
 
-		// Convert to response DTOs
-		userResponses := make([]usersDto.UserResponse, len(users))
-		for i, user := range users {
-			userResponse := s.mapper.ModelToResponse(&user)
-			userResponses[i] = *userResponse
-		}
+		// Convert to DTOs
+		userDtos := s.mapper.ModelsToDtos(users)
 
-		response := usersDto.NewUserListResponse(userResponses, total, req.Page, req.PerPage)
+		response := usersDto.NewUserListDto(userDtos, total, req.Page, req.PerPage)
 		return dto.Success(response)
 	})
 }
 
 // CreateUser creates a new user using Response pattern
 func (s *UserService) CreateUser(req *usersDto.CreateUserRequest) *usersDto.CreateUserResponse {
-	return usersDto.NewCreateUserResponse(func() dto.Validation[*usersDto.UserResponse] {
+	return usersDto.NewCreateUserResponse(func() dto.Validation[*usersDto.UserDto] {
 		var validationErrors []dto.Error
 
 		// Validation
@@ -148,13 +144,13 @@ func (s *UserService) CreateUser(req *usersDto.CreateUserRequest) *usersDto.Crea
 		}
 
 		if len(validationErrors) > 0 {
-			return dto.Failure[*usersDto.UserResponse](validationErrors...)
+			return dto.Failure[*usersDto.UserDto](validationErrors...)
 		}
 
 		// Check if user already exists
 		var existingUser domain.User
 		if err := s.db.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
-			return dto.Invalid[*usersDto.UserResponse](dto.NewError("CONFLICT", "User with this email already exists", nil))
+			return dto.Invalid[*usersDto.UserDto](dto.NewError("CONFLICT", "User with this email already exists", nil))
 		}
 
 		// Create new user
@@ -163,14 +159,14 @@ func (s *UserService) CreateUser(req *usersDto.CreateUserRequest) *usersDto.Crea
 			panic(err)
 		}
 
-		response := s.mapper.ModelToResponse(user)
-		return dto.Success(response)
+		userDto := s.mapper.ModelToDto(user)
+		return dto.Success(userDto)
 	})
 }
 
 // UpdateUser updates an existing user using Response pattern
 func (s *UserService) UpdateUser(userID string, req *usersDto.UpdateUserRequest) *usersDto.UpdateUserResponse {
-	return usersDto.NewUpdateUserResponse(func() dto.Validation[*usersDto.UserResponse] {
+	return usersDto.NewUpdateUserResponse(func() dto.Validation[*usersDto.UserDto] {
 		var validationErrors []dto.Error
 
 		// Validation
@@ -183,14 +179,14 @@ func (s *UserService) UpdateUser(userID string, req *usersDto.UpdateUserRequest)
 		}
 
 		if len(validationErrors) > 0 {
-			return dto.Failure[*usersDto.UserResponse](validationErrors...)
+			return dto.Failure[*usersDto.UserDto](validationErrors...)
 		}
 
 		// Get existing user
 		var user domain.User
 		if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return dto.Invalid[*usersDto.UserResponse](dto.NewError("USER_NOT_FOUND", "User not found", nil))
+				return dto.Invalid[*usersDto.UserDto](dto.NewError("USER_NOT_FOUND", "User not found", nil))
 			}
 			panic(err)
 		}
@@ -203,8 +199,8 @@ func (s *UserService) UpdateUser(userID string, req *usersDto.UpdateUserRequest)
 			panic(err)
 		}
 
-		response := s.mapper.ModelToResponse(&user)
-		return dto.Success(response)
+		userDto := s.mapper.ModelToDto(&user)
+		return dto.Success(userDto)
 	})
 }
 
@@ -242,7 +238,7 @@ func (s *UserService) DeleteUser(userID string) *usersDto.DeleteUserResponse {
 
 // SyncUserFromClerk synchronizes a user from Clerk using Response pattern
 func (s *UserService) SyncUserFromClerk(req *usersDto.ClerkUserSyncRequest) *usersDto.CreateUserResponse {
-	return usersDto.NewCreateUserResponse(func() dto.Validation[*usersDto.UserResponse] {
+	return usersDto.NewCreateUserResponse(func() dto.Validation[*usersDto.UserDto] {
 		var validationErrors []dto.Error
 
 		// Validation
@@ -255,7 +251,7 @@ func (s *UserService) SyncUserFromClerk(req *usersDto.ClerkUserSyncRequest) *use
 		}
 
 		if len(validationErrors) > 0 {
-			return dto.Failure[*usersDto.UserResponse](validationErrors...)
+			return dto.Failure[*usersDto.UserDto](validationErrors...)
 		}
 
 		// Check if user already exists
@@ -272,8 +268,8 @@ func (s *UserService) SyncUserFromClerk(req *usersDto.ClerkUserSyncRequest) *use
 				panic(err)
 			}
 
-			response := s.mapper.ModelToResponse(&existingUser)
-			return dto.Success(response)
+			userDto := s.mapper.ModelToDto(&existingUser)
+			return dto.Success(userDto)
 		}
 
 		// Create new user
@@ -282,14 +278,14 @@ func (s *UserService) SyncUserFromClerk(req *usersDto.ClerkUserSyncRequest) *use
 			panic(err)
 		}
 
-		response := s.mapper.ModelToResponse(user)
-		return dto.Success(response)
+		userDto := s.mapper.ModelToDto(user)
+		return dto.Success(userDto)
 	})
 }
 
 // ProcessClerkWebhook processes a Clerk webhook using Response pattern
 func (s *UserService) ProcessClerkWebhook(userData *sharedMiddleware.UserWebhookData) *usersDto.ClerkSyncUserResponse {
-	return usersDto.NewClerkSyncUserResponse(func() dto.Validation[*usersDto.ClerkUserSyncResponse] {
+	return usersDto.NewClerkSyncUserResponse(func() dto.Validation[*usersDto.ClerkUserSyncDto] {
 		var validationErrors []dto.Error
 
 		// Validation
@@ -298,7 +294,7 @@ func (s *UserService) ProcessClerkWebhook(userData *sharedMiddleware.UserWebhook
 		}
 
 		if len(validationErrors) > 0 {
-			return dto.Failure[*usersDto.ClerkUserSyncResponse](validationErrors...)
+			return dto.Failure[*usersDto.ClerkUserSyncDto](validationErrors...)
 		}
 
 		// Process webhook logic here
@@ -318,8 +314,8 @@ func (s *UserService) ProcessClerkWebhook(userData *sharedMiddleware.UserWebhook
 			name = *userData.LastName
 		}
 
-		response := &usersDto.ClerkUserSyncResponse{
-			User: usersDto.UserResponse{
+		response := &usersDto.ClerkUserSyncDto{
+			User: usersDto.UserDto{
 				ID:      userData.ID,
 				ClerkID: userData.ID, // Clerk ID is the same as ID in webhook data
 				Email:   email,

@@ -28,7 +28,7 @@ func (suite *UserMapperTestSuite) TestNewUserMapper() {
 	assert.NotNil(suite.T(), mapper)
 }
 
-func (suite *UserMapperTestSuite) TestModelToResponse() {
+func (suite *UserMapperTestSuite) TestModelToDto() {
 	// Arrange
 	now := time.Now()
 	user := &domain.User{
@@ -45,29 +45,29 @@ func (suite *UserMapperTestSuite) TestModelToResponse() {
 	}
 
 	// Act
-	response := suite.mapper.ModelToResponse(user)
+	dto := suite.mapper.ModelToDto(user)
 
 	// Assert
-	assert.NotNil(suite.T(), response)
-	assert.Equal(suite.T(), "test-id", response.ID)
-	assert.Equal(suite.T(), "clerk-123", response.ClerkID)
-	assert.Equal(suite.T(), "test@example.com", response.Email)
-	assert.Equal(suite.T(), "Test User", response.Name)
-	assert.Equal(suite.T(), "testuser", response.Username)
-	assert.Equal(suite.T(), "https://example.com/avatar.jpg", response.AvatarURL)
-	assert.Equal(suite.T(), now.Format(time.RFC3339), response.CreatedAt)
-	assert.Equal(suite.T(), now.Format(time.RFC3339), response.UpdatedAt)
+	assert.NotNil(suite.T(), dto)
+	assert.Equal(suite.T(), "test-id", dto.ID)
+	assert.Equal(suite.T(), "clerk-123", dto.ClerkID)
+	assert.Equal(suite.T(), "test@example.com", dto.Email)
+	assert.Equal(suite.T(), "Test User", dto.Name)
+	assert.Equal(suite.T(), "testuser", dto.Username)
+	assert.Equal(suite.T(), "https://example.com/avatar.jpg", dto.AvatarURL)
+	assert.Equal(suite.T(), now.Format(time.RFC3339), dto.CreatedAt)
+	assert.Equal(suite.T(), now.Format(time.RFC3339), dto.UpdatedAt)
 }
 
-func (suite *UserMapperTestSuite) TestModelToResponse_NilInput() {
+func (suite *UserMapperTestSuite) TestModelToDto_NilInput() {
 	// Act
-	response := suite.mapper.ModelToResponse(nil)
+	dto := suite.mapper.ModelToDto(nil)
 
 	// Assert
-	assert.Nil(suite.T(), response)
+	assert.Nil(suite.T(), dto)
 }
 
-func (suite *UserMapperTestSuite) TestModelsToResponses() {
+func (suite *UserMapperTestSuite) TestModelsToDtos() {
 	// Arrange
 	now := time.Now()
 	users := []domain.User{
@@ -92,21 +92,21 @@ func (suite *UserMapperTestSuite) TestModelsToResponses() {
 	}
 
 	// Act
-	responses := suite.mapper.ModelsToResponses(users)
+	dtos := suite.mapper.ModelsToDtos(users)
 
 	// Assert
-	assert.NotNil(suite.T(), responses)
-	assert.Len(suite.T(), responses, 2)
-	assert.Equal(suite.T(), "user1@example.com", responses[0].Email)
-	assert.Equal(suite.T(), "user2@example.com", responses[1].Email)
+	assert.NotNil(suite.T(), dtos)
+	assert.Len(suite.T(), dtos, 2)
+	assert.Equal(suite.T(), "user1@example.com", dtos[0].Email)
+	assert.Equal(suite.T(), "user2@example.com", dtos[1].Email)
 }
 
-func (suite *UserMapperTestSuite) TestModelsToResponses_NilInput() {
+func (suite *UserMapperTestSuite) TestModelsToDtos_NilInput() {
 	// Act
-	responses := suite.mapper.ModelsToResponses(nil)
+	dtos := suite.mapper.ModelsToDtos(nil)
 
 	// Assert
-	assert.Nil(suite.T(), responses)
+	assert.Nil(suite.T(), dtos)
 }
 
 func (suite *UserMapperTestSuite) TestCreateRequestToModel() {

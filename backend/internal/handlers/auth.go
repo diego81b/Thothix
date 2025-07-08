@@ -38,8 +38,8 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} models.UserResponse
-// @Success 201 {object} models.UserResponse
+// @Success 200 {object} models.UserDto
+// @Success 201 {object} models.UserDto
 // @Failure 400 {object} dto.ErrorViewModel
 // @Failure 500 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/sync [post]
@@ -96,7 +96,7 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 			return nil
 		},
 		// Success
-		func(success *usersDto.UserResponse) interface{} {
+		func(success *usersDto.UserDto) interface{} {
 			ctx.SuccessResponse(success)
 			return nil
 		},
@@ -115,7 +115,7 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} models.UserResponse
+// @Success 200 {object} models.UserDto
 // @Failure 404 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/me [get]
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
@@ -136,7 +136,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 			return nil
 		},
 		// Success
-		func(success *usersDto.UserResponse) interface{} {
+		func(success *usersDto.UserDto) interface{} {
 			ctx.SuccessResponse(success)
 			return nil
 		},
@@ -188,7 +188,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error handling user.created webhook %s", webhookID))
 					return nil
 				},
-				func(syncResponse *usersDto.ClerkUserSyncResponse) interface{} {
+				func(syncResponse *usersDto.ClerkUserSyncDto) interface{} {
 					log.Printf("Created user %s from webhook %s", syncResponse.User.ID, webhookID)
 					return nil
 				},
@@ -214,7 +214,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error handling user.updated webhook %s", webhookID))
 					return nil
 				},
-				func(syncResponse *usersDto.ClerkUserSyncResponse) interface{} {
+				func(syncResponse *usersDto.ClerkUserSyncDto) interface{} {
 					log.Printf("Updated user %s from webhook %s", syncResponse.User.ID, webhookID)
 					return nil
 				},
@@ -235,15 +235,15 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 	case "user.deleted":
 		if userData, ok := sharedMiddleware.GetWebhookUserDataFromContext(c); ok {
 			// First find the user by Clerk ID to get internal ID
-			getUserResponse := h.userService.GetUserByClerkID(userData.ID)
+			getUserDto := h.userService.GetUserByClerkID(userData.ID)
 			var userID string
 
-			getUserResponse.Match(
+			getUserDto.Match(
 				func(err error) interface{} {
 					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error finding user for deletion webhook %s", webhookID))
 					return nil
 				},
-				func(user *usersDto.UserResponse) interface{} {
+				func(user *usersDto.UserDto) interface{} {
 					userID = user.ID
 					return nil
 				},

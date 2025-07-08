@@ -50,9 +50,9 @@ func (suite *UserDTOTestSuite) TestUpdateUserRequest() {
 	assert.Equal(suite.T(), "Updated Name", *req.Name)
 }
 
-func (suite *UserDTOTestSuite) TestUserResponse() {
+func (suite *UserDTOTestSuite) TestUserDto() {
 	// Arrange & Act
-	response := UserResponse{
+	dto := UserDto{
 		ID:        "test-id",
 		Email:     "test@example.com",
 		Name:      "Test User",
@@ -64,23 +64,23 @@ func (suite *UserDTOTestSuite) TestUserResponse() {
 	}
 
 	// Assert
-	assert.Equal(suite.T(), "test-id", response.ID)
-	assert.Equal(suite.T(), "test@example.com", response.Email)
-	assert.Equal(suite.T(), "Test User", response.Name)
-	assert.Equal(suite.T(), "clerk-123", response.ClerkID)
-	assert.Equal(suite.T(), "testuser", response.Username)
-	assert.Equal(suite.T(), "https://example.com/avatar.jpg", response.AvatarURL)
+	assert.Equal(suite.T(), "test-id", dto.ID)
+	assert.Equal(suite.T(), "test@example.com", dto.Email)
+	assert.Equal(suite.T(), "Test User", dto.Name)
+	assert.Equal(suite.T(), "clerk-123", dto.ClerkID)
+	assert.Equal(suite.T(), "testuser", dto.Username)
+	assert.Equal(suite.T(), "https://example.com/avatar.jpg", dto.AvatarURL)
 }
 
-func (suite *UserDTOTestSuite) TestNewUserListResponse() {
+func (suite *UserDTOTestSuite) TestNewUserListDto() {
 	// Arrange
-	users := []UserResponse{
+	users := []UserDto{
 		{ID: "1", Email: "user1@example.com", Name: "User 1"},
 		{ID: "2", Email: "user2@example.com", Name: "User 2"},
 	}
 
 	// Act
-	response := NewUserListResponse(users, 2, 1, 10)
+	response := NewUserListDto(users, 2, 1, 10)
 
 	// Assert
 	assert.NotNil(suite.T(), response)
@@ -109,37 +109,37 @@ func (suite *UserDTOTestSuite) TestClerkUserSyncRequest() {
 	assert.Equal(suite.T(), "https://example.com/avatar.jpg", req.AvatarURL)
 }
 
-func (suite *UserDTOTestSuite) TestClerkUserSyncResponse() {
+func (suite *UserDTOTestSuite) TestClerkUserSyncDto() {
 	// Arrange & Act
-	userResponse := UserResponse{
+	userDto := UserDto{
 		ID:      "test-id",
 		Email:   "test@example.com",
 		Name:    "Test User",
 		ClerkID: "clerk-123",
 	}
 
-	response := ClerkUserSyncResponse{
-		User:    userResponse,
+	response := ClerkUserSyncDto{
+		User:    userDto,
 		IsNew:   true,
 		Message: "User synchronized successfully",
 	}
 
 	// Assert
-	assert.Equal(suite.T(), userResponse, response.User)
+	assert.Equal(suite.T(), userDto, response.User)
 	assert.True(suite.T(), response.IsNew)
 	assert.Equal(suite.T(), "User synchronized successfully", response.Message)
 }
 
 func (suite *UserDTOTestSuite) TestNewGetUserResponse() {
 	// Arrange
-	userResponse := &UserResponse{
+	userDto := &UserDto{
 		ID:    "test-id",
 		Email: "test@example.com",
 		Name:  "Test User",
 	}
 
-	producer := func() dto.Validation[*UserResponse] {
-		return dto.Success(userResponse)
+	producer := func() dto.Validation[*UserDto] {
+		return dto.Success(userDto)
 	}
 
 	// Act
@@ -152,14 +152,14 @@ func (suite *UserDTOTestSuite) TestNewGetUserResponse() {
 
 func (suite *UserDTOTestSuite) TestNewCreateUserResponse() {
 	// Arrange
-	userResponse := &UserResponse{
+	userDto := &UserDto{
 		ID:    "test-id",
 		Email: "test@example.com",
 		Name:  "Test User",
 	}
 
-	producer := func() dto.Validation[*UserResponse] {
-		return dto.Success(userResponse)
+	producer := func() dto.Validation[*UserDto] {
+		return dto.Success(userDto)
 	}
 
 	// Act

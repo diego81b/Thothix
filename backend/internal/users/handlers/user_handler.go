@@ -60,7 +60,7 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 			return nil
 		},
 		// Success case
-		func(result *usersDto.UserListResponse) interface{} {
+		func(result *usersDto.UserListDto) interface{} {
 			wrapper.SuccessResponse(result)
 			return nil
 		},
@@ -100,7 +100,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 			return nil
 		},
 		// Success case
-		func(result *usersDto.UserResponse) interface{} {
+		func(result *usersDto.UserDto) interface{} {
 			wrapper.SuccessResponse(result)
 			return nil
 		},
@@ -150,7 +150,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 			return nil
 		},
 		// Success case
-		func(result *usersDto.UserResponse) interface{} {
+		func(result *usersDto.UserDto) interface{} {
 			wrapper.CreatedResponse(result)
 			return nil
 		},
@@ -202,7 +202,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 			return nil
 		},
 		// Success case
-		func(result *usersDto.UserResponse) interface{} {
+		func(result *usersDto.UserDto) interface{} {
 			wrapper.SuccessResponse(result)
 			return nil
 		},

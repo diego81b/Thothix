@@ -103,14 +103,14 @@ func (suite *UserHandlerTestSuite) TestNewUserHandler() {
 
 func (suite *UserHandlerTestSuite) TestGetUserByID_Success() {
 	// Arrange
-	userResponse := &usersDto.UserResponse{
+	userDto := &usersDto.UserDto{
 		ID:    "test-id",
 		Email: "test@example.com",
 		Name:  "Test User",
 	}
 
-	mockResponse := usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserResponse] {
-		return dto.Success(userResponse)
+	mockResponse := usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserDto] {
+		return dto.Success(userDto)
 	})
 
 	suite.mockService.On("GetUserByID", "test-id").Return(mockResponse)
@@ -126,8 +126,8 @@ func (suite *UserHandlerTestSuite) TestGetUserByID_Success() {
 
 func (suite *UserHandlerTestSuite) TestGetUserByID_NotFound() {
 	// Arrange
-	mockResponse := usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserResponse] {
-		return dto.Invalid[*usersDto.UserResponse](dto.NewError("USER_NOT_FOUND", "User not found", nil))
+	mockResponse := usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserDto] {
+		return dto.Invalid[*usersDto.UserDto](dto.NewError("USER_NOT_FOUND", "User not found", nil))
 	})
 
 	suite.mockService.On("GetUserByID", "nonexistent").Return(mockResponse)
@@ -148,14 +148,14 @@ func (suite *UserHandlerTestSuite) TestCreateUser_Success() {
 		Name:  "Test User",
 	}
 
-	userResponse := &usersDto.UserResponse{
+	userDto := &usersDto.UserDto{
 		ID:    "new-id",
 		Email: "test@example.com",
 		Name:  "Test User",
 	}
 
-	mockResponse := usersDto.NewCreateUserResponse(func() dto.Validation[*usersDto.UserResponse] {
-		return dto.Success(userResponse)
+	mockResponse := usersDto.NewCreateUserResponse(func() dto.Validation[*usersDto.UserDto] {
+		return dto.Success(userDto)
 	})
 
 	suite.mockService.On("CreateUser", mock.MatchedBy(func(req *usersDto.CreateUserRequest) bool {
@@ -180,8 +180,8 @@ func (suite *UserHandlerTestSuite) TestCreateUser_ValidationError() {
 		Name:  "Test User",
 	}
 
-	mockResponse := usersDto.NewCreateUserResponse(func() dto.Validation[*usersDto.UserResponse] {
-		return dto.Invalid[*usersDto.UserResponse](dto.NewError("VALIDATION_ERROR", "Email is required", nil))
+	mockResponse := usersDto.NewCreateUserResponse(func() dto.Validation[*usersDto.UserDto] {
+		return dto.Invalid[*usersDto.UserDto](dto.NewError("VALIDATION_ERROR", "Email is required", nil))
 	})
 
 	suite.mockService.On("CreateUser", mock.AnythingOfType("*dto.CreateUserRequest")).Return(mockResponse)
@@ -204,14 +204,14 @@ func (suite *UserHandlerTestSuite) TestUpdateUser_Success() {
 		Email: &newEmail,
 	}
 
-	userResponse := &usersDto.UserResponse{
+	userDto := &usersDto.UserDto{
 		ID:    "test-id",
 		Email: "updated@example.com",
 		Name:  "Test User",
 	}
 
-	mockResponse := usersDto.NewUpdateUserResponse(func() dto.Validation[*usersDto.UserResponse] {
-		return dto.Success(userResponse)
+	mockResponse := usersDto.NewUpdateUserResponse(func() dto.Validation[*usersDto.UserDto] {
+		return dto.Success(userDto)
 	})
 
 	suite.mockService.On("UpdateUser", "test-id", mock.AnythingOfType("*dto.UpdateUserRequest")).Return(mockResponse)
@@ -246,10 +246,10 @@ func (suite *UserHandlerTestSuite) TestDeleteUser_Success() {
 
 func (suite *UserHandlerTestSuite) TestGetUsers_Success() {
 	// Arrange
-	userListResponse := &usersDto.UserListResponse{}
+	userListDto := &usersDto.UserListDto{}
 
-	mockResponse := usersDto.NewGetUsersResponse(func() dto.Validation[*usersDto.UserListResponse] {
-		return dto.Success(userListResponse)
+	mockResponse := usersDto.NewGetUsersResponse(func() dto.Validation[*usersDto.UserListDto] {
+		return dto.Success(userListDto)
 	})
 
 	suite.mockService.On("GetUsers", mock.AnythingOfType("*dto.PaginationRequest")).Return(mockResponse)

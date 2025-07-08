@@ -16,13 +16,13 @@ func NewUserMapper() *UserMapper {
 	return &UserMapper{}
 }
 
-// ModelToResponse converts a User model to UserResponse DTO
-func (m *UserMapper) ModelToResponse(user *domain.User) *usersDto.UserResponse {
+// ModelToDto converts a User model to UserDto
+func (m *UserMapper) ModelToDto(user *domain.User) *usersDto.UserDto {
 	if user == nil {
 		return nil
 	}
 
-	return &usersDto.UserResponse{
+	return &usersDto.UserDto{
 		ID:        user.ID,
 		ClerkID:   user.ClerkID,
 		Email:     user.Email,
@@ -34,21 +34,21 @@ func (m *UserMapper) ModelToResponse(user *domain.User) *usersDto.UserResponse {
 	}
 }
 
-// ModelsToResponses converts a slice of User models to UserResponse DTOs
-func (m *UserMapper) ModelsToResponses(users []domain.User) []usersDto.UserResponse {
+// ModelsToDtos converts a slice of User models to UserDto DTOs
+func (m *UserMapper) ModelsToDtos(users []domain.User) []usersDto.UserDto {
 	if users == nil {
 		return nil
 	}
 
-	responses := make([]usersDto.UserResponse, len(users))
+	dtos := make([]usersDto.UserDto, len(users))
 	for i, user := range users {
-		response := m.ModelToResponse(&user)
-		if response != nil {
-			responses[i] = *response
+		dto := m.ModelToDto(&user)
+		if dto != nil {
+			dtos[i] = *dto
 		}
 	}
 
-	return responses
+	return dtos
 }
 
 // CreateRequestToModel converts CreateUserRequest DTO to User model

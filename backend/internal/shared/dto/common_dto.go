@@ -224,7 +224,7 @@ type PaginatedListResponse[T any] struct {
 
 // NewPaginatedListResponse creates a new paginated list response with the provided items and pagination metadata.
 // Automatically calculates pagination metadata based on the provided parameters.
-func NewPaginatedListResponse[T any](items []T, total int64, page int, perPage int) *PaginatedListResponse[T] {
+func NewPaginatedListResponse[T any](items []T, total int64, page, perPage int) *PaginatedListResponse[T] {
 	totalPages := int((total + int64(perPage) - 1) / int64(perPage))
 	if totalPages == 0 {
 		totalPages = 1 // Ensure at least 1 page even with 0 items

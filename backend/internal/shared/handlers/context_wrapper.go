@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"thothix-backend/internal/dto"
+	"thothix-backend/internal/shared/dto"
 )
 
 // ContextWrapper wraps gin.Context to provide convenience methods for standardized error responses.
@@ -36,7 +36,7 @@ func (c *ContextWrapper) ValidationErrorResponse(errors []dto.Error, logMessage 
 
 // NotFoundErrorResponse sends a standardized not found error response with logging.
 // Use this when a requested resource cannot be found.
-func (c *ContextWrapper) NotFoundErrorResponse(resourceType string, identifier string) {
+func (c *ContextWrapper) NotFoundErrorResponse(resourceType, identifier string) {
 	log.Printf("Resource not found: %s with identifier %s", resourceType, identifier)
 	response := dto.ErrorViewModel{
 		Success: false,

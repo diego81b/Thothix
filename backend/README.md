@@ -2,13 +2,95 @@
 
 [![Go](https://img.shields.io/badge/Go-1.23-blue?style=flat&logo=go)](https://golang.org) [![Gin](https://img.shields.io/badge/Gin-Web_Framework-green?style=flat)](https://github.com/gin-gonic/gin) [![GORM](https://img.shields.io/badge/GORM-ORM-yellow?style=flat)](https://gorm.io)
 
-Modern Go REST API with Gin framework, GORM ORM, PostgreSQL, Clerk authentication, and HashiCorp Vault integration.
+Modern Go REST API with **Vertical Slice Architecture**, Gin framework, GORM ORM, PostgreSQL, Clerk authentication, and HashiCorp Vault integration.
 
 ## 🏗️ Architecture
 
 **Tech Stack**: Gin • GORM v2 • PostgreSQL 15 • Clerk Auth • HashiCorp Vault • Swagger/OpenAPI • Docker
 
-**Clean Architecture**: Presentation Layer (handlers/middleware/router) → Business Layer (services/dto/mappers) → Data Layer (models/database)
+**Vertical Slice Architecture**: Domain-driven organization with business features as independent slices, each containing their complete stack from handlers to data access.
+
+### 🎯 Vertical Slice Architecture Benefits
+
+- **High Cohesion**: Related functionality grouped together by business domain
+- **Low Coupling**: Minimal dependencies between different domains
+- **Parallel Development**: Teams can work on different slices independently
+- **Feature-Focused**: Easy to add, modify, or remove complete business features
+- **Clear Boundaries**: Each slice owns its complete vertical stack
+
+### 🧩 Domain Structure
+
+Each business domain (e.g., `users`, `projects`, `chats`) follows this pattern:
+
+```
+internal/users/                    # Business Domain Slice
+├── domain/                        # Business Entities & Core Logic
+│   ├── user.go                   # Domain models with business rules
+│   └── user_test.go              # Domain logic tests
+├── dto/                          # Domain-Specific DTOs
+│   ├── user_dto.go               # Request/response contracts
+│   └── user_dto_test.go          # DTO validation tests
+├── service/                      # Business Logic Layer
+│   ├── user_service.go           # Business operations
+│   ├── user_service_interface.go # Service contract
+│   └── user_service_test.go      # Business logic tests
+├── handlers/                     # HTTP Controllers
+│   ├── user_handler.go           # HTTP endpoints
+│   ├── user_handler_test.go      # Controller tests
+│   └── routes.go                 # Route registration
+└── mappers/                      # Data Transformation
+    ├── user_mapper.go            # Entity ↔ DTO mapping
+    └── user_mapper_test.go       # Mapping tests
+```
+
+### 🌐 Shared Components
+
+Cross-domain components that promote consistency and reusability:
+
+```
+internal/shared/
+├── constants/                    # Common Constants
+│   └── errors.go                 # Error codes & messages
+├── dto/                          # Common DTOs
+│   └── common_dto.go             # Shared response patterns
+├── handlers/                     # Generic Handlers
+│   ├── context_wrapper.go        # Context utilities
+│   └── health.go                 # Health check endpoint
+├── middleware/                   # Reusable Middleware
+│   ├── clerk_auth.go             # Clerk authentication
+│   ├── cors.go                   # CORS configuration
+│   ├── logger.go                 # Logging utilities
+│   └── context.go                # Context management
+├── router/                       # Main Router
+│   └── router.go                 # Route setup and registration
+├── testing/                      # Generic Test Helpers
+│   └── assertions.go             # Type-safe test assertions
+└── README.md                     # Shared components documentation
+```
+
+**Key Features**:
+- **Generic Test Assertions**: Type-safe helpers using Go generics for any domain
+- **Common DTOs**: Shared response patterns and validation utilities
+- **Reusable Middleware**: Authentication, CORS, logging, and context management
+- **Centralized Routing**: Single point for route registration and middleware setup
+- **Generic Handlers**: Health checks and utility endpoints
+- **Common Constants**: Shared error codes and messages across all domains
+- **Extensible**: Easy to add new shared components as needed
+
+Example usage:
+```go
+// Generic test assertions for any domain
+result := sharedTesting.AssertSuccessWithValue(t, response.Response)
+sharedTesting.AssertValidationErrorWithCode(t, response.Response, constants.ValidationError)
+
+// Common error codes
+if req.Field == "" {
+    return []dto.Error{{
+        Code:    constants.ValidationError,
+        Message: "Field is required",
+    }}
+}
+```
 
 ### 🎯 Result Pattern Implementation
 
@@ -75,7 +157,121 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 }
 ```
 
-**Architecture**: `common_dto.go` (generic patterns) + `user_dto.go` (domain DTOs)
+**Architecture**: `shared/dto/common_dto.go` (generic patterns) + `users/dto/user_dto.go` (domain DTOs)
+
+---
+
+## 🔧 Shared Components
+
+The `internal/shared/` directory contains reusable components that can be used across all domain slices:
+
+### Structure
+
+```text
+internal/shared/
+├── dto/                      # Common DTOs and Result Pattern
+│   ├── common_dto.go         # Generic Response, Validation, Error types
+│   └── result_test.go        # Tests for Result Pattern
+├── handlers/                 # Shared HTTP utilities
+│   └── context_wrapper.go    # Gin context wrapper with standardized responses
+├── router/                   # Application routing
+│   └── router.go             # Main router setup and route registration
+├── testing/                  # Generic test helpers
+│   └── assertions.go         # Type-safe test assertions using Go generics
+└── constants/                # Common constants and error codes
+    └── errors.go             # Shared error codes and messages
+```
+
+### Key Components
+
+#### Common DTOs (`shared/dto/common_dto.go`)
+Generic Response patterns, validation types, and error structures:
+
+```go
+// Import in domain services
+import "thothix-backend/internal/shared/dto"
+
+// Use generic Response types
+func (s *SomeService) SomeOperation(req *SomeRequest) *dto.Response[*SomeResponse] {
+    return dto.NewResponse(func() dto.Validation[*SomeResponse] {
+        // Business logic here
+        return dto.Success(response)
+    })
+}
+```
+
+#### Context Wrapper (`shared/handlers/context_wrapper.go`)
+Standardized HTTP response helpers:
+
+```go
+// Import in handlers
+import sharedHandlers "thothix-backend/internal/shared/handlers"
+
+func (h *SomeHandler) SomeEndpoint(c *gin.Context) {
+    wrapper := sharedHandlers.WrapContext(c)
+
+    // Standardized responses
+    wrapper.SuccessResponse(data)
+    wrapper.ValidationErrorResponse(errors, "Operation failed")
+    wrapper.NotFoundErrorResponse("Resource", id)
+}
+```
+
+#### Application Router (`shared/router/router.go`)
+Centralized route registration and middleware setup:
+
+```go
+// Main application entry point
+import "thothix-backend/internal/shared/router"
+
+func main() {
+    r := router.Setup(db, cfg)
+    r.Run(":8080")
+}
+```
+
+#### Generic Test Assertions (`shared/testing/assertions.go`)
+Type-safe test helpers for any domain:
+
+```go
+// Example usage in any domain test
+func TestSomeDomainService(t *testing.T) {
+    response := domainService.SomeOperation(request)
+
+    // Assert success and get the typed result
+    result := sharedTesting.AssertSuccessWithValue(t, response.Response)
+    assert.Equal(t, "expected", result.SomeField)
+
+    // Assert validation error with specific code
+    sharedTesting.AssertValidationErrorWithCode(t, response.Response, "VALIDATION_ERROR")
+}
+```
+
+#### Common Constants (`shared/constants/errors.go`)
+Shared error codes and messages:
+
+```go
+// Example usage in any domain service
+import "thothix-backend/internal/shared/constants"
+
+func (s *SomeService) Validate(req *SomeRequest) []dto.Error {
+    if req.Field == "" {
+        return []dto.Error{{
+            Code:    constants.ValidationError,
+            Message: "Field is required",
+        }}
+    }
+    return nil
+}
+```
+
+### Benefits
+
+- **Consistency**: Standardized patterns across all domains
+- **Reusability**: Generic components that work with any domain type
+- **Maintainability**: Single source of truth for shared functionality
+- **Type Safety**: Go generics ensure compile-time type safety
+- **DRY Principle**: Eliminates code duplication across domains
 
 ---
 
@@ -129,74 +325,100 @@ npm run db:connect
 
 ```txt
 backend/
-├── internal/               # Private application code
-│   ├── config/            # Configuration management
-│   │   └── config.go      # App config and environment variables
-│   ├── database/          # Database setup and migrations
-│   │   └── database.go    # GORM setup and connection
-│   ├── dto/               # Data Transfer Objects (Clean Architecture)
-│   │   ├── user_dto.go    # User request/response DTOs
-│   │   ├── project_dto.go # Project DTOs
-│   │   ├── chat_dto.go    # Chat/Channel DTOs
-│   │   └── common_dto.go  # Common DTOs (error, pagination)
-│   ├── services/          # Business Logic Layer (Clean Architecture)
-│   │   ├── user_service.go          # User business logic
-│   │   ├── user_service_interface.go # User service contract
-│   │   ├── user_service_test.go     # User service tests
-│   │   ├── project_service.go       # Project business logic
-│   │   └── chat_service.go          # Chat business logic
-│   ├── mappers/           # DTO ↔ Model Mapping (Clean Architecture)
-│   │   ├── user_mapper.go          # User DTO/Model mapping
-│   │   ├── user_mapper_test.go     # User mapper tests
-│   │   ├── project_mapper.go       # Project DTO/Model mapping
-│   │   └── chat_mapper.go          # Chat DTO/Model mapping
-│   ├── handlers/          # HTTP handlers (controllers)
-│   │   ├── auth.go        # Authentication endpoints
-│   │   ├── chats.go       # Chat/Channel management
-│   │   ├── health.go      # Health check endpoint
-│   │   ├── messages.go    # Message endpoints
-│   │   ├── projects.go    # Project management
-│   │   ├── roles.go       # Role-based access control
-│   │   └── users.go       # User management
-│   ├── middleware/        # Custom middleware
-│   │   ├── auth.go        # Clerk authentication middleware
-│   │   ├── context.go     # Request context management
-│   │   ├── cors.go        # CORS configuration
-│   │   ├── logger.go      # Logging middleware
-│   │   └── rbac.go        # Role-based access control
-│   ├── models/            # Data models and database schema
-│   │   ├── base.go        # Base model with common fields
-│   │   ├── chat.go        # Chat/Channel models
-│   │   ├── message.go     # Message models
-│   │   ├── migrate.go     # Database migrations
-│   │   ├── project.go     # Project models
-│   │   ├── roles.go       # Role and permission models
-│   │   └── user.go        # User models
-│   ├── router/            # Route definitions
-│   │   └── router.go      # Gin router setup and routes
-│   └── vault/             # Vault integration
-│       └── client.go      # Vault client and secret management
-├── docs/                  # Generated Swagger documentation
-│   ├── docs.go           # Generated Swagger Go code
-│   ├── swagger.json      # Generated Swagger JSON
-│   └── swagger.yaml      # Generated Swagger YAML
-├── main.go               # Application entry point
-├── go.mod               # Go module dependencies
-├── go.sum               # Go module checksums
-├── Dockerfile           # Multi-stage Docker build
-└── README.md           # This file
+├── internal/                      # Private application code
+│   ├── config/                   # Configuration management
+│   │   └── config.go             # App config and environment variables
+│   ├── database/                 # Database setup and migrations
+│   │   └── database.go           # GORM setup and connection
+│   ├── dto/                      # Common/Shared DTOs
+│   │   ├── common_dto.go         # Result Pattern & generic types
+│   │   └── result_test.go        # Common DTO tests
+│   ├── models/                   # Shared data models and database schema
+│   │   ├── base.go               # Base model with common fields
+│   │   ├── chat.go               # Chat/Channel models
+│   │   ├── message.go            # Message models
+│   │   ├── migrate.go            # Database migrations
+│   │   ├── project.go            # Project models
+│   │   ├── roles.go              # Role and permission models
+│   │   └── user.go               # Legacy user model (being phased out)
+│   ├── middleware/               # Shared middleware
+│   │   ├── clerk_auth.go         # Clerk authentication middleware
+│   │   ├── context.go            # Request context management
+│   │   ├── cors.go               # CORS configuration
+│   │   ├── logger.go             # Logging middleware
+│   │   └── rbac.go               # Role-based access control
+│   ├── router/                   # Route definitions
+│   │   └── router.go             # Gin router setup and route registration
+│   ├── vault/                    # Vault integration
+│   │   └── client.go             # Vault client and secret management
+│   └── users/                    # Users Domain Slice (Vertical Slice)
+│       ├── domain/               # User business entities
+│       │   ├── user.go           # User domain model with business logic
+│       │   └── user_test.go      # Domain logic and business rules tests
+│       ├── dto/                  # User-specific DTOs
+│       │   ├── user_dto.go       # User request/response contracts
+│       │   └── user_dto_test.go  # User DTO validation tests
+│       ├── service/              # User business logic
+│       │   ├── user_service.go           # User business operations
+│       │   ├── user_service_interface.go # User service contract
+│       │   └── user_service_test.go      # User business logic tests
+│       ├── handlers/             # User HTTP controllers
+│       │   ├── user_handler.go   # User HTTP endpoints
+│       │   ├── user_handler_test.go # User controller tests
+│       │   └── routes.go         # User route registration
+│       └── mappers/              # User data transformation
+│           ├── user_mapper.go    # User entity ↔ DTO mapping
+│           └── user_mapper_test.go # User mapping tests
+├── tests/                        # Integration tests
+│   └── integration/
+│       └── user_integration_test.go # End-to-end user API tests
+├── docs/                         # Generated Swagger documentation
+│   ├── docs.go                   # Generated Swagger Go code
+│   ├── swagger.json              # Generated Swagger JSON
+│   └── swagger.yaml              # Generated Swagger YAML
+├── main.go                       # Application entry point
+├── go.mod                        # Go module dependencies
+├── go.sum                        # Go module checksums
+├── Dockerfile                    # Multi-stage Docker build
+└── README.md                     # This file
 ```
 
-### Clean Architecture Layers
+### 🧩 Vertical Slice Architecture Layers
 
-#### **1. Presentation Layer** (`handlers/`, `middleware/`, `router/`)
+#### **1. Domain Layer** (`users/domain/`)
 
-- **Handlers**: HTTP request/response controllers
-- **Middleware**: Cross-cutting concerns (auth, logging, CORS)
-- **Router**: Route definitions and middleware setup
-- **Input/Output**: Uses DTOs exclusively, no direct model access
+- **Business Entities**: Core domain models with embedded business logic
+- **Domain Rules**: Validation and business constraints within entities
+- **Pure Business Logic**: No external dependencies (database, HTTP, etc.)
+- **Testable**: Domain logic tested in isolation
 
-#### **2. Business Layer** (`services/`, `dto/`, `mappers/`)
+#### **2. DTO Layer** (`users/dto/`)
+
+- **API Contracts**: Request/response structures for HTTP endpoints
+- **Domain-Specific**: DTOs tailored to the specific business domain
+- **Validation**: Input validation rules and constraints
+- **Type Safety**: Strongly typed interfaces with the outside world
+
+#### **3. Service Layer** (`users/service/`)
+
+- **Business Operations**: Orchestrates domain entities and external dependencies
+- **Use Cases**: Implements specific business scenarios (CreateUser, GetUser, etc.)
+- **Dependency Injection**: Services implement interfaces for easy testing
+- **Result Pattern**: Type-safe error handling with functional composition
+
+#### **4. Handlers Layer** (`users/handlers/`)
+
+- **HTTP Controllers**: Handle HTTP requests and responses
+- **Route Registration**: Self-contained route setup in `routes.go`
+- **Error Handling**: Standardized error responses using ContextWrapper
+- **Clean Interface**: Uses only DTOs and services, no direct model access
+
+#### **5. Mappers Layer** (`users/mappers/`)
+
+- **Data Transformation**: Convert between domain entities and DTOs
+- **Explicit Mapping**: Clear, testable transformation logic
+- **Isolation**: Prevents data structure coupling between layers
+- **Bi-directional**: Supports both entity → DTO and DTO → entity mapping
 
 - **Services**: Business logic and domain rules
 - **DTOs**: Data contracts for API input/output
@@ -209,36 +431,155 @@ backend/
 - **Database**: Connection management and configuration
 - **Migrations**: Schema versioning and updates
 
-## 🎯 Clean Architecture Implementation
+## 🎯 Vertical Slice Architecture Implementation
 
-### Data Transfer Objects (DTOs)
+### Domain-Driven Organization
 
-DTOs define the API contract and decouple external interfaces from internal models
+Each business feature is organized as a **vertical slice** containing all necessary layers:
 
-### Service Layer
+```go
+// Example: User domain slice structure
+internal/users/
+├── domain/     → Business entities with core logic
+├── dto/        → API contracts specific to users
+├── service/    → User business operations
+├── handlers/   → User HTTP endpoints
+└── mappers/    → User data transformation
+```
 
-Services contain business logic and implement interfaces for dependency injection
+### Modular Route Registration
 
-### Mapper Layer
+Each domain slice registers its own routes independently:
 
-Mappers handle explicit transformation between DTOs and models
+```go
+// users/handlers/routes.go
+func RegisterUserRoutes(router *gin.RouterGroup, db *gorm.DB) {
+    userService := service.NewUserService(db)
+    userHandler := NewUserHandler(userService)
 
-### Handler Layer
+    users := router.Group("/users")
+    users.GET("", userHandler.GetUsers)
+    users.GET("/:id", userHandler.GetUserByID)
+    users.POST("", userHandler.CreateUser)
+    // ... more routes
+}
 
-Handlers use only DTOs and services, never accessing models or database directly
+// router/router.go - main router
+func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
+    // ... middleware setup
 
-### Dependency Injection
+    v1 := r.Group("/api/v1")
+    protected := v1.Group("/").Use(middleware.ClerkAuthSDK())
 
-Services are injected into handlers via interfaces
+    // Register domain slices
+    userHandlers.RegisterUserRoutes(protected, db)
+    // Future: projectHandlers.RegisterProjectRoutes(protected, db)
+    // Future: chatHandlers.RegisterChatRoutes(protected, db)
+}
+```
 
-### Benefits of This Architecture
+### Benefits of Vertical Slice Architecture
 
-1. **Separation of Concerns**: Clear boundaries between layers
-2. **Testability**: Services implement interfaces, easy to mock
-3. **Maintainability**: Changes to models don't affect handlers
-4. **API Stability**: DTOs provide stable external contracts
-5. **Validation**: Input validation at DTO level
-6. **Type Safety**: Explicit mapping prevents data leaks
+1. **Feature Isolation**: Complete features can be developed, tested, and deployed independently
+2. **Clear Ownership**: Each slice has clear boundaries and responsibilities
+3. **Parallel Development**: Teams can work on different slices without conflicts
+4. **Easy Feature Addition**: New domains follow the same established pattern
+5. **Reduced Coupling**: Minimal dependencies between different business domains
+6. **Single Responsibility**: Each slice handles one business concern completely
+
+### Domain Layer Design
+
+```go
+// users/domain/user.go - Business entity with embedded logic
+type User struct {
+    models.BaseModel
+    ClerkID   string `json:"clerk_id" gorm:"uniqueIndex;not null"`
+    Email     string `json:"email"`
+    Name      string `json:"name"`
+    Username  string `json:"username,omitempty"`
+    AvatarURL string `json:"avatar_url,omitempty"`
+}
+
+// Domain methods embedded in the entity
+func (u *User) TableName() string { return "users" }
+
+func (u *User) SyncFromClerk(clerkData *ClerkUserData) {
+    u.ClerkID = clerkData.ID
+    u.Email = clerkData.Email
+    u.Name = clerkData.FirstName + " " + clerkData.LastName
+    // ... business logic
+}
+```
+
+### Service Layer Pattern
+
+```go
+// users/service/user_service_interface.go - Contract
+type UserServiceInterface interface {
+    GetUserByID(userID string) *usersDto.GetUserResponse
+    CreateUser(req *usersDto.CreateUserRequest) *usersDto.CreateUserResponse
+    // ... other operations
+}
+
+// users/service/user_service.go - Implementation
+type UserService struct {
+    db *gorm.DB
+}
+
+func (s *UserService) GetUserByID(userID string) *usersDto.GetUserResponse {
+    return usersDto.NewGetUserResponse(func() dto.Validation[*usersDto.UserResponse] {
+        // Validation and business logic
+        if userID == "" {
+            return dto.Failure[*usersDto.UserResponse](
+                dto.NewError("VALIDATION_ERROR", "User ID required", nil))
+        }
+
+        // Database operation
+        var user domain.User
+        if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+            // ... error handling
+        }
+
+        // Transform to DTO
+        response := s.mapper.DomainToResponse(&user)
+        return dto.Success(response)
+    })
+}
+```
+
+### Testing Strategy
+
+Each layer has focused, isolated tests:
+
+```go
+// Domain tests - Pure business logic
+func TestUser_SyncFromClerk(t *testing.T) {
+    user := &domain.User{}
+    clerkData := &domain.ClerkUserData{...}
+
+    user.SyncFromClerk(clerkData)
+
+    assert.Equal(t, clerkData.Email, user.Email)
+}
+
+// Service tests - Business operations with mocked dependencies
+func TestUserService_GetUserByID(t *testing.T) {
+    // Uses testcontainers for real database testing
+    // Tests complete business logic flow
+}
+
+// Handler tests - HTTP endpoint behavior with mocked services
+func TestUserHandler_GetUserByID(t *testing.T) {
+    mockService := &MockUserService{}
+    handler := NewUserHandler(mockService)
+    // ... HTTP testing
+}
+
+// Integration tests - End-to-end API testing
+func TestUserAPI_GetUserByID_Integration(t *testing.T) {
+    // Complete API test with real database
+}
+```
 
 ## 🗄️ Data Models
 
@@ -529,352 +870,60 @@ type ProjectHandler struct {
     projectService services.ProjectServiceInterface
 }
 
-func (h *ProjectHandler) CreateProject(c *gin.Context) {
-    var req dto.CreateProjectRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(400, dto.ErrorResponse{Error: "validation_failed"})
-        return
-    }
-
-    project, err := h.projectService.CreateProject(&req)
-    if err != nil {
-        c.JSON(500, dto.ErrorResponse{Error: "creation_failed"})
-        return
-    }
-
-    c.JSON(201, project)
+func NewProjectHandler(service services.ProjectServiceInterface) *ProjectHandler {
+    return &ProjectHandler{projectService: service}
 }
-```
 
-#### **7. Update Router** (`internal/router/`)
+// routes.go - Route registration
+func RegisterProjectRoutes(router *gin.RouterGroup, db *gorm.DB) {
+    projectService := service.NewProjectService(db)
+    projectHandler := NewProjectHandler(projectService)
 
-```go
-// Dependency injection and route setup
-func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
-    // Initialize services
-    projectService := services.NewProjectService(db)
-
-    // Initialize handlers with service interfaces
-    projectHandler := handlers.NewProjectHandler(projectService)
-
-    // Setup routes
-    projects := protected.Group("/projects")
+    projects := router.Group("/projects")
+    projects.GET("", projectHandler.GetProjects)
+    projects.GET("/:id", projectHandler.GetProjectByID)
     projects.POST("", projectHandler.CreateProject)
 }
 ```
 
-#### **8. Update Swagger Documentation**
+#### **7. Register Routes in Main Router**
 
 ```go
-// Add Swagger comments to handlers
-// @Summary Create project
-// @Tags projects
-// @Accept json
-// @Produce json
-// @Param project body dto.CreateProjectRequest true "Project data"
-// @Success 201 {object} dto.ProjectResponse
-// @Router /api/v1/projects [post]
-func (h *ProjectHandler) CreateProject(c *gin.Context) { ... }
-```
+// internal/router/router.go
+func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
+    // ... existing setup
 
-### Hot Reload Development
+    v1 := r.Group("/api/v1")
+    protected := v1.Group("/").Use(middleware.ClerkAuthSDK())
 
-```bash
-# Install Air for hot reload
-go install github.com/cosmtrek/air@latest
+    // Register domain slices
+    userHandlers.RegisterUserRoutes(protected, db)
+    projectHandlers.RegisterProjectRoutes(protected, db)  // Add new domain
 
-# Start with hot reload
-air
-
-# Or via Docker with hot reload
-npm run dev
-```
-
-### Environment Variables
-
-Key environment variables for development:
-
-```bash
-# Database
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=thothix_dev
-POSTGRES_USER=thothix_user
-POSTGRES_PASSWORD=secure_password
-
-# Clerk Authentication
-CLERK_SECRET_KEY=sk_test_...
-CLERK_PUBLISHABLE_KEY=pk_test_...
-
-# Vault Integration
-USE_VAULT=true
-VAULT_ADDR=http://localhost:8200
-VAULT_ROOT_TOKEN=thothix-secure-root-token
-
-# Application
-PORT=8080
-GIN_MODE=debug
-LOG_LEVEL=debug
-```
-
-### Database Operations
-
-```bash
-# Database status and connection
-npm run db:status
-npm run db:connect
-
-# Schema verification
-npm run db:check           # Verify BaseModel fields
-npm run db:tables         # List all tables
-
-# Advanced database operations
-npx zx scripts/db-verify.mjs check-table users
-npx zx scripts/db-verify.mjs has-field projects owner_id
-npx zx scripts/db-verify.mjs missing-field channels is_private
-```
-
-## 🧪 Testing
-
-### Test Architecture
-
-The testing strategy follows the clean architecture layers:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    INTEGRATION TESTS                        │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐      │
-│  │   Handler   │────│   Service   │────│  Database   │      │
-│  │   Tests     │    │   Tests     │    │(PostgreSQL  │      │
-│  │ (E2E API)   │    │(with real   │    │Testcont.)   │      │
-│  │             │    │ database)   │    │             │      │
-│  └─────────────┘    └─────────────┘    └─────────────┘      │
-└─────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      UNIT TESTS                             │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐      │
-│  │   Mapper    │────│   DTO       │────│  Business   │      │
-│  │   Tests     │    │Validation   │    │   Logic     │      │
-│  │ (Pure Go)   │    │   Tests     │    │   Tests     │      │
-│  └─────────────┘    └─────────────┘    └─────────────┘      │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Unit Tests
-
-```bash
-# Run all tests
-npm run test
-go test ./...
-
-# Run tests with debug output
-npm run test --debug
-
-# Run specific test packages
-go test ./internal/mappers/...     # Mapper tests (no database)
-go test ./internal/services/...    # Service tests (with PostgreSQL)
-```
-
-### Integration Tests with PostgreSQL
-
-Services use **testcontainers** with real PostgreSQL for realistic testing:
-
-```go
-func setupTestDB(t *testing.T) *gorm.DB {
-    ctx := context.Background()
-
-    // Create PostgreSQL container
-    postgresContainer, err := pgtest.Run(ctx,
-        "docker.io/postgres:16-alpine",
-        pgtest.WithDatabase("testdb"),
-        pgtest.WithUsername("testuser"),
-        pgtest.WithPassword("testpass"),
-        testcontainers.WithWaitStrategy(
-            wait.ForLog("database system is ready to accept connections").
-                WithOccurrence(2).
-                WithStartupTimeout(30*time.Second)),
-    )
-    require.NoError(t, err)
-
-    // Auto-cleanup after test
-    t.Cleanup(func() {
-        postgresContainer.Terminate(ctx)
-    })
-
-    // Connect with GORM
-    connStr, _ := postgresContainer.ConnectionString(ctx, "sslmode=disable")
-    db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
-    require.NoError(t, err)
-
-    // Auto-migrate schema
-    db.AutoMigrate(&models.User{})
-
-    return db
+    return r
 }
 ```
 
-### Test Structure
-
-```txt
-backend/
-├── internal/
-│   ├── mappers/
-│   │   ├── user_mapper.go
-│   │   └── user_mapper_test.go          # Pure unit tests
-│   ├── services/
-│   │   ├── user_service.go
-│   │   └── user_service_test.go         # Integration tests with PostgreSQL
-│   ├── dto/
-│   │   └── user_dto_test.go             # Validation tests
-│   └── handlers/
-│       └── user_handler_test.go         # API endpoint tests
-└── tests/
-    ├── integration/                     # Full E2E tests
-    ├── fixtures/                        # Test data
-    └── testcontainers/                  # Container configurations
-```
-
-### Test Commands
+#### **8. Add Tests for Each Layer
 
 ```bash
-# Standard test run
-npm run test
-
-# Debug mode with race detection and coverage
-npm run test -- --debug
-
-# Test specific layers
-go test ./internal/mappers/...     # Unit tests (fast)
-go test ./internal/services/...    # Integration tests (with DB)
-go test ./internal/handlers/...    # API tests
-
-# Test with coverage
-go test -cover ./...
-go test -coverprofile=coverage.out ./...
-go tool cover -html=coverage.out
-
-# Continuous testing (with file watching)
-air test
+# Create test files
+touch internal/projects/domain/project_test.go
+touch internal/projects/dto/project_dto_test.go
+touch internal/projects/service/project_service_test.go
+touch internal/projects/handlers/project_handler_test.go
+touch internal/projects/mappers/project_mapper_test.go
+touch tests/integration/project_integration_test.go
 ```
 
-### Test Benefits
+### Key Principles for New Domains
 
-1. **Realistic Testing**: Uses same PostgreSQL as production
-2. **Isolation**: Each test gets a fresh database container
-3. **Fast Feedback**: Parallel test execution
-4. **Coverage**: Tests all architectural layers
-5. **CI/CD Ready**: Works in any Docker environment
+1. **Self-Contained**: Each domain slice should be independent
+2. **Consistent Structure**: Follow the established 5-layer pattern
+3. **Clear Contracts**: Define interfaces for services and mappers
+4. **Comprehensive Testing**: Test each layer in isolation
+5. **Route Registration**: Use the modular registration pattern
+6. **Error Handling**: Use the Result Pattern consistently
+7. **Validation**: Implement input validation in DTOs
 
-## 🚀 Deployment
-
-### Docker Build
-
-```bash
-# Local build
-docker build -t thothix/backend:latest .
-
-# Multi-stage production build
-docker build --target prod -t thothix/backend:prod .
-
-# Development build with hot reload
-docker build --target dev -t thothix/backend:dev .
-```
-
-### Environment Deployment
-
-```bash
-# Development
-npm run dev
-
-# Staging
-npm run staging
-
-# Production
-npm run prod
-```
-
-### Health Checks
-
-The API includes health check endpoints:
-
-- `GET /health` - Basic health status
-- `GET /health/ready` - Readiness check (includes database)
-- `GET /health/live` - Liveness check
-
-### Monitoring
-
-```bash
-# Container logs
-npm run dev:logs backend
-
-# Database logs
-npm run dev:logs postgres
-
-# Vault logs
-npm run dev:logs vault
-
-# Resource usage
-docker stats thothix-backend-dev
-```
-
-## 🔧 Configuration
-
-### Gin Framework Configuration
-
-```go
-// Production mode
-gin.SetMode(gin.ReleaseMode)
-
-// Development mode with detailed logging
-gin.SetMode(gin.DebugMode)
-```
-
-### GORM Configuration
-
-```go
-// Database connection with optimizations
-db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-    Logger: logger.Default.LogMode(logger.Info),
-    NamingStrategy: schema.NamingStrategy{
-        SingularTable: false,
-    },
-})
-```
-
-### Middleware Stack
-
-1. **CORS** - Cross-origin resource sharing
-2. **Logger** - Request/response logging
-3. **Recovery** - Panic recovery
-4. **Auth** - Clerk authentication
-5. **RBAC** - Role-based access control
-6. **Context** - Request context management
-
-## 📚 Additional Resources
-
-- **[Main Project README](../README.md)** - Overall project documentation
-- **[Vault Integration](../docs/VAULT_INTEGRATION.md)** - HashiCorp Vault setup
-- **[Clerk Integration](../docs/CLERK_INTEGRATION.md)** - Authentication setup
-- **[Node.js Development Guide](../docs/NODE_JS_GUIDE.md)** - Cross-platform automation
-- **[Database Migration](../docs/DB_MIGRATION.md)** - Database schema management
-
----
-
-## 🤝 Contributing
-
-1. Follow Go best practices and project conventions
-2. Write tests for new features
-3. Update Swagger documentation for API changes
-4. Use the provided npm scripts for consistency
-5. Ensure all pre-commit checks pass
-
-```bash
-# Before committing
-npm run pre-commit
-```
-
----
-
-**Built with ❤️ using Go, Gin, GORM, and modern DevOps practices.**
+This pattern ensures consistency, maintainability, and allows teams to work on different domains independently.

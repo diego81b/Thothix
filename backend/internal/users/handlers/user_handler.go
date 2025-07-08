@@ -3,15 +3,17 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 
-	"thothix-backend/internal/dto"
-	"thothix-backend/internal/services"
+	"thothix-backend/internal/shared/dto"
+	"thothix-backend/internal/shared/handlers"
+	usersDto "thothix-backend/internal/users/dto"
+	"thothix-backend/internal/users/service"
 )
 
 type UserHandler struct {
-	userService services.UserServiceInterface
+	userService service.UserServiceInterface
 }
 
-func NewUserHandler(userService services.UserServiceInterface) *UserHandler {
+func NewUserHandler(userService service.UserServiceInterface) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 	}
@@ -26,12 +28,12 @@ func NewUserHandler(userService services.UserServiceInterface) *UserHandler {
 // @Security BearerAuth
 // @Param page query int false "Page number (default: 1)"
 // @Param per_page query int false "Items per page (default: 20, max: 100)"
-// @Success 200 {object} dto.UserListResponse
+// @Success 200 {object} usersDto.UserListResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users [get]
 func (h *UserHandler) GetUsers(c *gin.Context) {
-	wrapper := WrapContext(c)
+	wrapper := handlers.WrapContext(c)
 
 	var request dto.PaginationRequest
 	if err := c.ShouldBindQuery(&request); err != nil {
@@ -58,7 +60,7 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 			return nil
 		},
 		// Success case
-		func(result *dto.UserListResponse) interface{} {
+		func(result *usersDto.UserListResponse) interface{} {
 			wrapper.SuccessResponse(result)
 			return nil
 		},
@@ -78,13 +80,13 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "User ID"
-// @Success 200 {object} dto.UserResponse
+// @Success 200 {object} usersDto.UserResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(c *gin.Context) {
-	wrapper := WrapContext(c)
+	wrapper := handlers.WrapContext(c)
 	userID := c.Param("id")
 
 	// Get response from service
@@ -98,7 +100,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 			return nil
 		},
 		// Success case
-		func(result *dto.UserResponse) interface{} {
+		func(result *usersDto.UserResponse) interface{} {
 			wrapper.SuccessResponse(result)
 			return nil
 		},
@@ -122,16 +124,16 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param user body dto.CreateUserRequest true "User data"
-// @Success 201 {object} dto.UserResponse
+// @Param user body usersDto.CreateUserRequest true "User data"
+// @Success 201 {object} usersDto.UserResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 409 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	wrapper := WrapContext(c)
+	wrapper := handlers.WrapContext(c)
 
-	var request dto.CreateUserRequest
+	var request usersDto.CreateUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		wrapper.BadRequestErrorResponse("Invalid request payload")
 		return
@@ -148,7 +150,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 			return nil
 		},
 		// Success case
-		func(result *dto.UserResponse) interface{} {
+		func(result *usersDto.UserResponse) interface{} {
 			wrapper.CreatedResponse(result)
 			return nil
 		},
@@ -173,17 +175,17 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "User ID"
-// @Param user body dto.UpdateUserRequest true "User data"
-// @Success 200 {object} dto.UserResponse
+// @Param user body usersDto.UpdateUserRequest true "User data"
+// @Success 200 {object} usersDto.UserResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
-	wrapper := WrapContext(c)
+	wrapper := handlers.WrapContext(c)
 	userID := c.Param("id")
 
-	var request dto.UpdateUserRequest
+	var request usersDto.UpdateUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		wrapper.BadRequestErrorResponse("Invalid request payload")
 		return
@@ -200,7 +202,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 			return nil
 		},
 		// Success case
-		func(result *dto.UserResponse) interface{} {
+		func(result *usersDto.UserResponse) interface{} {
 			wrapper.SuccessResponse(result)
 			return nil
 		},
@@ -231,7 +233,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
-	wrapper := WrapContext(c)
+	wrapper := handlers.WrapContext(c)
 	userID := c.Param("id")
 
 	// Get response from service

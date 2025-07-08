@@ -6,7 +6,7 @@ import (
 	_ "thothix-backend/docs" // Importa i documenti Swagger generati
 	"thothix-backend/internal/config"
 	"thothix-backend/internal/database"
-	"thothix-backend/internal/router"
+	"thothix-backend/internal/shared/router"
 )
 
 // @title Thothix API

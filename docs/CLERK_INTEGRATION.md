@@ -737,7 +737,7 @@ For developers who need to understand the technical details of what changed, see
 
 🔧 **Router Configuration**: Check [router.go](../backend/internal/router/router.go)
 
-🛡️ **Middleware Implementation**: View [clerk_auth.go](../backend/internal/middleware/clerk_auth.go)
+🛡️ **Middleware Implementation**: View [clerk_auth.go](../backend/internal/shared/middleware/clerk_auth.go)
 
 🐳 **Docker Setup**: Check [docker-compose.yml](../docker-compose.yml)
 

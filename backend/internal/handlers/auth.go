@@ -7,20 +7,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"thothix-backend/internal/dto"
-	"thothix-backend/internal/middleware"
-	"thothix-backend/internal/services"
+	"thothix-backend/internal/shared/dto"
+	sharedHandlers "thothix-backend/internal/shared/handlers"
+	sharedMiddleware "thothix-backend/internal/shared/middleware"
+	usersDto "thothix-backend/internal/users/dto"
+	"thothix-backend/internal/users/service"
 )
 
 type AuthHandler struct {
 	db               *gorm.DB
-	userService      services.UserServiceInterface
-	clerkUserService services.ClerkUserServiceInterface
-	userServiceImpl  *services.UserService // For legacy webhook methods
+	userService      service.UserServiceInterface
+	clerkUserService service.ClerkUserServiceInterface
+	userServiceImpl  *service.UserService // For legacy webhook methods
 }
 
 func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	userServiceImpl := services.NewUserService(db)
+	userServiceImpl := service.NewUserService(db)
 	return &AuthHandler{
 		db:               db,
 		userService:      userServiceImpl,
@@ -42,7 +44,7 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 // @Failure 500 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/sync [post]
 func (h *AuthHandler) SyncUser(c *gin.Context) {
-	ctx := WrapContext(c)
+	ctx := sharedHandlers.WrapContext(c)
 
 	clerkUserID, exists := c.Get("clerk_user_id")
 	if !exists {
@@ -77,7 +79,7 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 	}
 
 	// Prepara i dati per il servizio usando il DTO
-	clerkSyncReq := &dto.ClerkUserSyncRequest{
+	clerkSyncReq := &usersDto.ClerkUserSyncRequest{
 		ClerkID:   clerkUserID.(string),
 		Email:     clerkEmail.(string),
 		Name:      fullName,
@@ -94,7 +96,7 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 			return nil
 		},
 		// Success
-		func(success *dto.UserResponse) interface{} {
+		func(success *usersDto.UserResponse) interface{} {
 			ctx.SuccessResponse(success)
 			return nil
 		},
@@ -117,7 +119,7 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 // @Failure 404 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/me [get]
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
-	ctx := WrapContext(c)
+	ctx := sharedHandlers.WrapContext(c)
 
 	clerkUserID, exists := c.Get("clerk_user_id")
 	if !exists {
@@ -134,7 +136,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 			return nil
 		},
 		// Success
-		func(success *dto.UserResponse) interface{} {
+		func(success *usersDto.UserResponse) interface{} {
 			ctx.SuccessResponse(success)
 			return nil
 		},
@@ -166,10 +168,10 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 // @Router /api/v1/auth/webhooks/clerk [post]
 func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 	// Get typed webhook event from middleware
-	webhookID, _ := middleware.GetWebhookIDFromContext(c)
+	webhookID, _ := sharedMiddleware.GetWebhookIDFromContext(c)
 	log.Printf("Processing Clerk webhook %s", webhookID)
 
-	event, exists := middleware.GetWebhookEventFromContext(c)
+	event, exists := sharedMiddleware.GetWebhookEventFromContext(c)
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Webhook event not found in context"})
 		return
@@ -179,14 +181,14 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 
 	switch event.Type {
 	case "user.created":
-		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
+		if userData, ok := sharedMiddleware.GetWebhookUserDataFromContext(c); ok {
 			response := h.clerkUserService.ProcessClerkWebhook(userData)
 			response.Match(
 				func(err error) interface{} {
 					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error handling user.created webhook %s", webhookID))
 					return nil
 				},
-				func(syncResponse *dto.ClerkUserSyncResponse) interface{} {
+				func(syncResponse *usersDto.ClerkUserSyncResponse) interface{} {
 					log.Printf("Created user %s from webhook %s", syncResponse.User.ID, webhookID)
 					return nil
 				},
@@ -205,14 +207,14 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 		}
 
 	case "user.updated":
-		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
+		if userData, ok := sharedMiddleware.GetWebhookUserDataFromContext(c); ok {
 			response := h.clerkUserService.ProcessClerkWebhook(userData)
 			response.Match(
 				func(err error) interface{} {
 					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error handling user.updated webhook %s", webhookID))
 					return nil
 				},
-				func(syncResponse *dto.ClerkUserSyncResponse) interface{} {
+				func(syncResponse *usersDto.ClerkUserSyncResponse) interface{} {
 					log.Printf("Updated user %s from webhook %s", syncResponse.User.ID, webhookID)
 					return nil
 				},
@@ -231,7 +233,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 		}
 
 	case "user.deleted":
-		if userData, ok := middleware.GetWebhookUserDataFromContext(c); ok {
+		if userData, ok := sharedMiddleware.GetWebhookUserDataFromContext(c); ok {
 			// First find the user by Clerk ID to get internal ID
 			getUserResponse := h.userService.GetUserByClerkID(userData.ID)
 			var userID string
@@ -241,7 +243,7 @@ func (h *AuthHandler) WebhookHandler(c *gin.Context) {
 					c.JSON(http.StatusInternalServerError, dto.LoggedSystemErrorResponse(err, "Error finding user for deletion webhook %s", webhookID))
 					return nil
 				},
-				func(user *dto.UserResponse) interface{} {
+				func(user *usersDto.UserResponse) interface{} {
 					userID = user.ID
 					return nil
 				},

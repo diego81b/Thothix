@@ -5,7 +5,9 @@ import (
 	"thothix-backend/internal/handlers"
 	"thothix-backend/internal/middleware"
 	"thothix-backend/internal/models"
-	"thothix-backend/internal/services"
+	sharedHandlers "thothix-backend/internal/shared/handlers"
+	sharedMiddleware "thothix-backend/internal/shared/middleware"
+	userHandlers "thothix-backend/internal/users/handlers"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -21,23 +23,19 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
 
 	// Middleware globali
-	r.Use(middleware.CORS())
-	r.Use(middleware.Logger())
-	r.Use(middleware.Recovery())
+	r.Use(sharedMiddleware.CORS())
+	r.Use(sharedMiddleware.Logger())
+	r.Use(sharedMiddleware.Recovery())
 
 	// Swagger documentation
 	url := ginSwagger.URL("http://localhost:30000/swagger/doc.json") // The url pointing to API definition
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	// Health check
-	r.GET("/health", handlers.HealthCheck)
-
-	// Initialize services
-	userService := services.NewUserService(db)
+	r.GET("/health", sharedHandlers.HealthCheck)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db)
-	userHandler := handlers.NewUserHandler(userService)
 	projectHandler := handlers.NewProjectHandler(db)
 	channelHandler := handlers.NewChannelHandler(db)
 	messageHandler := handlers.NewMessageHandler(db)
@@ -50,14 +48,14 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 
 	// Webhook di Clerk (middleware + handler pattern)
 	auth.POST("/webhooks/clerk",
-		middleware.ClerkWebhookHandler(cfg.ClerkWebhookSecret),
+		sharedMiddleware.ClerkWebhookHandler(cfg.ClerkWebhookSecret),
 		authHandler.WebhookHandler,
 	)
 
 	// Protected routes con Clerk SDK Auth
 	protected := v1.Group("/")
-	protected.Use(middleware.ClerkAuthSDK(cfg.ClerkSecretKey))
-	protected.Use(middleware.SetUserContext()) // Add user context for GORM hooks
+	protected.Use(sharedMiddleware.ClerkAuthSDK(cfg.ClerkSecretKey))
+	protected.Use(sharedMiddleware.SetUserContext()) // Add user context for GORM hooks
 
 	// Auth routes (sync with Clerk)
 	authProtected := protected.Group("/auth")
@@ -65,13 +63,8 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	authProtected.GET("/me", authHandler.GetCurrentUser)
 	authProtected.POST("/import-users", middleware.RequireSystemRole(db, models.RoleAdmin), authHandler.ImportUsers)
 
-	// Users
-	users := protected.Group("/users")
-	users.GET("", userHandler.GetUsers)
-	users.PUT("/me", userHandler.UpdateUser) // Will need special handling for current user
-	users.GET("/:id", userHandler.GetUserByID)
-	users.PUT("/:id", middleware.RequirePermission(db, models.PermissionUserManage, nil), userHandler.UpdateUser)
-	users.GET("/:id/roles", roleHandler.GetUserRoles)
+	// Users - using the new vertical slice structure
+	userHandlers.RegisterUserRoutes(protected, db)
 
 	// Roles management (only admins can manage roles)
 	roles := protected.Group("/roles")

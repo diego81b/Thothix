@@ -1,15 +1,15 @@
-package service
+package e2e
 
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 	"thothix-backend/internal/config"
 	"thothix-backend/internal/shared/router"
@@ -18,24 +18,13 @@ import (
 	usersDto "thothix-backend/internal/users/dto"
 )
 
-// UserEndToEndTestSuite tests complete user flows that span multiple components
-// These tests validate the entire request pipeline: Router -> Middleware -> Handler -> Service -> DB
-type UserEndToEndTestSuite struct {
-	suite.Suite
-	container *sharedTesting.PostgresTestContainer
-}
-
-func (suite *UserEndToEndTestSuite) SetupSuite() {
+// setupTestContainer creates a shared test container for e2e tests
+func setupTestContainer(t *testing.T) *sharedTesting.PostgresTestContainer {
 	gin.SetMode(gin.TestMode)
-	suite.container = sharedTesting.GetSharedTestContainer(
-		suite.T(),
-		"integration/user_e2e",
+	return sharedTesting.NewPostgresTestContainer(
+		t,
 		[]interface{}{&domain.User{}},
 	)
-}
-
-func (suite *UserEndToEndTestSuite) TearDownSuite() {
-	// Cleanup handled by t.Cleanup in GetSharedTestContainer
 }
 
 // TestCompleteUserLifecycle tests the entire user lifecycle in one flow
@@ -43,11 +32,13 @@ func (suite *UserEndToEndTestSuite) TearDownSuite() {
 // 1. Request routing and middleware
 // 2. Multi-step business flows
 // 3. Data consistency across operations
-func (suite *UserEndToEndTestSuite) TestCompleteUserLifecycle() {
-	suite.container.WithTransaction(func(db *gorm.DB) {
-		// Setup router with transaction DB
+func TestCompleteUserLifecycle(t *testing.T) {
+	container := setupTestContainer(t)
+
+	container.WithTransaction(func(db *gorm.DB) {
+		// Setup router with transaction DB - using test router without authentication
 		cfg := &config.Config{Environment: "test"}
-		testRouter := router.Setup(db, cfg)
+		testRouter := router.SetupTestRouter(db, cfg)
 
 		testName := "CompleteUserLifecycle"
 		userID := ""
@@ -65,31 +56,41 @@ func (suite *UserEndToEndTestSuite) TestCompleteUserLifecycle() {
 		w := httptest.NewRecorder()
 		testRouter.ServeHTTP(w, req)
 
-		assert.Equal(suite.T(), http.StatusCreated, w.Code)
+		assert.Equal(t, http.StatusCreated, w.Code)
+
+		// Debug: Print response body if test fails
+		if w.Code != http.StatusCreated {
+			t.Logf("Create user failed. Status: %d, Body: %s", w.Code, w.Body.String())
+		}
 
 		var createResponse map[string]interface{}
 		err := json.Unmarshal(w.Body.Bytes(), &createResponse)
-		assert.NoError(suite.T(), err)
+		assert.NoError(t, err)
+
+		// Debug: Print response structure if data is nil
+		if createResponse["data"] == nil {
+			t.Logf("Response data is nil. Full response: %+v", createResponse)
+		}
 
 		data := createResponse["data"].(map[string]interface{})
 		userID = data["id"].(string)
-		assert.NotEmpty(suite.T(), userID)
-		assert.Equal(suite.T(), createReq.Email, data["email"])
+		assert.NotEmpty(t, userID)
+		assert.Equal(t, createReq.Email, data["email"])
 
 		// Step 2: Get User (verify creation)
 		req, _ = http.NewRequest("GET", "/api/v1/users/"+userID, nil)
 		w = httptest.NewRecorder()
 		testRouter.ServeHTTP(w, req)
 
-		assert.Equal(suite.T(), http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 
 		var getResponse map[string]interface{}
 		err = json.Unmarshal(w.Body.Bytes(), &getResponse)
-		assert.NoError(suite.T(), err)
+		assert.NoError(t, err)
 
 		userData := getResponse["data"].(map[string]interface{})
-		assert.Equal(suite.T(), userID, userData["id"])
-		assert.Equal(suite.T(), createReq.Email, userData["email"])
+		assert.Equal(t, userID, userData["id"])
+		assert.Equal(t, createReq.Email, userData["email"])
 
 		// Step 3: Update User
 		newEmail := "updated-lifecycle-" + testName + "@example.com"
@@ -105,29 +106,29 @@ func (suite *UserEndToEndTestSuite) TestCompleteUserLifecycle() {
 		w = httptest.NewRecorder()
 		testRouter.ServeHTTP(w, req)
 
-		assert.Equal(suite.T(), http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 
 		var updateResponse map[string]interface{}
 		err = json.Unmarshal(w.Body.Bytes(), &updateResponse)
-		assert.NoError(suite.T(), err)
+		assert.NoError(t, err)
 
 		updatedData := updateResponse["data"].(map[string]interface{})
-		assert.Equal(suite.T(), newEmail, updatedData["email"])
-		assert.Equal(suite.T(), newName, updatedData["name"])
+		assert.Equal(t, newEmail, updatedData["email"])
+		assert.Equal(t, newName, updatedData["name"])
 
 		// Step 4: Delete User
 		req, _ = http.NewRequest("DELETE", "/api/v1/users/"+userID, nil)
 		w = httptest.NewRecorder()
 		testRouter.ServeHTTP(w, req)
 
-		assert.Equal(suite.T(), http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Step 5: Verify deletion (should return 404)
 		req, _ = http.NewRequest("GET", "/api/v1/users/"+userID, nil)
 		w = httptest.NewRecorder()
 		testRouter.ServeHTTP(w, req)
 
-		assert.Equal(suite.T(), http.StatusNotFound, w.Code)
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }
 
@@ -136,21 +137,24 @@ func (suite *UserEndToEndTestSuite) TestCompleteUserLifecycle() {
 // 2. Query parameter parsing
 // 3. Response formatting
 // This is valuable as integration test because it validates the complete pagination pipeline
-func (suite *UserEndToEndTestSuite) TestUserPaginationEndToEnd() {
-	suite.container.WithTransaction(func(db *gorm.DB) {
-		// Setup router with transaction DB
+func TestUserPaginationEndToEnd(t *testing.T) {
+	container := setupTestContainer(t)
+
+	container.WithTransaction(func(db *gorm.DB) {
+		// Setup router with transaction DB - using test router without authentication
 		cfg := &config.Config{Environment: "test"}
-		testRouter := router.Setup(db, cfg)
+		testRouter := router.SetupTestRouter(db, cfg)
 
 		testName := "PaginationEndToEnd"
 
 		// Create multiple users via API (tests creation + data consistency)
 		userIDs := make([]string, 5)
 		for i := 0; i < 5; i++ {
+			// Fixed: use proper string conversion instead of rune casting
 			createReq := usersDto.CreateUserRequest{
-				Email:   "pagination-" + testName + "-" + string(rune('1'+i)) + "@example.com",
-				Name:    "Pagination User " + testName + " " + string(rune('1'+i)),
-				ClerkID: "clerk-pagination-" + testName + "-" + string(rune('1'+i)),
+				Email:   fmt.Sprintf("pagination-%s-%d@example.com", testName, i+1),
+				Name:    fmt.Sprintf("Pagination User %s %d", testName, i+1),
+				ClerkID: fmt.Sprintf("clerk-pagination-%s-%d", testName, i+1),
 			}
 
 			reqBody, _ := json.Marshal(createReq)
@@ -159,11 +163,11 @@ func (suite *UserEndToEndTestSuite) TestUserPaginationEndToEnd() {
 			w := httptest.NewRecorder()
 			testRouter.ServeHTTP(w, req)
 
-			assert.Equal(suite.T(), http.StatusCreated, w.Code)
+			assert.Equal(t, http.StatusCreated, w.Code)
 
 			var response map[string]interface{}
 			err := json.Unmarshal(w.Body.Bytes(), &response)
-			assert.NoError(suite.T(), err)
+			assert.NoError(t, err)
 
 			data := response["data"].(map[string]interface{})
 			userIDs[i] = data["id"].(string)
@@ -174,40 +178,36 @@ func (suite *UserEndToEndTestSuite) TestUserPaginationEndToEnd() {
 		w := httptest.NewRecorder()
 		testRouter.ServeHTTP(w, req)
 
-		assert.Equal(suite.T(), http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 
 		var paginationResponse map[string]interface{}
 		err := json.Unmarshal(w.Body.Bytes(), &paginationResponse)
-		assert.NoError(suite.T(), err)
+		assert.NoError(t, err)
 
 		data := paginationResponse["data"].(map[string]interface{})
 		items := data["items"].([]interface{})
 
-		assert.Len(suite.T(), items, 3)
-		assert.Equal(suite.T(), float64(5), data["total"]) // JSON numbers are float64
-		assert.Equal(suite.T(), float64(1), data["page"])
-		assert.Equal(suite.T(), float64(3), data["per_page"])
+		assert.Len(t, items, 3)
+		assert.Equal(t, float64(5), data["total"]) // JSON numbers are float64
+		assert.Equal(t, float64(1), data["page"])
+		assert.Equal(t, float64(3), data["per_page"])
 
 		// Test pagination - page 2
 		req, _ = http.NewRequest("GET", "/api/v1/users?page=2&per_page=3", nil)
 		w = httptest.NewRecorder()
 		testRouter.ServeHTTP(w, req)
 
-		assert.Equal(suite.T(), http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 
 		err = json.Unmarshal(w.Body.Bytes(), &paginationResponse)
-		assert.NoError(suite.T(), err)
+		assert.NoError(t, err)
 
 		data = paginationResponse["data"].(map[string]interface{})
 		items = data["items"].([]interface{})
 
-		assert.Len(suite.T(), items, 2) // Remaining 2 users
-		assert.Equal(suite.T(), float64(5), data["total"])
-		assert.Equal(suite.T(), float64(2), data["page"])
-		assert.Equal(suite.T(), float64(3), data["per_page"])
+		assert.Len(t, items, 2) // Remaining 2 users
+		assert.Equal(t, float64(5), data["total"])
+		assert.Equal(t, float64(2), data["page"])
+		assert.Equal(t, float64(3), data["per_page"])
 	})
-}
-
-func TestUserEndToEndTestSuite(t *testing.T) {
-	suite.Run(t, new(UserEndToEndTestSuite))
 }

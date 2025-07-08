@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.0.10 Complete Testing Infrastructure and Development Workflow (2025-07-08)
+
+### **feat: comprehensive test automation with unit/integration/e2e separation**
+
+- **Test categorization and separation**:
+  - Unit tests: Fast isolated tests (domain, dto, mappers, handlers) - 81 tests
+  - Integration tests: Database integration tests (service layer) - 3 tests
+  - E2E tests: Full HTTP pipeline tests with containers - 2 tests
+- **Smart test discovery**: Centralized configuration in `getTestConfig()` for automatic domain pattern generation
+- **Cross-platform test execution**: Windows-compatible with TestContainers, Ryuk disabled
+- **Test script generalization**: `scripts/dev.mjs` supports multiple domains with extensible architecture
+
+### **fix: resolve test execution issues on Windows**
+
+- **TestContainers compatibility**: Disabled Ryuk reaper with `TESTCONTAINERS_RYUK_DISABLED=true`
+- **Test timing fixes**: Updated assertions for `UpdatedAt` to handle timing precision (`After(now) || Equal(now)`)
+- **Bulk test data generation**: Fixed string/rune conversion issues in integration tests
+- **Authentication mocking**: Proper middleware mocking in handler tests to prevent 401 errors
+- **E2E test refactoring**: Converted from suite-based to function-based approach with test router
+
+### **feat: enhanced development script with intelligent test filtering**
+
+- **Centralized configuration**: `getDomainConfig()` and `getTestConfig()` for maintainable test patterns
+- **Regex-based test filtering**: Unit tests exclude "Integration" patterns, integration tests include only "Integration"
+- **Directory management**: Robust `cd()` handling for consecutive test runs
+- **Enhanced npm scripts**: `test`, `test:integration`, `test:e2e`, `test:all`, `pre-commit`, `pre-commit:full`
+- **Debug support**: `--debug` flag for verbose output and coverage reporting
+
+### **refactor: streamlined VS Code tasks with npm integration**
+
+- **Task consolidation**: Removed duplicate and obsolete tasks (dev.bat references)
+- **npm-based execution**: All tasks now use `npm run` commands for consistency
+- **Clear task hierarchy**:
+  - "Dev: Pre-commit (Fast)" - Quick pre-commit with unit tests only
+  - "Dev: Pre-commit (Full)" - Complete pre-commit with all tests (default)
+  - Individual test tasks for development workflow
+- **Cross-platform compatibility**: All tasks work consistently across Windows/Linux/macOS
+
+### **docs: comprehensive testing documentation and best practices**
+
+- **Extension guides**: Clear instructions for adding new domains to test system
+- **Testing strategy**: Documented separation between unit, integration, and e2e tests
+- **Developer workflow**: Step-by-step guide for test execution and debugging
+- **Architecture documentation**: Test infrastructure patterns and conventions
+
 ## v0.0.9 Implement Vertical Slice Architecture with Domain-Driven Structure (2025-07-07)
 
 ### **feat: refactor to vertical slice architecture for better domain separation**

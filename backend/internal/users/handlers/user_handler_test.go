@@ -76,6 +76,15 @@ func (suite *UserHandlerTestSuite) SetupTest() {
 	suite.handler = NewUserHandler(suite.mockService)
 
 	suite.router = gin.New()
+
+	// Add a mock auth middleware to simulate authenticated requests
+	suite.router.Use(func(c *gin.Context) {
+		// Mock user context - simulates what ClerkAuthSDK middleware would do
+		c.Set("clerk_user_id", "test-clerk-user-id")
+		c.Set("user_id", "test-user-id")
+		c.Next()
+	})
+
 	suite.router.GET("/users/:id", suite.handler.GetUserByID)
 	suite.router.POST("/users", suite.handler.CreateUser)
 	suite.router.GET("/users", suite.handler.GetUsers)

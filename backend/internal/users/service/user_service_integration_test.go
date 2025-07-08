@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,10 +42,11 @@ func (suite *UserServiceIntegrationTestSuite) TestBulkUserOperations() {
 		// Create multiple users
 		userIDs := make([]string, 10)
 		for i := 0; i < 10; i++ {
+			idx := fmt.Sprintf("%d", i+1)
 			req := &usersDto.CreateUserRequest{
-				Email:   "bulk-" + testName + "-" + string(rune('1'+i)) + "@example.com",
-				Name:    "Bulk User " + testName + " " + string(rune('1'+i)),
-				ClerkID: "clerk-bulk-" + testName + "-" + string(rune('1'+i)),
+				Email:   "bulk-" + testName + "-" + idx + "@example.com",
+				Name:    "Bulk User " + testName + " " + idx,
+				ClerkID: "clerk-bulk-" + testName + "-" + idx,
 			}
 
 			response := service.CreateUser(req)

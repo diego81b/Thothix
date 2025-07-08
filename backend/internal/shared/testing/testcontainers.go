@@ -2,6 +2,7 @@ package testing
 
 import (
 	"context"
+	"os"
 	"sync"
 	"testing"
 
@@ -60,6 +61,10 @@ func NewPostgresTestContainer(t *testing.T, models []interface{}, config ...Test
 		cfg = config[0]
 	}
 
+	// Disable testcontainers reaper to avoid port conflicts on Windows
+	// This prevents "Failed to start PostgreSQL container: port not found: creating reaper failed" errors
+	os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
+
 	// Start PostgreSQL container
 	postgresContainer, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage(cfg.Image),
@@ -73,6 +78,13 @@ func NewPostgresTestContainer(t *testing.T, models []interface{}, config ...Test
 	if err != nil {
 		t.Fatalf("Failed to start PostgreSQL container: %v", err)
 	}
+
+	// Cleanup function to ensure container is terminated
+	t.Cleanup(func() {
+		if postgresContainer != nil {
+			_ = postgresContainer.Terminate(ctx)
+		}
+	})
 
 	// Get connection details
 	connectionString, err := postgresContainer.ConnectionString(ctx, "sslmode=disable")

@@ -175,7 +175,7 @@ func (suite *UserMapperTestSuite) TestUpdateRequestToModel() {
 	assert.Equal(suite.T(), "New Name", user.Name)
 	assert.Equal(suite.T(), "newuser", user.Username)
 	assert.Equal(suite.T(), "https://example.com/new-avatar.jpg", user.AvatarURL)
-	assert.True(suite.T(), user.UpdatedAt.After(now))
+	assert.True(suite.T(), user.UpdatedAt.After(now) || user.UpdatedAt.Equal(now))
 }
 
 func (suite *UserMapperTestSuite) TestUpdateRequestToModel_NilInputs() {

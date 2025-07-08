@@ -99,6 +99,68 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	return r
 }
 
+// SetupTestRouter creates a router without authentication middleware for testing
+func SetupTestRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
+	if cfg.Environment == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	r := gin.Default()
+
+	// Basic middleware for tests
+	r.Use(sharedMiddleware.CORS())
+	r.Use(sharedMiddleware.Logger())
+	r.Use(sharedMiddleware.Recovery())
+
+	// Mock authentication middleware for tests
+	r.Use(func(c *gin.Context) {
+		// Mock user context - simulates what ClerkAuthSDK middleware would do
+		c.Set("clerk_user_id", "test-clerk-user-id")
+		c.Set("user_id", "test-user-id")
+		c.Next()
+	})
+	r.Use(sharedMiddleware.SetUserContext()) // Add user context for GORM hooks
+
+	// Health check
+	r.GET("/health", sharedHandlers.HealthCheck)
+
+	// Initialize handlers
+	authHandler := handlers.NewAuthHandler(db)
+	projectHandler := handlers.NewProjectHandler(db)
+	channelHandler := handlers.NewChannelHandler(db)
+	messageHandler := handlers.NewMessageHandler(db)
+
+	// API routes
+	v1 := r.Group("/api/v1")
+
+	// Auth routes (no authentication required in tests)
+	auth := v1.Group("/auth")
+	auth.POST("/sync", authHandler.SyncUser)
+	auth.GET("/me", authHandler.GetCurrentUser)
+
+	// Users - using the new vertical slice structure (no auth middleware in tests)
+	userHandlers.RegisterUserRoutes(v1, db)
+
+	// Projects (simplified for tests)
+	projects := v1.Group("/projects")
+	projects.GET("", projectHandler.GetProjects)
+	projects.POST("", projectHandler.CreateProject)
+	projects.GET("/:id", projectHandler.GetProject)
+	projects.PUT("/:id", projectHandler.UpdateProject)
+	projects.DELETE("/:id", projectHandler.DeleteProject)
+
+	// Channels (simplified for tests)
+	channels := v1.Group("/channels")
+	channels.GET("", channelHandler.GetChats)
+	channels.POST("", channelHandler.CreateChat)
+	channels.GET("/:id", channelHandler.GetChat)
+	channels.POST("/:id/join", channelHandler.JoinChannel)
+	channels.GET("/:id/messages", messageHandler.GetMessages)
+	channels.POST("/:id/messages", messageHandler.SendMessage)
+
+	return r
+}
+
 // Helper function to create string pointer
 func stringPtr(s string) *string {
 	return &s

@@ -11,6 +11,11 @@ import (
 	usersDto "thothix-backend/internal/users/dto"
 )
 
+// Helper function to create string pointer
+func stringPtr(s string) *string {
+	return &s
+}
+
 type UserMapperTestSuite struct {
 	suite.Suite
 	mapper *UserMapper
@@ -37,7 +42,7 @@ func (suite *UserMapperTestSuite) TestModelToDto() {
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
-		ClerkID:   "clerk-123",
+		ClerkID:   stringPtr("clerk-123"), // Use helper function for pointer
 		Email:     "test@example.com",
 		Name:      "Test User",
 		Username:  "testuser",
@@ -115,7 +120,6 @@ func (suite *UserMapperTestSuite) TestCreateRequestToModel() {
 		Email:     "test@example.com",
 		Name:      "Test User",
 		Username:  "testuser",
-		ClerkID:   "clerk-123",
 		FirstName: "Test",
 		LastName:  "User",
 	}
@@ -126,7 +130,7 @@ func (suite *UserMapperTestSuite) TestCreateRequestToModel() {
 	// Assert
 	assert.NotNil(suite.T(), user)
 	assert.NotEmpty(suite.T(), user.ID)
-	assert.Equal(suite.T(), "clerk-123", user.ClerkID)
+	assert.Nil(suite.T(), user.ClerkID) // ClerkID should be nil for manual user creation
 	assert.Equal(suite.T(), "test@example.com", user.Email)
 	assert.Equal(suite.T(), "Test User", user.Name)
 	assert.Equal(suite.T(), "testuser", user.Username)
@@ -201,7 +205,8 @@ func (suite *UserMapperTestSuite) TestClerkSyncRequestToModel() {
 	// Assert
 	assert.NotNil(suite.T(), user)
 	assert.NotEmpty(suite.T(), user.ID)
-	assert.Equal(suite.T(), "clerk-123", user.ClerkID)
+	assert.NotNil(suite.T(), user.ClerkID)
+	assert.Equal(suite.T(), "clerk-123", *user.ClerkID) // Dereference pointer
 	assert.Equal(suite.T(), "test@example.com", user.Email)
 	assert.Equal(suite.T(), "Test User", user.Name)
 	assert.Equal(suite.T(), "testuser", user.Username)

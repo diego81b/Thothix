@@ -44,9 +44,9 @@ func (suite *UserServiceIntegrationTestSuite) TestBulkUserOperations() {
 		for i := 0; i < 10; i++ {
 			idx := fmt.Sprintf("%d", i+1)
 			req := &usersDto.CreateUserRequest{
-				Email:   "bulk-" + testName + "-" + idx + "@example.com",
-				Name:    "Bulk User " + testName + " " + idx,
-				ClerkID: "clerk-bulk-" + testName + "-" + idx,
+				Email: "bulk-" + testName + "-" + idx + "@example.com",
+				Name:  "Bulk User " + testName + " " + idx,
+				// ClerkID removed - CreateUserRequest is for manual user creation only
 			}
 
 			response := service.CreateUser(req)
@@ -88,9 +88,8 @@ func (suite *UserServiceIntegrationTestSuite) TestUserDataConsistency() {
 
 		// Create user
 		createReq := &usersDto.CreateUserRequest{
-			Email:   "consistency-" + testName + "@example.com",
-			Name:    "Consistency User " + testName,
-			ClerkID: "clerk-consistency-" + testName,
+			Email: "consistency-" + testName + "@example.com",
+			Name:  "Consistency User " + testName,
 		}
 
 		createResponse := service.CreateUser(createReq)
@@ -125,9 +124,6 @@ func (suite *UserServiceIntegrationTestSuite) TestUserDataConsistency() {
 
 			assert.Equal(suite.T(), update.email, fetchedUser.Email)
 			assert.Equal(suite.T(), update.name, fetchedUser.Name)
-
-			// Verify ClerkID remains unchanged
-			assert.Equal(suite.T(), createReq.ClerkID, fetchedUser.ClerkID)
 
 			// Log progress
 			suite.T().Logf("Completed update %d/%d: %s", i+1, len(updates), update.email)

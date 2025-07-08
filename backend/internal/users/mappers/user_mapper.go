@@ -22,9 +22,15 @@ func (m *UserMapper) ModelToDto(user *domain.User) *usersDto.UserDto {
 		return nil
 	}
 
+	// Handle nullable ClerkID
+	var clerkID string
+	if user.ClerkID != nil {
+		clerkID = *user.ClerkID
+	}
+
 	return &usersDto.UserDto{
 		ID:        user.ID,
-		ClerkID:   user.ClerkID,
+		ClerkID:   clerkID, // Convert from *string to string (empty if nil)
 		Email:     user.Email,
 		Name:      user.Name,
 		Username:  user.Username,
@@ -52,13 +58,14 @@ func (m *UserMapper) ModelsToDtos(users []domain.User) []usersDto.UserDto {
 }
 
 // CreateRequestToModel converts CreateUserRequest DTO to User model
+// Note: ClerkID is not set here as CreateUserRequest is for manual user creation only
 func (m *UserMapper) CreateRequestToModel(req *usersDto.CreateUserRequest) *domain.User {
 	if req == nil {
 		return nil
 	}
 
 	user := &domain.User{
-		ClerkID:  req.ClerkID,
+		// ClerkID intentionally left empty - will be set later via Clerk webhook sync
 		Email:    req.Email,
 		Name:     req.Name,
 		Username: req.Username,
@@ -101,7 +108,7 @@ func (m *UserMapper) ClerkSyncRequestToModel(req *usersDto.ClerkUserSyncRequest)
 	}
 
 	user := &domain.User{
-		ClerkID:   req.ClerkID,
+		ClerkID:   &req.ClerkID, // Convert string to *string
 		Email:     req.Email,
 		Name:      req.Name,
 		Username:  req.Username,

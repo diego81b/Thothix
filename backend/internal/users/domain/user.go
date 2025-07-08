@@ -9,8 +9,8 @@ import (
 // User represents a user entity in the users domain
 type User struct {
 	models.BaseModel
-	// Clerk user ID (primary identifier)
-	ClerkID    string          `json:"clerk_id" gorm:"uniqueIndex;not null"`
+	// Clerk user ID (optional - NULL for manually created users)
+	ClerkID    *string         `json:"clerk_id" gorm:"uniqueIndex"` // NULL for manual users, unique for Clerk users
 	Email      string          `json:"email"`
 	Name       string          `json:"name"`
 	Username   string          `json:"username"`

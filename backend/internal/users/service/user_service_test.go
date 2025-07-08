@@ -50,7 +50,7 @@ func (suite *UserServiceTestSuite) TestGetUserByID_Success() {
 		// Arrange - use unique IDs for this test
 		testName := "TestGetUserByID_Success"
 		user := &domain.User{
-			ClerkID: "clerk-" + testName,
+			ClerkID: stringPtr("clerk-" + testName), // Use helper function
 			Email:   "test-" + testName + "@example.com",
 			Name:    "Test User " + testName,
 		}
@@ -112,7 +112,7 @@ func (suite *UserServiceTestSuite) TestGetUserByClerkID_Success() {
 		service := NewUserService(db)
 
 		// Act
-		response := service.GetUserByClerkID(user.ClerkID)
+		response := service.GetUserByClerkID(*user.ClerkID) // Dereference pointer
 
 		// Assert
 		userResponse := sharedTesting.AssertSuccessWithValue(suite.T(), response.Response)
@@ -126,9 +126,9 @@ func (suite *UserServiceTestSuite) TestGetUsers_Success() {
 		// Arrange - use unique data for this test
 		testName := "TestGetUsers_Success"
 		users := []domain.User{
-			{ClerkID: "clerk-1-" + testName, Email: "user1-" + testName + "@example.com", Name: "User 1 " + testName},
-			{ClerkID: "clerk-2-" + testName, Email: "user2-" + testName + "@example.com", Name: "User 2 " + testName},
-			{ClerkID: "clerk-3-" + testName, Email: "user3-" + testName + "@example.com", Name: "User 3 " + testName},
+			{ClerkID: stringPtr("clerk-1-" + testName), Email: "user1-" + testName + "@example.com", Name: "User 1 " + testName},
+			{ClerkID: stringPtr("clerk-2-" + testName), Email: "user2-" + testName + "@example.com", Name: "User 2 " + testName},
+			{ClerkID: stringPtr("clerk-3-" + testName), Email: "user3-" + testName + "@example.com", Name: "User 3 " + testName},
 		}
 		for i, user := range users {
 			user.ID = fmt.Sprintf("user-id-%d-%s", i+1, testName)
@@ -163,9 +163,9 @@ func (suite *UserServiceTestSuite) TestCreateUser_Success() {
 		// Arrange - use unique data for this test
 		testName := "TestCreateUser_Success"
 		req := &usersDto.CreateUserRequest{
-			Email:   "test-" + testName + "@example.com",
-			Name:    "Test User " + testName,
-			ClerkID: "clerk-" + testName,
+			Email: "test-" + testName + "@example.com",
+			Name:  "Test User " + testName,
+			// ClerkID removed - CreateUserRequest is for manual user creation only
 		}
 
 		// Act
@@ -212,9 +212,9 @@ func (suite *UserServiceTestSuite) TestCreateUser_DuplicateEmail() {
 		service := NewUserService(db)
 
 		req := &usersDto.CreateUserRequest{
-			Email:   existingUser.Email, // Same email as existing user
-			Name:    "New User " + testName,
-			ClerkID: "clerk-new-" + testName,
+			Email: existingUser.Email, // Same email as existing user
+			Name:  "New User " + testName,
+			// ClerkID removed - CreateUserRequest is for manual user creation only
 		}
 
 		// Act
@@ -324,7 +324,7 @@ func (suite *UserServiceTestSuite) TestSyncUserFromClerk_ExistingUser() {
 		service := NewUserService(db)
 
 		req := &usersDto.ClerkUserSyncRequest{
-			ClerkID:   existingUser.ClerkID, // Same ClerkID to update existing user
+			ClerkID:   *existingUser.ClerkID, // Dereference pointer to get string
 			Email:     "new-" + testName + "@example.com",
 			Name:      "New Name " + testName,
 			Username:  "newuser" + testName,
@@ -343,11 +343,17 @@ func (suite *UserServiceTestSuite) TestSyncUserFromClerk_ExistingUser() {
 
 // generateUniqueTestUser creates a unique user for testing based on test name
 func (suite *UserServiceTestSuite) generateUniqueTestUser(testIdentifier string) *domain.User {
+	clerkID := "clerk-" + testIdentifier
 	return &domain.User{
-		ClerkID: "clerk-" + testIdentifier,
+		ClerkID: &clerkID, // Convert string to *string
 		Email:   "test-" + testIdentifier + "@example.com",
 		Name:    "Test User " + testIdentifier,
 	}
+}
+
+// stringPtr is a helper function to convert string to *string
+func stringPtr(s string) *string {
+	return &s
 }
 
 func TestUserServiceTestSuite(t *testing.T) {

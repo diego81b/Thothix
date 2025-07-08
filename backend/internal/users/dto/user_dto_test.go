@@ -18,7 +18,6 @@ func (suite *UserDTOTestSuite) TestCreateUserRequest() {
 		Email:     "test@example.com",
 		Name:      "Test User",
 		Username:  "testuser",
-		ClerkID:   "clerk-123",
 		FirstName: "Test",
 		LastName:  "User",
 	}
@@ -27,7 +26,6 @@ func (suite *UserDTOTestSuite) TestCreateUserRequest() {
 	assert.Equal(suite.T(), "test@example.com", req.Email)
 	assert.Equal(suite.T(), "Test User", req.Name)
 	assert.Equal(suite.T(), "testuser", req.Username)
-	assert.Equal(suite.T(), "clerk-123", req.ClerkID)
 	assert.Equal(suite.T(), "Test", req.FirstName)
 	assert.Equal(suite.T(), "User", req.LastName)
 }

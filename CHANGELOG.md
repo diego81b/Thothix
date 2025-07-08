@@ -1,5 +1,45 @@
 # Changelog
 
+## v0.0.12 Implement ClerkID Nullable Database Model for Data Integrity (2025-07-08)
+
+### **fix: make ClerkID nullable in database model for proper data consistency**
+
+- **Database schema update**: Modified `ClerkID` field from `string` to `*string` (nullable) in both:
+  - `internal/models/user.go` - Database migration model (removed `not null` constraint)
+  - `internal/users/domain/user.go` - Domain entity model (already nullable)
+- **Semantic distinction**: Ensures proper data integrity between user types:
+  - Manual users: `ClerkID = nil` (NULL in database)
+  - Clerk users: `ClerkID = &"clerk_xxx"` (actual value in database)
+- **GORM compatibility**: Updated GORM tags to handle nullable field properly with `uniqueIndex` constraint
+- **Response model alignment**: Updated `UserResponse` in models package to handle `*string` ClerkID
+
+### **test: comprehensive test updates for ClerkID pointer handling**
+
+- **Domain tests** (`user_test.go`): Updated to use ClerkID pointer with helper function
+- **Service tests** (`user_service_test.go`):
+  - Added `stringPtr(s string) *string` helper function for test data creation
+  - Updated `generateUniqueTestUser` to properly create ClerkID pointers
+  - Fixed all ClerkID references to properly dereference pointers when needed
+  - Removed ClerkID from `CreateUserRequest` test cases (manual users don't have ClerkID)
+- **E2E tests** (`user_end_to_end_test.go`): Removed ClerkID from manual user creation requests
+- **Request DTO cleanup**: Ensured `CreateUserRequest` does not include ClerkID field (manual users only)
+
+### **feat: enhanced data validation and business logic integrity**
+
+- **Clear user type distinction**: System now properly differentiates between:
+  - Users created manually via API (ClerkID = NULL)
+  - Users synchronized from Clerk webhooks (ClerkID = actual value)
+- **Improved validation**: ClerkID pointer handling prevents confusion between empty string and null values
+- **Migration safety**: GORM AutoMigrate handles schema changes automatically without data loss
+- **API consistency**: External API behavior unchanged, internal data model improved
+
+### **quality: maintained 100% test coverage with 86 passing tests**
+
+- **All test suites passing**: Domain, DTO, Mappers, Handlers, Service, Integration, E2E
+- **No breaking changes**: API contracts remain identical for external consumers
+- **Database compatibility**: Existing ClerkID values preserved during migration
+- **Type safety**: Pointer-based ClerkID eliminates null-reference errors
+
 ## v0.0.11 Refactor User DTO Architecture for Better Code Organization (2025-07-08)
 
 ### **refactor: separate user DTOs into domain-specific files for improved maintainability**
@@ -226,7 +266,7 @@
 - **Major architectural refactor**: Replace traditional error handling with functional Result Pattern and pattern matching
 - Implement generic Result Pattern types in `internal/dto/common_dto.go`:
   - `Error` - Structured error representation with code, message, and details
-  - `Exceptional[T]` - Holds either a value T or an exceptio
+  - `Exceptional[T]` - Holds either a value T or an exception
   - `Validation[T]` - Holds either a value T or validation errors
   - `Response[T]` - Main response wrapper with lazy evaluation
 - **Pattern matching**: Implement `Match()` methods for all types with proper functional composition

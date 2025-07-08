@@ -24,13 +24,14 @@ func (suite *UserDomainTestSuite) TestUserTableName() {
 
 func (suite *UserDomainTestSuite) TestSyncFromClerk() {
 	// Arrange
+	clerkID := "clerk-123"
 	user := &User{
 		BaseModel: models.BaseModel{
 			ID:        "test-id",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
-		ClerkID: "clerk-123",
+		ClerkID: &clerkID, // Use pointer
 		Email:   "old@example.com",
 		Name:    "Old Name",
 	}

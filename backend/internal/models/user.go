@@ -8,8 +8,8 @@ import (
 // swagger:model User
 type User struct {
 	BaseModel
-	// Clerk user ID (primary identifier)
-	ClerkID    string    `json:"clerk_id" gorm:"uniqueIndex;not null"`
+	// Clerk user ID (optional - NULL for manually created users)
+	ClerkID    *string   `json:"clerk_id" gorm:"uniqueIndex"`
 	Email      string    `json:"email"`
 	Name       string    `json:"name"`
 	Username   string    `json:"username"`
@@ -22,7 +22,7 @@ type User struct {
 // swagger:model UserResponse
 type UserResponse struct {
 	ID         string    `json:"id"`
-	ClerkID    string    `json:"clerk_id"`
+	ClerkID    *string   `json:"clerk_id"` // Nullable
 	Email      string    `json:"email"`
 	Name       string    `json:"name"`
 	AvatarURL  string    `json:"avatar_url"`

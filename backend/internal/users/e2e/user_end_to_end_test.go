@@ -45,9 +45,9 @@ func TestCompleteUserLifecycle(t *testing.T) {
 
 		// Step 1: Create User
 		createReq := usersDto.CreateUserRequest{
-			Email:   "lifecycle-" + testName + "@example.com",
-			Name:    "Lifecycle User " + testName,
-			ClerkID: "clerk-lifecycle-" + testName,
+			Email: "lifecycle-" + testName + "@example.com",
+			Name:  "Lifecycle User " + testName,
+			// ClerkID removed - CreateUserRequest is for manual user creation only
 		}
 
 		reqBody, _ := json.Marshal(createReq)
@@ -149,12 +149,11 @@ func TestUserPaginationEndToEnd(t *testing.T) {
 
 		// Create multiple users via API (tests creation + data consistency)
 		userIDs := make([]string, 5)
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			// Fixed: use proper string conversion instead of rune casting
 			createReq := usersDto.CreateUserRequest{
-				Email:   fmt.Sprintf("pagination-%s-%d@example.com", testName, i+1),
-				Name:    fmt.Sprintf("Pagination User %s %d", testName, i+1),
-				ClerkID: fmt.Sprintf("clerk-pagination-%s-%d", testName, i+1),
+				Email: fmt.Sprintf("pagination-%s-%d@example.com", testName, i+1),
+				Name:  fmt.Sprintf("Pagination User %s %d", testName, i+1),
 			}
 
 			reqBody, _ := json.Marshal(createReq)

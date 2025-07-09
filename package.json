@@ -39,5 +39,7 @@
   },
   "engines": {
     "node": ">=16.0.0"
-  }
+  },
+  "license": "AGPL-3.0-or-later",
+  "copyright": "Copyright (C) 2025 Diego Baldeschi <baldeschidiego@gmail.com>. All rights reserved. Use, modification, and distribution of this software are subject to the terms of the AGPL v3 license and the attribution requirement."
 }

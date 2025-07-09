@@ -659,3 +659,6 @@ specific requirements.
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU AGPL, see
 <https://www.gnu.org/licenses/>.
+
+**Attribution Requirement:**
+If you use, modify, or distribute this software (or any derivative work), you must give appropriate credit by clearly mentioning "Diego Baldeschi" as the original author in your documentation, about page, or any public reference to the software, as well as in any accompanying legal notices or license files.

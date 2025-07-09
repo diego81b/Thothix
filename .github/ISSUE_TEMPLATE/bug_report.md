@@ -1,32 +1,80 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-labels: bug
+name: 🐞 Bug Report (Agile-style)
+about: Report a bug following Agile best practices
+title: "[Bug] "
+labels: [bug]
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## 🐛 Bug Summary
 
-**To Reproduce**
-Steps to reproduce the behavior:
+_Briefly describe the bug._
 
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+> Example:
+> When submitting the user form without a Clerk ID, the server crashes with a panic.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+---
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+## 🔁 Steps to Reproduce
 
-**Environment (please complete the following information):**
+_List minimal steps to reproduce the bug._
 
-- OS: [e.g. Windows 11]
-- Node version: [e.g. 18]
-- Browser [e.g. chrome, safari]
-- Version [e.g. 22]
+1. Go to `/admin/users`
+2. Click "Create User"
+3. Leave Clerk ID empty
+4. Click "Submit"
 
-**Additional context**
-Add any other context about the problem here.
+---
+
+## 📌 Expected Behavior
+
+_What did you expect to happen?_
+
+> Example:
+> The user should be created without Clerk ID and no error should occur.
+
+---
+
+## 💥 Actual Behavior
+
+_What actually happened?_
+
+> Example:
+> The server panics with a nil pointer exception.
+
+---
+
+## 🖥 Environment
+
+- OS: (e.g., Ubuntu 22.04 / macOS 14)
+- Browser/Postman: (e.g., Chrome 126 / curl)
+- Backend Version: (e.g., `v0.3.1`)
+- Branch: (e.g., `main` / `dev`)
+
+---
+
+## ✅ Acceptance Criteria
+
+- [ ] Bug is reproducible with tests
+- [ ] Missing Clerk ID does not crash server
+- [ ] Proper validation or fallback applied
+
+---
+
+## 🧠 Possible Fix / Notes
+
+_If you have any ideas for the fix, write here._
+
+> Example:
+> Missing null check on `clerk_id` field in `CreateUserHandler`.
+
+---
+
+## 🔗 Related Issues / PR
+
+_Link related issues or PRs, e.g., #123, #45_
+
+---
+
+## 🏷 Labels and Priority
+
+_(Optional: e.g., `priority: high`, `area: backend`)_

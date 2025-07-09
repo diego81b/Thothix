@@ -517,6 +517,7 @@ Thothix uses **Clerk** for authentication and implements a simplified **Role-Bas
 
 ## 🤝 Contributing
 
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
@@ -525,9 +526,43 @@ Thothix uses **Clerk** for authentication and implements a simplified **Role-Bas
 
 ---
 
+## 🚀 Release & Changelog
+
+When releasing a new version, update the [`CHANGELOG.md`](./CHANGELOG.md) manually at the top of the file, following this format:
+
+```markdown
+## vX.Y.Z Short Release Title (YYYY-MM-DD)
+
+### **type: short summary of the main change**
+
+- Bullet points describing the main changes, fixes, or features
+```
+
+**Example:**
+
+```markdown
+## v0.0.13 Add Automated Version Bump and Changelog Workflow (2025-07-09)
+
+### **feat: introduce GitHub Actions workflow for versioning and changelog**
+
+- Added workflow for automated version bump and changelog update
+- Integrated versioning and PR automation
+```
+
+**Guidelines:**
+- Always add the newest release at the top.
+- Use a clear, human-readable title and date.
+- Summarize the main change in the `###` heading.
+- Use bullet points for details.
+- Keep the changelog readable for both users and developers.
+
+Automated workflows will handle version bump and PR creation, but the changelog should be updated manually for clarity and quality.
+
+---
+
 ## 📄 License
 
-This project is distributed under the MIT License. See `LICENSE` for more information.
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ---
 

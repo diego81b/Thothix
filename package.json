@@ -1,6 +1,6 @@
 {
   "name": "thothix-scripts",
-  "version": "0.0.1",
+  "version": "0.0.11",
   "description": "Cross-platform scripts for Thothix development",
   "private": true,
   "type": "module",

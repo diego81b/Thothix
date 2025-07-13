@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"thothix-backend/internal/models"
+	commonModels "thothix-backend/internal/common/models"
 )
 
 type UserDomainTestSuite struct {
@@ -26,7 +26,7 @@ func (suite *UserDomainTestSuite) TestSyncFromClerk() {
 	// Arrange
 	clerkID := "clerk-123"
 	user := &User{
-		BaseModel: models.BaseModel{
+		BaseModel: commonModels.BaseModel{
 			ID:        "test-id",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),

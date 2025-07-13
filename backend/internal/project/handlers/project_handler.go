@@ -3,8 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	_ "thothix-backend/internal/models"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )

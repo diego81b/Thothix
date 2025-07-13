@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+
+	commonModels "thothix-backend/internal/common/models"
+)
 
 // RoleType defines the available role types
 type RoleType string
@@ -88,17 +92,6 @@ var RolePermissions = map[RoleType][]Permission{
 	},
 }
 
-// UserRole represents a user's role assignment
-// swagger:model UserRole
-type UserRole struct {
-	BaseModel
-	ResourceID   *string  `json:"resource_id,omitempty"`   // For project/channel specific roles (not used in simplified system)
-	ResourceType *string  `json:"resource_type,omitempty"` // "project", "channel", null for system roles (not used in simplified system)
-	User         User     `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user,omitempty"`
-	UserID       string   `json:"user_id"`
-	Role         RoleType `json:"role"`
-}
-
 // HasPermission checks if a role has a specific permission
 func (r RoleType) HasPermission(permission Permission) bool {
 	permissions, exists := RolePermissions[r]
@@ -114,13 +107,32 @@ func (r RoleType) HasPermission(permission Permission) bool {
 	return false
 }
 
+// This will need to be refactored to use domain models after we complete the migration
+// For now, we'll keep these as interfaces that can be implemented by domain models
+
+// UserProvider interface for getting user data
+type UserProvider interface {
+	GetSystemRole() RoleType
+}
+
+// ChannelProvider interface for getting channel data
+type ChannelProvider interface {
+	GetIsPrivate() bool
+}
+
 // GetUserRole gets the user's system role from database
+// This is a temporary implementation that uses the old models
+// Will be updated once all models are migrated to domains
 func GetUserRole(db *gorm.DB, userID string) (RoleType, error) {
-	var user User
-	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+	// This will be updated to use usersDomain.User once migration is complete
+	var result struct {
+		SystemRole RoleType `json:"system_role"`
+	}
+
+	if err := db.Table("users").Select("system_role").Where("id = ?", userID).First(&result).Error; err != nil {
 		return RoleUser, err // Default to user role on error
 	}
-	return user.SystemRole, nil
+	return result.SystemRole, nil
 }
 
 // HasUserPermission checks if a user has a specific permission
@@ -148,16 +160,18 @@ func HasUserPermission(db *gorm.DB, userID string, permission Permission, resour
 }
 
 // hasChannelAccess checks if user has access to a specific channel
+// Temporary implementation using raw SQL queries
 func hasChannelAccess(db *gorm.DB, userID, channelID string, permission Permission) bool {
-	var channel Channel
-	if err := db.Where("id = ?", channelID).First(&channel).Error; err != nil {
+	// Get channel info
+	var channel struct {
+		ProjectID string `json:"project_id"`
+	}
+	if err := db.Table("channels").Select("project_id").Where("id = ?", channelID).First(&channel).Error; err != nil {
 		return false
 	}
 
-	// Load the IsPrivate field
-	if err := channel.LoadIsPrivate(db); err != nil {
-		return false
-	}
+	// Check if channel is private (has project_id)
+	isPrivate := channel.ProjectID != ""
 
 	// Get user's system role
 	userRole, err := GetUserRole(db, userID)
@@ -167,18 +181,18 @@ func hasChannelAccess(db *gorm.DB, userID, channelID string, permission Permissi
 
 	// External users can only access public channels
 	if userRole == RoleExternal {
-		return !channel.IsPrivate
+		return !isPrivate
 	}
 
 	// For private channels, check if user is a member or has elevated role
-	if channel.IsPrivate {
+	if isPrivate {
 		if userRole == RoleAdmin || userRole == RoleManager {
 			return true
 		}
 		// Check if user is a member of the channel
-		var member ChannelMember
-		err := db.Where("channel_id = ? AND user_id = ?", channelID, userID).First(&member).Error
-		return err == nil
+		var count int64
+		db.Table("channel_members").Where("channel_id = ? AND user_id = ?", channelID, userID).Count(&count)
+		return count > 0
 	}
 
 	// Public channels are accessible to all authenticated users
@@ -198,13 +212,28 @@ func hasProjectAccess(db *gorm.DB, userID, projectID string, permission Permissi
 	}
 
 	// For regular users and external users, check if they are project members
-	var member ProjectMember
-	err = db.Where("project_id = ? AND user_id = ?", projectID, userID).First(&member).Error
-	return err == nil
+	var count int64
+	db.Table("project_members").Where("project_id = ? AND user_id = ?", projectID, userID).Count(&count)
+	return count > 0
 }
 
 // Legacy function for backward compatibility
 func HasUserPermissionSimple(userID string, permission Permission) bool {
 	// This function is deprecated - use HasUserPermission with db parameter instead
 	return false
+}
+
+// UserRole represents a user's role assignment
+// swagger:model UserRole
+type UserRole struct {
+	commonModels.BaseModel
+	ResourceID   *string  `json:"resource_id,omitempty"`   // For project/channel specific roles (not used in simplified system)
+	ResourceType *string  `json:"resource_type,omitempty"` // "project", "channel", null for system roles (not used in simplified system)
+	UserID       string   `json:"user_id"`
+	Role         RoleType `json:"role"`
+}
+
+// TableName specifies the table name for the UserRole model
+func (UserRole) TableName() string {
+	return "user_roles"
 }

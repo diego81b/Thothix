@@ -4,7 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"thothix-backend/internal/models"
+	chatDomain "thothix-backend/internal/chat/domain"
+	messageDomain "thothix-backend/internal/message/domain"
+	messageDto "thothix-backend/internal/message/dto"
+	sharedModels "thothix-backend/internal/shared/models"
+	usersDomain "thothix-backend/internal/users/domain"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -56,21 +60,21 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 
 	// Check if user has access to this channel (already done by middleware, but double-check)
 	resourceType := "channel"
-	if !models.HasUserPermission(h.db, userID.(string), models.PermissionChannelRead, &resourceType, &channelID) {
+	if !sharedModels.HasUserPermission(h.db, userID.(string), sharedModels.PermissionChannelRead, &resourceType, &channelID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to channel"})
 		return
 	}
 
 	// Get messages with pagination
 	offset := (page - 1) * limit
-	var messages []models.Message
+	var messages []messageDomain.Message
 	var total int64
 
 	// Count total messages
-	h.db.Model(&models.Message{}).Where("channel_id = ?", channelID).Count(&total)
+	h.db.Model(&messageDomain.Message{}).Where("channel_id = ?", channelID).Count(&total)
 
 	// Get paginated messages with user preloading
-	if err := h.db.Preload("User").Where("channel_id = ?", channelID).
+	if err := h.db.Preload("Sender").Where("channel_id = ?", channelID).
 		Order("created_at DESC").
 		Offset(offset).
 		Limit(limit).
@@ -98,7 +102,7 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Channel ID"
-// @Param message body SendMessageRequest true "Message data"
+// @Param message body messageDto.MessageCreateRequest true "Message data"
 // @Success 201 {object} models.Message
 // @Failure 400 {object} map[string]interface{}
 // @Failure 403 {object} map[string]interface{}
@@ -112,7 +116,7 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 
 	channelID := c.Param("id")
 
-	var req SendMessageRequest
+	var req messageDto.MessageCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -120,19 +124,20 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 
 	// Check if user has permission to send messages in this channel
 	resourceType := "channel"
-	if !models.HasUserPermission(h.db, userID.(string), models.PermissionMessageCreate, &resourceType, &channelID) {
+	if !sharedModels.HasUserPermission(h.db, userID.(string), sharedModels.PermissionMessageCreate, &resourceType, &channelID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot send messages to this channel"})
 		return
 	}
 
 	// Verify channel exists
-	var channel models.Channel
+	var channel chatDomain.Channel
 	if err := h.db.Where("id = ?", channelID).First(&channel).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
 		return
 	}
+
 	// Create message
-	message := models.Message{
+	message := messageDomain.Message{
 		Content:   req.Content,
 		ChannelID: &channelID,
 		SenderID:  userID.(string),
@@ -142,6 +147,7 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send message"})
 		return
 	}
+
 	// Load sender relation for response
 	h.db.Preload("Sender").First(&message, message.ID)
 
@@ -174,19 +180,20 @@ func (h *MessageHandler) CreateDirectMessage(c *gin.Context) {
 	}
 
 	// Check if user has permission to create direct messages
-	if !models.HasUserPermission(h.db, userID.(string), models.PermissionDMCreate, nil, nil) {
+	if !sharedModels.HasUserPermission(h.db, userID.(string), sharedModels.PermissionDMCreate, nil, nil) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot create direct messages"})
 		return
 	}
 
 	// Verify recipient exists
-	var recipient models.User
+	var recipient usersDomain.User
 	if err := h.db.Where("id = ?", req.RecipientID).First(&recipient).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Recipient not found"})
 		return
 	}
+
 	// Create direct message
-	message := models.Message{
+	message := messageDomain.Message{
 		Content:    req.Content,
 		SenderID:   userID.(string),
 		ReceiverID: &req.RecipientID,
@@ -198,14 +205,9 @@ func (h *MessageHandler) CreateDirectMessage(c *gin.Context) {
 	}
 
 	// Load user relation for response
-	h.db.Preload("User").Preload("Recipient").First(&message, message.ID)
+	h.db.Preload("Sender").Preload("Receiver").First(&message, message.ID)
 
 	c.JSON(http.StatusCreated, message)
-}
-
-// SendMessageRequest represents the request body for sending a message
-type SendMessageRequest struct {
-	Content string `json:"content" binding:"required"`
 }
 
 // DirectMessageRequest represents the request body for direct messages
@@ -216,9 +218,9 @@ type DirectMessageRequest struct {
 
 // MessageListResponse represents the response for message listing
 type MessageListResponse struct {
-	Messages []models.Message `json:"messages"`
-	Page     int              `json:"page"`
-	Limit    int              `json:"limit"`
-	Total    int64            `json:"total"`
-	Pages    int64            `json:"pages"`
+	Messages []messageDomain.Message `json:"messages"`
+	Page     int                     `json:"page"`
+	Limit    int                     `json:"limit"`
+	Total    int64                   `json:"total"`
+	Pages    int64                   `json:"pages"`
 }

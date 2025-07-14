@@ -53,9 +53,6 @@ jobs:
 
       - name: Run Go tests (unit only)
         working-directory: ./backend
-        env:
-          # Testcontainers gestirà PostgreSQL automaticamente
-          CLERK_SECRET_KEY: sk_test_github_actions_key
         run: go test -v ./...
 
       - name: Build Go application

@@ -1,12 +1,14 @@
 package router
 
 import (
+	chatHandlers "thothix-backend/internal/chat/handlers"
 	"thothix-backend/internal/config"
-	"thothix-backend/internal/handlers"
+	messageHandlers "thothix-backend/internal/message/handlers"
 	"thothix-backend/internal/middleware"
-	"thothix-backend/internal/models"
+	projectHandlers "thothix-backend/internal/project/handlers"
 	sharedHandlers "thothix-backend/internal/shared/handlers"
 	sharedMiddleware "thothix-backend/internal/shared/middleware"
+	sharedModels "thothix-backend/internal/shared/models"
 	userHandlers "thothix-backend/internal/users/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -35,11 +37,11 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	r.GET("/health", sharedHandlers.HealthCheck)
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(db)
-	projectHandler := handlers.NewProjectHandler(db)
-	channelHandler := handlers.NewChannelHandler(db)
-	messageHandler := handlers.NewMessageHandler(db)
-	roleHandler := handlers.NewRoleHandler(db)
+	authHandler := sharedHandlers.NewAuthHandler(db)
+	projectHandler := projectHandlers.NewProjectHandler(db)
+	channelHandler := chatHandlers.NewChannelHandler(db)
+	messageHandler := messageHandlers.NewMessageHandler(db)
+	roleHandler := sharedHandlers.NewRoleHandler(db)
 	// API routes
 	v1 := r.Group("/api/v1")
 
@@ -61,30 +63,30 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	authProtected := protected.Group("/auth")
 	authProtected.POST("/sync", authHandler.SyncUser)
 	authProtected.GET("/me", authHandler.GetCurrentUser)
-	authProtected.POST("/import-users", middleware.RequireSystemRole(db, models.RoleAdmin), authHandler.ImportUsers)
+	authProtected.POST("/import-users", middleware.RequireSystemRole(db, sharedModels.RoleAdmin), authHandler.ImportUsers)
 
 	// Users - using the new vertical slice structure
 	userHandlers.RegisterUserRoutes(protected, db)
 
 	// Roles management (only admins can manage roles)
 	roles := protected.Group("/roles")
-	roles.POST("", middleware.RequireSystemRole(db, models.RoleAdmin), roleHandler.AssignUserRole)
-	roles.DELETE("/:roleId", middleware.RequireSystemRole(db, models.RoleAdmin), roleHandler.RevokeUserRole)
+	roles.POST("", middleware.RequireSystemRole(db, sharedModels.RoleAdmin), roleHandler.AssignUserRole)
+	roles.DELETE("/:roleId", middleware.RequireSystemRole(db, sharedModels.RoleAdmin), roleHandler.RevokeUserRole)
 
 	// Projects
 	projects := protected.Group("/projects")
 	projects.GET("", projectHandler.GetProjects)
-	projects.POST("", middleware.RequirePermission(db, models.PermissionProjectCreate, nil), projectHandler.CreateProject)
+	projects.POST("", middleware.RequirePermission(db, sharedModels.PermissionProjectCreate, nil), projectHandler.CreateProject)
 	projects.GET("/:id", middleware.RequireProjectAccess(db), projectHandler.GetProject)
 	projects.PUT("/:id", middleware.RequireProjectAccess(db), projectHandler.UpdateProject)
-	projects.DELETE("/:id", middleware.RequirePermission(db, models.PermissionProjectDelete, stringPtr("project")), projectHandler.DeleteProject)
-	projects.POST("/:id/members", middleware.RequirePermission(db, models.PermissionProjectManage, stringPtr("project")), projectHandler.AddMember)
-	projects.DELETE("/:id/members/:userId", middleware.RequirePermission(db, models.PermissionProjectManage, stringPtr("project")), projectHandler.RemoveMember)
+	projects.DELETE("/:id", middleware.RequirePermission(db, sharedModels.PermissionProjectDelete, stringPtr("project")), projectHandler.DeleteProject)
+	projects.POST("/:id/members", middleware.RequirePermission(db, sharedModels.PermissionProjectManage, stringPtr("project")), projectHandler.AddMember)
+	projects.DELETE("/:id/members/:userId", middleware.RequirePermission(db, sharedModels.PermissionProjectManage, stringPtr("project")), projectHandler.RemoveMember)
 
 	// Channels
 	channels := protected.Group("/channels")
 	channels.GET("", channelHandler.GetChats)
-	channels.POST("", middleware.RequirePermission(db, models.PermissionChannelCreate, nil), channelHandler.CreateChat)
+	channels.POST("", middleware.RequirePermission(db, sharedModels.PermissionChannelCreate, nil), channelHandler.CreateChat)
 	channels.GET("/:id", middleware.RequireChannelAccess(db), channelHandler.GetChat)
 	channels.POST("/:id/join", channelHandler.JoinChannel)
 	channels.GET("/:id/messages", middleware.RequireChannelAccess(db), messageHandler.GetMessages)
@@ -125,10 +127,10 @@ func SetupTestRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	r.GET("/health", sharedHandlers.HealthCheck)
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(db)
-	projectHandler := handlers.NewProjectHandler(db)
-	channelHandler := handlers.NewChannelHandler(db)
-	messageHandler := handlers.NewMessageHandler(db)
+	authHandler := sharedHandlers.NewAuthHandler(db)
+	projectHandler := projectHandlers.NewProjectHandler(db)
+	channelHandler := chatHandlers.NewChannelHandler(db)
+	messageHandler := messageHandlers.NewMessageHandler(db)
 
 	// API routes
 	v1 := r.Group("/api/v1")

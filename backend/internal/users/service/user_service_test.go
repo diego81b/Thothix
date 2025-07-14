@@ -1,9 +1,9 @@
 package service
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -54,7 +54,7 @@ func (suite *UserServiceTestSuite) TestGetUserByID_Success() {
 			Email:   "test-" + testName + "@example.com",
 			Name:    "Test User " + testName,
 		}
-		user.ID = "test-id-" + testName
+		user.ID = uuid.New().String()
 		err := db.Create(user).Error
 		assert.NoError(suite.T(), err)
 
@@ -62,7 +62,7 @@ func (suite *UserServiceTestSuite) TestGetUserByID_Success() {
 		service := NewUserService(db)
 
 		// Act
-		response := service.GetUserByID("test-id-" + testName)
+		response := service.GetUserByID(user.ID)
 
 		// Assert
 		userResponse := sharedTesting.AssertSuccessWithValue(suite.T(), response.Response)
@@ -91,7 +91,7 @@ func (suite *UserServiceTestSuite) TestGetUserByID_NotFound() {
 		service := NewUserService(db)
 
 		// Act
-		response := service.GetUserByID("nonexistent-id")
+		response := service.GetUserByID(uuid.New().String())
 
 		// Assert
 		sharedTesting.AssertValidationErrorWithCode(suite.T(), response.Response, "USER_NOT_FOUND")
@@ -104,7 +104,7 @@ func (suite *UserServiceTestSuite) TestGetUserByClerkID_Success() {
 		// Arrange - use unique data for this test
 		testName := "TestGetUserByClerkID_Success"
 		user := suite.generateUniqueTestUser(testName)
-		user.ID = "test-id-" + testName
+		user.ID = uuid.New().String()
 		err := db.Create(user).Error
 		assert.NoError(suite.T(), err)
 
@@ -130,8 +130,8 @@ func (suite *UserServiceTestSuite) TestGetUsers_Success() {
 			{ClerkID: stringPtr("clerk-2-" + testName), Email: "user2-" + testName + "@example.com", Name: "User 2 " + testName},
 			{ClerkID: stringPtr("clerk-3-" + testName), Email: "user3-" + testName + "@example.com", Name: "User 3 " + testName},
 		}
-		for i, user := range users {
-			user.ID = fmt.Sprintf("user-id-%d-%s", i+1, testName)
+		for _, user := range users {
+			user.ID = uuid.New().String()
 			err := db.Create(&user).Error
 			assert.NoError(suite.T(), err)
 		}
@@ -204,7 +204,8 @@ func (suite *UserServiceTestSuite) TestCreateUser_DuplicateEmail() {
 		// Arrange - use unique data for this test
 		testName := "TestCreateUser_DuplicateEmail"
 		existingUser := suite.generateUniqueTestUser(testName)
-		existingUser.ID = "existing-id-" + testName
+		// Generate a valid UUID for the existing user
+		existingUser.ID = uuid.New().String()
 		err := db.Create(existingUser).Error
 		assert.NoError(suite.T(), err)
 
@@ -231,7 +232,7 @@ func (suite *UserServiceTestSuite) TestUpdateUser_Success() {
 		// Arrange - use unique data for this test
 		testName := "TestUpdateUser_Success"
 		user := suite.generateUniqueTestUser(testName)
-		user.ID = "test-id-" + testName
+		user.ID = uuid.New().String()
 		err := db.Create(user).Error
 		assert.NoError(suite.T(), err)
 
@@ -261,7 +262,7 @@ func (suite *UserServiceTestSuite) TestDeleteUser_Success() {
 		// Arrange - use unique data for this test
 		testName := "TestDeleteUser_Success"
 		user := suite.generateUniqueTestUser(testName)
-		user.ID = "test-id-" + testName
+		user.ID = uuid.New().String()
 		err := db.Create(user).Error
 		assert.NoError(suite.T(), err)
 
@@ -314,7 +315,7 @@ func (suite *UserServiceTestSuite) TestSyncUserFromClerk_ExistingUser() {
 		// Arrange - use unique data for this test
 		testName := "TestSyncUserFromClerk_ExistingUser"
 		existingUser := suite.generateUniqueTestUser(testName)
-		existingUser.ID = "existing-id-" + testName
+		existingUser.ID = uuid.New().String()
 		existingUser.Email = "old-" + testName + "@example.com"
 		existingUser.Name = "Old Name " + testName
 		err := db.Create(existingUser).Error

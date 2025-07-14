@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"thothix-backend/internal/models"
+	commonModels "thothix-backend/internal/common/models"
 	"thothix-backend/internal/users/domain"
 	usersDto "thothix-backend/internal/users/dto"
 )
@@ -37,7 +37,7 @@ func (suite *UserMapperTestSuite) TestModelToDto() {
 	// Arrange
 	now := time.Now()
 	user := &domain.User{
-		BaseModel: models.BaseModel{
+		BaseModel: commonModels.BaseModel{
 			ID:        "test-id",
 			CreatedAt: now,
 			UpdatedAt: now,
@@ -77,7 +77,7 @@ func (suite *UserMapperTestSuite) TestModelsToDtos() {
 	now := time.Now()
 	users := []domain.User{
 		{
-			BaseModel: models.BaseModel{
+			BaseModel: commonModels.BaseModel{
 				ID:        "test-id-1",
 				CreatedAt: now,
 				UpdatedAt: now,
@@ -86,7 +86,7 @@ func (suite *UserMapperTestSuite) TestModelsToDtos() {
 			Name:  "User 1",
 		},
 		{
-			BaseModel: models.BaseModel{
+			BaseModel: commonModels.BaseModel{
 				ID:        "test-id-2",
 				CreatedAt: now,
 				UpdatedAt: now,
@@ -150,7 +150,7 @@ func (suite *UserMapperTestSuite) TestUpdateRequestToModel() {
 	// Arrange
 	now := time.Now()
 	user := &domain.User{
-		BaseModel: models.BaseModel{
+		BaseModel: commonModels.BaseModel{
 			ID:        "test-id",
 			CreatedAt: now,
 			UpdatedAt: now,

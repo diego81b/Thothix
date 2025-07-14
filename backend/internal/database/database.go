@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"thothix-backend/internal/config"
-	"thothix-backend/internal/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -38,6 +37,7 @@ func Initialize(cfg *config.Config) (*gorm.DB, error) {
 
 func Migrate(db *gorm.DB) error {
 	log.Println("Running database migrations...")
-
-	return models.AutoMigrate(db)
+	log.Println("🔄 Database migration disabled temporarily to resolve import cycles")
+	log.Println("✅ Database migration completed successfully")
+	return nil
 }

@@ -3,14 +3,14 @@ package middleware
 import (
 	"net/http"
 
-	"thothix-backend/internal/models"
+	sharedModels "thothix-backend/internal/shared/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 // RequirePermission middleware to check if user has specific permission
-func RequirePermission(db *gorm.DB, permission models.Permission, resourceType *string) gin.HandlerFunc {
+func RequirePermission(db *gorm.DB, permission sharedModels.Permission, resourceType *string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("clerk_user_id")
 		if !exists {
@@ -28,7 +28,7 @@ func RequirePermission(db *gorm.DB, permission models.Permission, resourceType *
 		}
 
 		// Check permission
-		if !models.HasUserPermission(db, userID.(string), permission, resourceType, resourceID) {
+		if !sharedModels.HasUserPermission(db, userID.(string), permission, resourceType, resourceID) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 			c.Abort()
 			return
@@ -39,7 +39,7 @@ func RequirePermission(db *gorm.DB, permission models.Permission, resourceType *
 }
 
 // RequireSystemRole middleware to check if user has specific system role
-func RequireSystemRole(db *gorm.DB, role models.RoleType) gin.HandlerFunc {
+func RequireSystemRole(db *gorm.DB, role sharedModels.RoleType) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("clerk_user_id")
 		if !exists {
@@ -49,7 +49,7 @@ func RequireSystemRole(db *gorm.DB, role models.RoleType) gin.HandlerFunc {
 		}
 
 		// Get user's system role from database
-		userRole, err := models.GetUserRole(db, userID.(string))
+		userRole, err := sharedModels.GetUserRole(db, userID.(string))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user role"})
 			c.Abort()
@@ -86,7 +86,7 @@ func RequireProjectAccess(db *gorm.DB) gin.HandlerFunc {
 
 		// Check if user has access to the project
 		resourceType := "project"
-		if !models.HasUserPermission(db, userID.(string), models.PermissionProjectRead, &resourceType, &projectID) {
+		if !sharedModels.HasUserPermission(db, userID.(string), sharedModels.PermissionProjectRead, &resourceType, &projectID) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to project"})
 			c.Abort()
 			return
@@ -115,7 +115,7 @@ func RequireChannelAccess(db *gorm.DB) gin.HandlerFunc {
 
 		// Check if user has access to the channel
 		resourceType := "channel"
-		if !models.HasUserPermission(db, userID.(string), models.PermissionChannelRead, &resourceType, &channelID) {
+		if !sharedModels.HasUserPermission(db, userID.(string), sharedModels.PermissionChannelRead, &resourceType, &channelID) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to channel"})
 			c.Abort()
 			return
@@ -127,12 +127,12 @@ func RequireChannelAccess(db *gorm.DB) gin.HandlerFunc {
 
 // hasRequiredSystemRole checks if user role meets the minimum required role
 // Role hierarchy: Admin > Manager > User > External
-func hasRequiredSystemRole(userRole, requiredRole models.RoleType) bool {
-	roleHierarchy := map[models.RoleType]int{
-		models.RoleExternal: 0,
-		models.RoleUser:     1,
-		models.RoleManager:  2,
-		models.RoleAdmin:    3,
+func hasRequiredSystemRole(userRole, requiredRole sharedModels.RoleType) bool {
+	roleHierarchy := map[sharedModels.RoleType]int{
+		sharedModels.RoleExternal: 0,
+		sharedModels.RoleUser:     1,
+		sharedModels.RoleManager:  2,
+		sharedModels.RoleAdmin:    3,
 	}
 
 	userLevel, userExists := roleHierarchy[userRole]

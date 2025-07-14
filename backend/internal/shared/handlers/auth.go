@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 
 	"thothix-backend/internal/shared/dto"
-	sharedHandlers "thothix-backend/internal/shared/handlers"
 	sharedMiddleware "thothix-backend/internal/shared/middleware"
 	usersDto "thothix-backend/internal/users/dto"
 	"thothix-backend/internal/users/service"
@@ -44,7 +43,7 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 // @Failure 500 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/sync [post]
 func (h *AuthHandler) SyncUser(c *gin.Context) {
-	ctx := sharedHandlers.WrapContext(c)
+	ctx := WrapContext(c)
 
 	clerkUserID, exists := c.Get("clerk_user_id")
 	if !exists {
@@ -119,7 +118,7 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 // @Failure 404 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/me [get]
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
-	ctx := sharedHandlers.WrapContext(c)
+	ctx := WrapContext(c)
 
 	clerkUserID, exists := c.Get("clerk_user_id")
 	if !exists {

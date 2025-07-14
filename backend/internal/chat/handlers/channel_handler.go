@@ -4,7 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	"thothix-backend/internal/models"
+	chatDomain "thothix-backend/internal/chat/domain"
+	chatDto "thothix-backend/internal/chat/dto"
+	projectDomain "thothix-backend/internal/project/domain"
+	sharedModels "thothix-backend/internal/shared/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -25,7 +28,7 @@ func NewChannelHandler(db *gorm.DB) *ChannelHandler {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {array} models.Channel
+// @Success 200 {array} chatDomain.Channel
 // @Failure 500 {object} map[string]interface{}
 // @Router /api/v1/channels [get]
 func (h *ChannelHandler) GetChats(c *gin.Context) {
@@ -36,22 +39,22 @@ func (h *ChannelHandler) GetChats(c *gin.Context) {
 	}
 
 	// Get user's system role
-	userRole, err := models.GetUserRole(h.db, userID.(string))
+	userRole, err := sharedModels.GetUserRole(h.db, userID.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user role"})
 		return
 	}
 
-	var channels []models.Channel
+	var channels []chatDomain.Channel
 
 	// Admins and managers can see all channels
 	switch userRole {
-	case models.RoleAdmin, models.RoleManager:
+	case sharedModels.RoleAdmin, sharedModels.RoleManager:
 		if err := h.db.Preload("Project").Find(&channels).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get channels"})
 			return
 		}
-	case models.RoleExternal:
+	case sharedModels.RoleExternal:
 		// External users can only see public channels (channels without members)
 		query := `
 			SELECT c.* FROM channels c
@@ -93,8 +96,8 @@ func (h *ChannelHandler) GetChats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param channel body CreateChannelRequest true "Channel data"
-// @Success 201 {object} models.Channel
+// @Param channel body chatDto.ChannelCreateRequest true "Channel data"
+// @Success 201 {object} chatDomain.Channel
 // @Failure 400 {object} map[string]interface{}
 // @Failure 403 {object} map[string]interface{}
 // @Router /api/v1/channels [post]
@@ -105,32 +108,33 @@ func (h *ChannelHandler) CreateChat(c *gin.Context) {
 		return
 	}
 
-	var req CreateChannelRequest
+	var req chatDto.ChannelCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Check if user has permission to create channels
-	if !models.HasUserPermission(h.db, userID.(string), models.PermissionChannelCreate, nil, nil) {
+	if !sharedModels.HasUserPermission(h.db, userID.(string), sharedModels.PermissionChannelCreate, nil, nil) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to create channels"})
 		return
 	}
 
 	// Verify project exists and user has access
-	var project models.Project
+	var project projectDomain.Project
 	if err := h.db.Where("id = ?", req.ProjectID).First(&project).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Project not found"})
 		return
 	}
 
 	resourceType := "project"
-	if !models.HasUserPermission(h.db, userID.(string), models.PermissionProjectRead, &resourceType, &req.ProjectID) {
+	if !sharedModels.HasUserPermission(h.db, userID.(string), sharedModels.PermissionProjectRead, &resourceType, &req.ProjectID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to project"})
 		return
 	}
+
 	// Create channel
-	channel := models.Channel{
+	channel := chatDomain.Channel{
 		Name:      req.Name,
 		ProjectID: req.ProjectID,
 	}
@@ -138,15 +142,6 @@ func (h *ChannelHandler) CreateChat(c *gin.Context) {
 	if err := h.db.Create(&channel).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create channel"})
 		return
-	}
-
-	// Add creator as channel member if it's a private channel
-	if req.IsPrivate {
-		member := models.ChannelMember{
-			ChannelID: channel.ID,
-			UserID:    userID.(string),
-		}
-		h.db.Create(&member)
 	}
 
 	// Load project relation and IsPrivate field for response
@@ -166,7 +161,7 @@ func (h *ChannelHandler) CreateChat(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Channel ID"
-// @Success 200 {object} models.Channel
+// @Success 200 {object} chatDomain.Channel
 // @Failure 404 {object} map[string]interface{}
 // @Failure 403 {object} map[string]interface{}
 // @Router /api/v1/channels/{id} [get]
@@ -181,12 +176,12 @@ func (h *ChannelHandler) GetChat(c *gin.Context) {
 
 	// Check if user has access to this channel
 	resourceType := "channel"
-	if !models.HasUserPermission(h.db, userID.(string), models.PermissionChannelRead, &resourceType, &channelID) {
+	if !sharedModels.HasUserPermission(h.db, userID.(string), sharedModels.PermissionChannelRead, &resourceType, &channelID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to channel"})
 		return
 	}
 
-	var channel models.Channel
+	var channel chatDomain.Channel
 	if err := h.db.Preload("Project").Where("id = ?", channelID).First(&channel).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
 		return
@@ -203,7 +198,7 @@ func (h *ChannelHandler) GetChat(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Channel ID"
-// @Success 201 {object} models.ChannelMember
+// @Success 201 {object} chatDomain.ChannelMember
 // @Failure 400 {object} map[string]interface{}
 // @Failure 403 {object} map[string]interface{}
 // @Router /api/v1/channels/{id}/join [post]
@@ -217,46 +212,47 @@ func (h *ChannelHandler) JoinChannel(c *gin.Context) {
 	channelID := c.Param("id")
 
 	// Get channel info
-	var channel models.Channel
+	var channel chatDomain.Channel
 	if err := h.db.Where("id = ?", channelID).First(&channel).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
 		return
 	}
 
 	// Get user role
-	userRole, err := models.GetUserRole(h.db, userID.(string))
+	userRole, err := sharedModels.GetUserRole(h.db, userID.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user role"})
 		return
 	}
+
 	// Check if user can join this channel
 	switch {
 	case channel.IsPrivate:
 		// Only admins/managers can join private channels without invitation
-		if userRole != models.RoleAdmin && userRole != models.RoleManager {
+		if userRole != sharedModels.RoleAdmin && userRole != sharedModels.RoleManager {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Cannot join private channel without invitation"})
 			return
 		}
-	case !channel.IsPrivate && userRole == models.RoleExternal:
+	case !channel.IsPrivate && userRole == sharedModels.RoleExternal:
 		// External users can join public channels
-	case userRole == models.RoleUser:
+	case userRole == sharedModels.RoleUser:
 		// Regular users can join any public channel if they have project access
 		resourceType := "project"
-		if !models.HasUserPermission(h.db, userID.(string), models.PermissionProjectRead, &resourceType, &channel.ProjectID) {
+		if !sharedModels.HasUserPermission(h.db, userID.(string), sharedModels.PermissionProjectRead, &resourceType, &channel.ProjectID) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied to project"})
 			return
 		}
 	}
 
 	// Check if already a member
-	var existingMember models.ChannelMember
+	var existingMember chatDomain.ChannelMember
 	if err := h.db.Where("channel_id = ? AND user_id = ?", channelID, userID).First(&existingMember).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Already a member of this channel"})
 		return
 	}
 
 	// Create membership
-	member := models.ChannelMember{
+	member := chatDomain.ChannelMember{
 		ChannelID: channelID,
 		UserID:    userID.(string),
 	}
@@ -267,11 +263,4 @@ func (h *ChannelHandler) JoinChannel(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, member)
-}
-
-// CreateChannelRequest represents the request body for channel creation
-type CreateChannelRequest struct {
-	Name      string `json:"name" binding:"required"`
-	ProjectID string `json:"project_id" binding:"required"`
-	IsPrivate bool   `json:"is_private"` // If true, creator will be added as member
 }

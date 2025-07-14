@@ -63,8 +63,8 @@ If Vault is not available, configure these GitHub Secrets:
 ## Available Workflows
 
 ### 1. **`basic-checks.yml`** - Fast Feedback ⚡
-**Trigger**: Push/PR to `main` or `dev`  
-**Duration**: 3-5 minutes  
+**Trigger**: Push/PR to `main` or `dev`
+**Duration**: 3-5 minutes
 **Purpose**: Quick validation for immediate feedback
 
 **Features**:
@@ -80,8 +80,8 @@ If Vault is not available, configure these GitHub Secrets:
 - `scripts-validation`: npm scripts verification
 
 ### 2. **`ci.yml`** - Complete Pipeline 🔄
-**Trigger**: Push/PR to `main` or `dev`  
-**Duration**: 10-15 minutes  
+**Trigger**: Push/PR to `main` or `dev`
+**Duration**: 10-15 minutes
 **Purpose**: Comprehensive testing and building
 
 **Features**:
@@ -91,7 +91,7 @@ If Vault is not available, configure these GitHub Secrets:
 - Docker Compose integration tests
 
 ### 3. **`auto-version-bump.yml`** - Versioning 📦
-**Trigger**: PR merged to `main`  
+**Trigger**: PR merged to `main`
 **Purpose**: Automated version management
 
 **Features**:
@@ -100,7 +100,7 @@ If Vault is not available, configure these GitHub Secrets:
 - Extracts feature authors from git log
 
 ### 4. **`debug.yml`** - Troubleshooting 🔧
-**Trigger**: Manual dispatch  
+**Trigger**: Manual dispatch
 **Purpose**: CI debugging and environment inspection
 
 **Features**:

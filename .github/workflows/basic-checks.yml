@@ -95,7 +95,7 @@ jobs:
           DB_PORT: ${{ secrets.DB_PORT || '5432' }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY || 'sk_test_github_actions_key' }}
           CLERK_WEBHOOK_SECRET: ${{ secrets.CLERK_WEBHOOK_SECRET || 'whsec_test_github_actions_secret' }}
-          
+
           # App settings
           ENVIRONMENT: test
         run: |
@@ -106,7 +106,7 @@ jobs:
         working-directory: ./backend
         run: go build -v ./...
 
-  go-lint:
+  lint-and-scripts:
     runs-on: ubuntu-latest
 
     steps:
@@ -117,20 +117,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          working-directory: ./backend
-          args: --timeout=10m
-
-  scripts-validation:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -148,12 +134,18 @@ jobs:
       - name: Install Node dependencies
         run: npm install
 
+      - name: Install Go dependencies
+        working-directory: ./backend
+        run: |
+          go mod download
+          go mod tidy
+
+      - name: Run lint (Go + formatting checks)
+        run: |
+          echo "🔍 Running comprehensive linting..."
+          npm run lint
+
       - name: Validate package.json scripts
         run: |
-          echo "Checking if all script commands are valid..."
+          echo "📋 Checking if all script commands are valid..."
           npm run --silent || echo "Some scripts may have issues"
-
-      - name: Check pre-commit command
-        run: |
-          echo "Testing pre-commit command..."
-          timeout 60s npm run pre-commit || echo "Pre-commit check completed or timed out"

@@ -29,6 +29,17 @@ jobs:
         working-directory: ./backend
         run: go mod download
 
+      - name: Install swag CLI
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Generate Swagger docs
+        working-directory: ./backend
+        run: swag init
+
+      - name: Tidy Go modules
+        working-directory: ./backend
+        run: go mod tidy
+
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8

@@ -41,13 +41,16 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
+          key: ${{ runner.os }}-go-1.24.3-${{ hashFiles('backend/go.sum') }}
           restore-keys: |
+            ${{ runner.os }}-go-1.24.3-
             ${{ runner.os }}-go-
 
       - name: Install dependencies
         working-directory: ./backend
-        run: go mod download
+        run: |
+          go mod download
+          go mod tidy
 
       - name: Install swag CLI
         run: go install github.com/swaggo/swag/cmd/swag@latest
@@ -55,6 +58,10 @@ jobs:
       - name: Generate Swagger docs
         working-directory: ./backend
         run: swag init
+
+      - name: Verify Go modules
+        working-directory: ./backend
+        run: go mod verify
 
       - name: Run tests
         working-directory: ./backend

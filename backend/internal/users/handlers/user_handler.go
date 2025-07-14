@@ -28,7 +28,7 @@ func NewUserHandler(userService service.UserServiceInterface) *UserHandler {
 // @Security BearerAuth
 // @Param page query int false "Page number (default: 1)"
 // @Param per_page query int false "Items per page (default: 20, max: 100)"
-// @Success 200 {object} usersDto.UserListResponse
+// @Success 200 {object} usersDto.GetUsersResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users [get]
@@ -80,7 +80,7 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "User ID"
-// @Success 200 {object} usersDto.UserResponse
+// @Success 200 {object} usersDto.GetUserResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -125,7 +125,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param user body usersDto.CreateUserRequest true "User data"
-// @Success 201 {object} usersDto.UserResponse
+// @Success 201 {object} usersDto.CreateUserResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 409 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -176,7 +176,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "User ID"
 // @Param user body usersDto.UpdateUserRequest true "User data"
-// @Success 200 {object} usersDto.UserResponse
+// @Success 200 {object} usersDto.UpdateUserResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse

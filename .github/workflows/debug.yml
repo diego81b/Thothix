@@ -87,6 +87,12 @@ jobs:
 
               echo "=== Trying go mod download ==="
               cd backend && go mod download || echo "go mod download failed"
+
+              echo "=== Installing swag CLI ==="
+              go install github.com/swaggo/swag/cmd/swag@latest || echo "swag install failed"
+
+              echo "=== Generating Swagger docs ==="
+              swag init || echo "swag init failed"
             fi
           fi
 

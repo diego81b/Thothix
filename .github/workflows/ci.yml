@@ -49,6 +49,13 @@ jobs:
         working-directory: ./backend
         run: go mod download
 
+      - name: Install swag CLI
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Generate Swagger docs
+        working-directory: ./backend
+        run: swag init
+
       - name: Run tests
         working-directory: ./backend
         env:
@@ -108,10 +115,12 @@ jobs:
           version: latest
           working-directory: ./backend
 
+      - name: Install gosec
+        run: go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+
       - name: Run gosec security scanner
-        uses: securecodewarrior/github-action-gosec@master
-        with:
-          args: '-no-fail -fmt sarif -out results.sarif ./backend/...'
+        working-directory: ./backend
+        run: gosec -no-fail -fmt sarif -out results.sarif ./...
         continue-on-error: true
 
   docker-compose-test:

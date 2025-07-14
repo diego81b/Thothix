@@ -1,5 +1,203 @@
 basePath: /api/v1
 definitions:
+  domain.Channel:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      is_private:
+        description: Computed field, not stored in DB
+        type: boolean
+      name:
+        type: string
+      project_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.ChannelMember:
+    properties:
+      channel_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.Message:
+    properties:
+      channel_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      receiver_id:
+        type: string
+      sender_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.Project:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.ProjectMember:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      joined_at:
+        type: string
+      project_id:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  dto.ChannelCreateRequest:
+    properties:
+      is_private:
+        description: If true, creator will be added as member
+        type: boolean
+      name:
+        type: string
+      project_id:
+        type: string
+    required:
+    - name
+    - project_id
+    type: object
+  dto.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  dto.CreateUserResponse:
+    type: object
+  dto.Error:
+    properties:
+      code:
+        description: Error code (e.g., "VALIDATION_ERROR", "USER_NOT_FOUND")
+        type: string
+      details:
+        additionalProperties:
+          type: string
+        description: Additional context (field names, values, etc.)
+        type: object
+      message:
+        description: Human-readable error message
+        type: string
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        description: Error code or type
+        type: string
+      message:
+        description: Human-readable error description
+        type: string
+    type: object
+  dto.ErrorViewModel:
+    properties:
+      error:
+        description: Error code or type
+        type: string
+      errors:
+        description: Detailed validation errors (optional)
+        items:
+          $ref: '#/definitions/dto.Error'
+        type: array
+      message:
+        description: Human-readable error description
+        type: string
+      success:
+        description: Always false for error responses
+        type: boolean
+    type: object
+  dto.GetUserResponse:
+    type: object
+  dto.GetUsersResponse:
+    type: object
+  dto.MessageCreateRequest:
+    properties:
+      channel_id:
+        type: string
+      content:
+        type: string
+      receiver_id:
+        type: string
+    required:
+    - content
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      avatar_url:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.UpdateUserResponse:
+    type: object
+  dto.UserDto:
+    properties:
+      avatar_url:
+        type: string
+      clerk_id:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
   handlers.AssignRoleRequest:
     properties:
       resource_id:
@@ -13,19 +211,6 @@ definitions:
     required:
     - role
     - user_id
-    type: object
-  handlers.CreateChannelRequest:
-    properties:
-      is_private:
-        description: If true, creator will be added as member
-        type: boolean
-      name:
-        type: string
-      project_id:
-        type: string
-    required:
-    - name
-    - project_id
     type: object
   handlers.DirectMessageRequest:
     properties:
@@ -43,7 +228,7 @@ definitions:
         type: integer
       messages:
         items:
-          $ref: '#/definitions/models.Message'
+          $ref: '#/definitions/domain.Message'
         type: array
       page:
         type: integer
@@ -51,119 +236,6 @@ definitions:
         type: integer
       total:
         type: integer
-    type: object
-  handlers.SendMessageRequest:
-    properties:
-      content:
-        type: string
-    required:
-    - content
-    type: object
-  models.Channel:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: string
-      id:
-        type: string
-      is_private:
-        description: Computed field, not stored in DB
-        type: boolean
-      members:
-        items:
-          $ref: '#/definitions/models.User'
-        type: array
-      name:
-        type: string
-      project:
-        $ref: '#/definitions/models.Project'
-      project_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  models.ChannelMember:
-    properties:
-      channel:
-        $ref: '#/definitions/models.Channel'
-      channel_id:
-        type: string
-      created_at:
-        type: string
-      created_by:
-        type: string
-      id:
-        type: string
-      updated_at:
-        type: string
-      user:
-        $ref: '#/definitions/models.User'
-      user_id:
-        type: string
-    type: object
-  models.Message:
-    properties:
-      channel:
-        $ref: '#/definitions/models.Channel'
-      channel_id:
-        type: string
-      content:
-        type: string
-      created_at:
-        type: string
-      created_by:
-        type: string
-      id:
-        type: string
-      receiver:
-        $ref: '#/definitions/models.User'
-      receiver_id:
-        type: string
-      sender:
-        $ref: '#/definitions/models.User'
-      sender_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  models.Project:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: string
-      description:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  models.ProjectMember:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: string
-      id:
-        type: string
-      joined_at:
-        type: string
-      project:
-        $ref: '#/definitions/models.Project'
-      project_id:
-        type: string
-      role:
-        type: string
-      updated_at:
-        type: string
-      user:
-        $ref: '#/definitions/models.User'
-      user_id:
-        type: string
     type: object
   models.RoleType:
     enum:
@@ -182,49 +254,9 @@ definitions:
     - RoleManager
     - RoleUser
     - RoleExternal
-  models.User:
-    properties:
-      avatar_url:
-        type: string
-      created_at:
-        type: string
-      created_by:
-        type: string
-      email:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      system_role:
-        allOf:
-        - $ref: '#/definitions/models.RoleType'
-        description: Default system role
-      updated_at:
-        type: string
-    type: object
-  models.UserResponse:
-    properties:
-      avatar_url:
-        type: string
-      created_at:
-        type: string
-      email:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      system_role:
-        $ref: '#/definitions/models.RoleType'
-      updated_at:
-        type: string
-    type: object
   models.UserRole:
     properties:
       created_at:
-        type: string
-      created_by:
         type: string
       id:
         type: string
@@ -239,8 +271,6 @@ definitions:
         $ref: '#/definitions/models.RoleType'
       updated_at:
         type: string
-      user:
-        $ref: '#/definitions/models.User'
       user_id:
         type: string
     type: object
@@ -258,6 +288,29 @@ info:
   title: Thothix API
   version: "1.0"
 paths:
+  /api/v1/auth/import-users:
+    post:
+      consumes:
+      - application/json
+      description: Import all users from Clerk to local database (development only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Import all users from Clerk
+      tags:
+      - auth
   /api/v1/auth/me:
     get:
       consumes:
@@ -269,12 +322,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserResponse'
+            $ref: '#/definitions/dto.UserDto'
         "404":
           description: Not Found
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.ErrorViewModel'
       security:
       - BearerAuth: []
       summary: Get current user
@@ -291,11 +343,45 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserResponse'
+            $ref: '#/definitions/dto.UserDto'
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.UserResponse'
+            $ref: '#/definitions/dto.UserDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorViewModel'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorViewModel'
+      security:
+      - BearerAuth: []
+      summary: Sync user from Clerk
+      tags:
+      - auth
+  /api/v1/auth/webhooks/clerk:
+    post:
+      consumes:
+      - application/json
+      description: Handle Clerk webhooks for automatic user synchronization
+      parameters:
+      - description: Clerk webhook payload
+        in: body
+        name: webhook
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -306,9 +392,7 @@ paths:
           schema:
             additionalProperties: true
             type: object
-      security:
-      - BearerAuth: []
-      summary: Sync user from Clerk
+      summary: Handle Clerk webhooks
       tags:
       - auth
   /api/v1/channels:
@@ -323,7 +407,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Channel'
+              $ref: '#/definitions/domain.Channel'
             type: array
         "500":
           description: Internal Server Error
@@ -345,14 +429,14 @@ paths:
         name: channel
         required: true
         schema:
-          $ref: '#/definitions/handlers.CreateChannelRequest'
+          $ref: '#/definitions/dto.ChannelCreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Channel'
+            $ref: '#/definitions/domain.Channel'
         "400":
           description: Bad Request
           schema:
@@ -385,7 +469,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Channel'
+            $ref: '#/definitions/domain.Channel'
         "403":
           description: Forbidden
           schema:
@@ -418,7 +502,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.ChannelMember'
+            $ref: '#/definitions/domain.ChannelMember'
         "400":
           description: Bad Request
           schema:
@@ -487,14 +571,14 @@ paths:
         name: message
         required: true
         schema:
-          $ref: '#/definitions/handlers.SendMessageRequest'
+          $ref: '#/definitions/dto.MessageCreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Message'
+            $ref: '#/definitions/domain.Message'
         "400":
           description: Bad Request
           schema:
@@ -529,7 +613,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Message'
+            $ref: '#/definitions/domain.Message'
         "400":
           description: Bad Request
           schema:
@@ -557,7 +641,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Project'
+              $ref: '#/definitions/domain.Project'
             type: array
         "500":
           description: Internal Server Error
@@ -579,7 +663,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Project'
+            $ref: '#/definitions/domain.Project'
         "400":
           description: Bad Request
           schema:
@@ -632,7 +716,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Project'
+            $ref: '#/definitions/domain.Project'
         "404":
           description: Not Found
           schema:
@@ -659,7 +743,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Project'
+            $ref: '#/definitions/domain.Project'
         "400":
           description: Bad Request
           schema:
@@ -687,7 +771,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ProjectMember'
+            $ref: '#/definitions/domain.ProjectMember'
         "400":
           description: Bad Request
           schema:
@@ -789,92 +873,6 @@ paths:
       summary: Revoke user role
       tags:
       - roles
-  /api/v1/users:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all users
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              items:
-                $ref: '#/definitions/models.UserResponse'
-              type: array
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get all users
-      tags:
-      - users
-  /api/v1/users/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get a single user by their ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.UserResponse'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get user by ID
-      tags:
-      - users
-    put:
-      consumes:
-      - application/json
-      description: Update a user's information
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.UserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Update user
-      tags:
-      - users
   /api/v1/users/{userId}/roles:
     get:
       consumes:
@@ -905,33 +903,6 @@ paths:
       summary: Get user roles
       tags:
       - roles
-  /api/v1/users/me:
-    put:
-      consumes:
-      - application/json
-      description: Update the current authenticated user's information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.UserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Update current user
-      tags:
-      - users
   /health:
     get:
       consumes:
@@ -948,6 +919,186 @@ paths:
       summary: Health check endpoint
       tags:
       - health
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all users with pagination
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 20, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GetUsersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new user
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Get a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GetUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UpdateUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a user
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

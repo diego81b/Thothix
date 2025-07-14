@@ -103,7 +103,7 @@ func (h *MessageHandler) GetMessages(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "Channel ID"
 // @Param message body messageDto.MessageCreateRequest true "Message data"
-// @Success 201 {object} models.Message
+// @Success 201 {object} domain.Message
 // @Failure 400 {object} map[string]interface{}
 // @Failure 403 {object} map[string]interface{}
 // @Router /api/v1/channels/{id}/messages [post]
@@ -162,7 +162,7 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param message body DirectMessageRequest true "Direct message data"
-// @Success 201 {object} models.Message
+// @Success 201 {object} domain.Message
 // @Failure 400 {object} map[string]interface{}
 // @Failure 403 {object} map[string]interface{}
 // @Router /api/v1/messages/direct [post]

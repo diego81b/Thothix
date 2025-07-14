@@ -37,8 +37,8 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} models.UserDto
-// @Success 201 {object} models.UserDto
+// @Success 200 {object} usersDto.UserDto
+// @Success 201 {object} usersDto.UserDto
 // @Failure 400 {object} dto.ErrorViewModel
 // @Failure 500 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/sync [post]
@@ -114,7 +114,7 @@ func (h *AuthHandler) SyncUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} models.UserDto
+// @Success 200 {object} usersDto.UserDto
 // @Failure 404 {object} dto.ErrorViewModel
 // @Router /api/v1/auth/me [get]
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {

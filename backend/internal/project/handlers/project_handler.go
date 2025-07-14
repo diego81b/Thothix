@@ -22,7 +22,7 @@ func NewProjectHandler(db *gorm.DB) *ProjectHandler {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {array} models.Project
+// @Success 200 {array} domain.Project
 // @Failure 500 {object} map[string]interface{}
 // @Router /api/v1/projects [get]
 func (h *ProjectHandler) GetProjects(c *gin.Context) {
@@ -37,7 +37,7 @@ func (h *ProjectHandler) GetProjects(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 201 {object} models.Project
+// @Success 201 {object} domain.Project
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/v1/projects [post]
 func (h *ProjectHandler) CreateProject(c *gin.Context) {
@@ -53,7 +53,7 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Success 200 {object} models.Project
+// @Success 200 {object} domain.Project
 // @Failure 404 {object} map[string]interface{}
 // @Router /api/v1/projects/{id} [get]
 func (h *ProjectHandler) GetProject(c *gin.Context) {
@@ -69,7 +69,7 @@ func (h *ProjectHandler) GetProject(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Success 200 {object} models.Project
+// @Success 200 {object} domain.Project
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/v1/projects/{id} [put]
 func (h *ProjectHandler) UpdateProject(c *gin.Context) {
@@ -101,7 +101,7 @@ func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Success 200 {object} models.ProjectMember
+// @Success 200 {object} domain.ProjectMember
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/v1/projects/{id}/members [post]
 func (h *ProjectHandler) AddMember(c *gin.Context) {

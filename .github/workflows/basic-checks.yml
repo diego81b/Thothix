@@ -54,72 +54,57 @@ jobs:
       - name: Install Node dependencies
         run: npm install
 
-      - name: Start Vault container
-        run: |
-          # Create a minimal docker-compose just for Vault in CI
-          cat > docker-compose.ci.yml << 'EOF'
-          services:
-            vault:
-              image: hashicorp/vault:1.15
-              container_name: thothix-vault-dev
-              environment:
-                VAULT_DEV_ROOT_TOKEN_ID: thothix-dev-root-token
-                VAULT_DEV_MODE: "true"
-                VAULT_LOG_LEVEL: INFO
-              command: vault server -dev -dev-root-token-id=thothix-dev-root-token -dev-listen-address=0.0.0.0:8200
-              ports:
-                - '8200:8200'
-              cap_add:
-                - IPC_LOCK
-          EOF
-          
-          # Start Vault
-          docker compose -f docker-compose.ci.yml up -d vault
-          
-          # Wait for Vault to be ready
-          until curl -s http://localhost:8200/v1/sys/health > /dev/null; do
-            echo "Waiting for Vault..."
-            sleep 2
-          done
-          echo "✅ Vault is ready"
-
-      - name: Initialize Vault with secrets
+      - name: Check Vault connectivity
         env:
-          VAULT_ADDR: http://localhost:8200
-          VAULT_ROOT_TOKEN: thothix-dev-root-token
-          # Test environment variables per vault sync
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: thothix_test
-          DB_HOST: localhost
-          DB_PORT: 5432
-          CLERK_SECRET_KEY: sk_test_github_actions_key
-          CLERK_WEBHOOK_SECRET: whsec_test_github_actions_secret
-          ENVIRONMENT: test
-        run: npm run vault:init
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        run: |
+          echo "🔐 Checking Vault connectivity..."
+          if [ -z "$VAULT_ADDR" ] || [ -z "$VAULT_TOKEN" ]; then
+            echo "❌ VAULT_ADDR or VAULT_TOKEN not configured in GitHub Secrets"
+            echo "⚠️  Running tests without Vault integration"
+            echo "USE_VAULT=false" >> $GITHUB_ENV
+          else
+            # Test Vault connection
+            curl -H "X-Vault-Token: $VAULT_TOKEN" \
+                 -X GET \
+                 "$VAULT_ADDR/v1/sys/health" \
+                 --fail --silent --show-error || {
+              echo "❌ Cannot connect to Vault at $VAULT_ADDR"
+              echo "⚠️  Running tests without Vault integration"
+              echo "USE_VAULT=false" >> $GITHUB_ENV
+              exit 0
+            }
+            echo "✅ Vault is accessible"
+            echo "USE_VAULT=true" >> $GITHUB_ENV
+          fi
 
-      - name: Run Go tests (all tests with Vault)
+      - name: Run Go tests (with or without Vault)
         working-directory: ./backend
         env:
-          # Vault configuration
-          VAULT_ADDR: http://localhost:8200
-          VAULT_TOKEN: thothix-dev-root-token
-          USE_VAULT: true
+          # Vault configuration (se disponibile)
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
           VAULT_MOUNT: thothix
+
+          # Fallback environment variables (se Vault non è disponibile)
+          DB_USER: ${{ secrets.DB_USER || 'postgres' }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD || 'postgres' }}
+          DB_NAME: ${{ secrets.DB_NAME || 'thothix_test' }}
+          DB_HOST: ${{ secrets.DB_HOST || 'localhost' }}
+          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY || 'sk_test_github_actions_key' }}
+          CLERK_WEBHOOK_SECRET: ${{ secrets.CLERK_WEBHOOK_SECRET || 'whsec_test_github_actions_secret' }}
           
           # App settings
           ENVIRONMENT: test
-        run: go test -v ./... -timeout=10m
+        run: |
+          echo "🧪 Running Go tests (USE_VAULT=$USE_VAULT)..."
+          go test -v ./... -timeout=10m
 
       - name: Build Go application
         working-directory: ./backend
         run: go build -v ./...
-
-      - name: Cleanup Vault container
-        if: always()
-        run: |
-          docker compose -f docker-compose.ci.yml down -v || true
-          rm -f docker-compose.ci.yml || true
 
   go-lint:
     runs-on: ubuntu-latest

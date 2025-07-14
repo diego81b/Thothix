@@ -167,16 +167,6 @@ npm run dev:down         # 🛑 Stop all services
 npm run vault:init       # 🏗️  Full Vault setup + sync all secrets
 npm run vault:sync       # 🔄 Update Vault with current .env secrets
 
-# Database Management
-npm run db:status        # ✅ Check database connection health
-npm run db:tables        # 📋 List all database tables
-npm run db:connect       # 🔗 Open interactive database shell
-
-# Code Quality
-npm run format           # 🎨 Format all code (Go, JS, etc.)
-npm run lint             # 🔍 Run all linters and checks
-npm run pre-commit       # ✅ Run pre-commit validation
-
 # Maintenance
 npm run vault:cleanup          # 🧹 Clean temporary files
 ```

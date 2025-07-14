@@ -14,20 +14,6 @@ jobs:
   go-tests:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: thothix_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,14 +51,10 @@ jobs:
         working-directory: ./backend
         run: go mod verify
 
-      - name: Run Go tests
+      - name: Run Go tests (unit only)
         working-directory: ./backend
         env:
-          DB_HOST: localhost
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: thothix_test
-          DB_PORT: 5432
+          # Testcontainers gestirà PostgreSQL automaticamente
           CLERK_SECRET_KEY: sk_test_github_actions_key
         run: go test -v ./...
 

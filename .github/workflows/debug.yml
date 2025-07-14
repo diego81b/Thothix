@@ -1,0 +1,117 @@
+name: Debug Workflow
+
+on:
+  workflow_dispatch: # Manual trigger only
+    inputs:
+      debug_level:
+        description: 'Debug level'
+        required: true
+        default: 'basic'
+        type: choice
+        options:
+          - basic
+          - detailed
+          - full
+
+jobs:
+  debug-environment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Environment Info
+        run: |
+          echo "=== GitHub Context ==="
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Repository: ${{ github.repository }}"
+
+          echo "=== System Info ==="
+          uname -a
+          echo "Node: $(node --version)"
+          echo "NPM: $(npm --version)"
+
+          echo "=== Available files ==="
+          ls -la
+
+          if [[ -f package.json ]]; then
+            echo "=== Package.json content ==="
+            cat package.json
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Debug Node Installation
+        run: |
+          echo "=== Node Debug ==="
+          which node
+          which npm
+          npm config list
+
+          echo "=== Trying npm install ==="
+          npm install --verbose || echo "npm install failed"
+
+          if [[ -d node_modules ]]; then
+            echo "=== Node modules installed ==="
+            ls -la node_modules/
+          fi
+
+      - name: Set up Go
+        if: inputs.debug_level == 'detailed' || inputs.debug_level == 'full'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.3'
+
+      - name: Debug Go Installation
+        if: inputs.debug_level == 'detailed' || inputs.debug_level == 'full'
+        run: |
+          echo "=== Go Debug ==="
+          which go
+          go version
+          go env
+
+          if [[ -d backend ]]; then
+            echo "=== Backend directory ==="
+            ls -la backend/
+
+            if [[ -f backend/go.mod ]]; then
+              echo "=== Go mod file ==="
+              cat backend/go.mod
+
+              echo "=== Trying go mod download ==="
+              cd backend && go mod download || echo "go mod download failed"
+            fi
+          fi
+
+      - name: Debug Scripts
+        if: inputs.debug_level == 'full'
+        run: |
+          echo "=== Scripts Debug ==="
+          if [[ -d scripts ]]; then
+            echo "Scripts directory content:"
+            ls -la scripts/
+
+            for script in scripts/*.mjs; do
+              if [[ -f "$script" ]]; then
+                echo "=== Content of $script (first 20 lines) ==="
+                head -20 "$script"
+              fi
+            done
+          fi
+
+          echo "=== Trying individual npm commands ==="
+          npm run --silent 2>/dev/null || echo "npm run failed"
+
+          # Try specific commands that might be causing issues
+          echo "Testing format command..."
+          timeout 30s npm run format 2>&1 || echo "Format command failed or timed out"
+
+          echo "Testing lint command..."
+          timeout 30s npm run lint 2>&1 || echo "Lint command failed or timed out"

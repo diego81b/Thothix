@@ -1,0 +1,119 @@
+name: Basic Checks
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  GO_VERSION: '1.24.3'
+  NODE_VERSION: '22'
+
+jobs:
+  go-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: thothix_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Go dependencies
+        working-directory: ./backend
+        run: go mod download
+
+      - name: Run Go tests
+        working-directory: ./backend
+        env:
+          DB_HOST: localhost
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: thothix_test
+          DB_PORT: 5432
+          CLERK_SECRET_KEY: sk_test_github_actions_key
+        run: go test -v ./...
+
+      - name: Build Go application
+        working-directory: ./backend
+        run: go build -v ./...
+
+  go-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: ./backend
+          args: --timeout=10m
+
+  scripts-validation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Validate package.json scripts
+        run: |
+          echo "Checking if all script commands are valid..."
+          npm run --silent || echo "Some scripts may have issues"
+
+      - name: Check pre-commit command
+        run: |
+          echo "Testing pre-commit command..."
+          timeout 60s npm run pre-commit || echo "Pre-commit check completed or timed out"

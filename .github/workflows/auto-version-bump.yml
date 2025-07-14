@@ -2,52 +2,54 @@ name: Auto Version Bump & PR
 
 on:
   pull_request:
-    types: [ closed ]
+    types: [closed]
     branches:
-    - main
+      - main
 
 jobs:
   bump-version-and-pr:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history for git log commands
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Bump version (patch)
-      if: github.event.pull_request.merged == true
-      uses: phips28/gh-action-bump-version@v11.0.2
-      with:
-        tag-prefix: 'v'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bump version (patch)
+        uses: phips28/gh-action-bump-version@v11.0.2
+        with:
+          tag-prefix: 'v'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Get feature authors
-      id: authors
-      run: |
-        git fetch origin dev:dev || true
-        AUTHORS=$(git log dev..main --pretty="%an <%ae>" | sort | uniq | paste -sd "," -)
-        echo "authors=$AUTHORS" >> $GITHUB_OUTPUT
+      - name: Get feature authors
+        id: authors
+        run: |
+          git fetch origin dev:dev || echo "dev branch not found, skipping"
+          AUTHORS=$(git log dev..main --pretty="%an <%ae>" | sort | uniq | paste -sd "," - || echo "No authors found")
+          echo "authors=$AUTHORS" >> $GITHUB_OUTPUT
 
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v6
-      with:
-        commit-message: "chore: bump version [skip ci]"
-        title: "chore: Automated version bump"
-        body: |
-          This PR was created automatically to bump the version after a push to main.
-          **Feature authors included in this release:**
-          ${{ steps.authors.outputs.authors }}
-          Please remember to update the CHANGELOG.md manually before merging.
-        branch: "auto/version-bump"
-        base: "main"
-        labels: "automated-pr"
-        delete-branch: true
-        assignees: "diego81b"
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: 'chore: bump version [skip ci]'
+          title: 'chore: Automated version bump'
+          body: |
+            This PR was created automatically to bump the version after a push to main.
+            **Feature authors included in this release:**
+            ${{ steps.authors.outputs.authors }}
+            Please remember to update the CHANGELOG.md manually before merging.
+          branch: 'auto/version-bump'
+          base: 'main'
+          labels: 'automated-pr'
+          delete-branch: true
+          assignees: 'diego81b'
